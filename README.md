@@ -91,11 +91,17 @@ Report suspected vulnerabilities privately as described in [SECURITY.md](SECURIT
 
 ## Roadmap
 
-- **v0.2 / Phase 2:** processes, services, terminal/editor, software, updates,
-  networking, and storage.
-- **v0.3 / Phase 3:** compute scheduling, game servers, integrations, backups,
-  automation, and alerting.
-- **v1.0 hardening:** PostgreSQL, staged signed updates, enterprise identity,
-  high availability, and third-party security review.
+- **v0.2:** fleet observability and read-only Windows diagnostics.
+- **v0.3:** safe file operations, resumable transfers, and configuration editor.
+- **v0.4:** controlled processes, services, power scheduling, and audited terminal.
+- **v0.5:** approved software deployment and Windows Update lifecycle.
+- **v0.6:** verified backups, alerts, and loop-safe automation.
+- **v0.7:** resource policies and distributed compute scheduling.
+- **v0.8:** adapter-based game-server management, starting with Minecraft Java.
+- **v0.9:** optional Pterodactyl and Docker integrations.
+- **v1.0:** signed staged updates, PostgreSQL, enterprise identity, scale, and
+  production/security hardening.
 
-The complete current status, including limitations, is maintained in [RESULT.md](RESULT.md).
+Each milestone is an independently installable, upgrade-tested release. The complete
+acceptance gates are in [PHASES.md](PHASES.md), and current verified status is maintained
+in [RESULT.md](RESULT.md).
