@@ -7,13 +7,15 @@ param(
 $ErrorActionPreference = 'Stop'
 $installer = [IO.Path]::GetFullPath($InstallerPath)
 $installRoot = [IO.Path]::GetFullPath($InstallDirectory)
-$temporaryRoot = [IO.Path]::GetFullPath($env:TEMP)
+$temporaryRoots = @($env:TEMP, $env:RUNNER_TEMP) |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+    ForEach-Object { [IO.Path]::GetFullPath($_).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar }
 $productData = [IO.Path]::GetFullPath((Join-Path $env:ProgramData 'NexaGrid'))
 $expectedProductData = [IO.Path]::GetFullPath('C:\ProgramData\NexaGrid')
 $logPath = Join-Path ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\artifacts'))) 'installer-smoke.log'
 
 if (-not (Test-Path -LiteralPath $installer)) { throw "Installer not found: $installer" }
-if (-not $installRoot.StartsWith($temporaryRoot, [StringComparison]::OrdinalIgnoreCase)) {
+if (-not ($temporaryRoots | Where-Object { $installRoot.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) })) {
     throw 'The smoke-test installation directory must be below the temporary directory.'
 }
 if ($productData -ne $expectedProductData) { throw "Unexpected product-data path: $productData" }
