@@ -4,10 +4,15 @@ using NexaGrid.Agent.Security;
 using NexaGrid.Agent.Telemetry;
 using NexaGrid.Agent.Transport;
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
 builder.Services.AddWindowsService(options => options.ServiceName = "NexaGrid Managed Node");
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
+builder.Logging.AddEventLog(settings => settings.SourceName = "NexaGrid Managed Node");
 var options = builder.Configuration.GetSection("Agent").Get<AgentOptions>() ?? new AgentOptions();
 ValidateOptions(options);
 builder.Services.AddSingleton(options);

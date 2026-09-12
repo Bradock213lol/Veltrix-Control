@@ -97,3 +97,6 @@ as completed features.
 - Combined-role setup originally required a code that could not exist before first launch;
   it now creates a cryptographically random local one-time bootstrap code, imports it into
   the Controller, deletes the Controller copy, and enrolls the local Agent automatically.
+- The first cloud installer smoke run showed that Windows services start with a system
+  working directory; both hosts now resolve configuration and static content explicitly
+  from their installed executable directory, with Agent failures also sent to Event Log.

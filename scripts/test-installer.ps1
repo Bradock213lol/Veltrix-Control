@@ -13,6 +13,7 @@ $temporaryRoots = @($env:TEMP, $env:RUNNER_TEMP) |
 $productData = [IO.Path]::GetFullPath((Join-Path $env:ProgramData 'NexaGrid'))
 $expectedProductData = [IO.Path]::GetFullPath('C:\ProgramData\NexaGrid')
 $logPath = Join-Path ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\artifacts'))) 'installer-smoke.log'
+$startedAt = Get-Date
 
 if (-not (Test-Path -LiteralPath $installer)) { throw "Installer not found: $installer" }
 if (-not ($temporaryRoots | Where-Object { $installRoot.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) })) {
@@ -68,6 +69,10 @@ try {
 }
 catch {
     if (Test-Path -LiteralPath $logPath) { Get-Content -LiteralPath $logPath -Tail 200 }
+    Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $startedAt } -ErrorAction SilentlyContinue |
+        Where-Object { $_.ProviderName -like '*NexaGrid*' -or $_.Message -like '*NexaGrid*' } |
+        Select-Object -First 50 TimeCreated, ProviderName, Id, LevelDisplayName, Message |
+        Format-List
     throw
 }
 finally {

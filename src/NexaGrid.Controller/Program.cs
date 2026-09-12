@@ -26,7 +26,11 @@ if (args is ["--prepare-combined-role"])
     return;
 }
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
 builder.Host.UseWindowsService(options => options.ServiceName = "NexaGrid Controller");
 builder.Services.Configure<ControllerOptions>(builder.Configuration.GetSection("Controller"));
 var controllerConfiguration = builder.Configuration.GetSection("Controller").Get<ControllerOptions>() ?? new ControllerOptions();
