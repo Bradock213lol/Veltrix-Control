@@ -1,5 +1,8 @@
 # NexaGrid
 
+[![Windows CI](https://github.com/Bradock213lol/Veltrix-Control/actions/workflows/windows-ci.yml/badge.svg?branch=main)](https://github.com/Bradock213lol/Veltrix-Control/actions/workflows/windows-ci.yml)
+[![Phase 1 release](https://img.shields.io/badge/release-v0.1.0%20preview-7c5cff)](https://github.com/Bradock213lol/Veltrix-Control/releases/tag/v0.1.0)
+
 NexaGrid is a security-first Windows fleet management platform. One installer can
 configure a computer as a **Controller**, **Managed Node**, or both. Version 0.1.0
 is a finished Phase 1 vertical slice: enroll an authorized device, see live health,
@@ -44,7 +47,9 @@ service hosting, and DPAPI key storage live in the Agent. See
 
 ## Install
 
-1. Download `NexaGridSetup.exe` and `SHA256SUMS.txt` from the Windows CI artifact.
+1. Download [`NexaGridSetup.exe`](https://github.com/Bradock213lol/Veltrix-Control/releases/download/v0.1.0/NexaGridSetup.exe)
+   and [`SHA256SUMS.txt`](https://github.com/Bradock213lol/Veltrix-Control/releases/download/v0.1.0/SHA256SUMS.txt)
+   from the [v0.1.0 release](https://github.com/Bradock213lol/Veltrix-Control/releases/tag/v0.1.0).
 2. Verify the SHA-256 value, run the installer as administrator, and select a role.
 3. For a Controller, open `http://localhost:5187` and create the first Owner account.
 4. In **Add device**, generate an enrollment code.

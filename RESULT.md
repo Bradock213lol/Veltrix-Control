@@ -3,9 +3,10 @@
 ## Status
 
 Phase 1 — Secure fleet foundation is implemented and verified as a usable, testable
-release candidate. The expanded Phase 2–10 roadmap remains planned in `PHASES.md`;
-those features are not represented as complete. The candidate remains unreleased
-until it is reviewed, merged to `main`, and tagged.
+release candidate for the `v0.1.0` GitHub preview. The expanded Phase 2–10 roadmap
+remains planned in `PHASES.md`; those features are not represented as complete.
+Publication is performed only from an annotated tag reachable from `main`, after the
+release workflow rebuilds, retests, installs, repairs, and verifies the payload.
 
 ## Architecture
 
@@ -69,9 +70,10 @@ until it is reviewed, merged to `main`, and tagged.
 ## Release artifacts
 
 - CI artifact name: `NexaGrid-Windows-x64`
+- GitHub release tag: `v0.1.0` (preview)
 - Installer: `NexaGridSetup.exe`
-- Local installer size: 87,215,613 bytes
-- Local installer SHA-256: recorded in `outputs/SHA256SUMS.txt`
+- Local validation: all 26 tests passed and the installer checksum was regenerated in
+  `outputs/SHA256SUMS.txt`.
 - Release archive: `NexaGrid-Windows-x64.zip`
 
 ## Security considerations and known limitations

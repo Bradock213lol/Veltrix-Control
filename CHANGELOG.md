@@ -19,6 +19,8 @@ All notable changes follow semantic versioning.
 - Expanded the roadmap into independently installable and upgrade-tested releases from
   fleet observability through production hardening.
 - Updated GitHub Actions to maintained Node.js 24-based action versions.
+- Added a tag-gated GitHub release workflow that rebuilds, tests, smoke-installs, verifies,
+  and publishes the installer and checksum assets only from `main`.
 
 ### Fixed
 
