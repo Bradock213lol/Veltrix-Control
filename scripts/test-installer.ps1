@@ -65,7 +65,31 @@ try {
         Start-Sleep -Milliseconds 500
     }
     if (-not $deviceOnline) { throw 'The combined-role Managed Node did not enroll and appear online.' }
-    Write-Output "Installer smoke test passed: Controller healthy, Agent enrolled, $($devices.Count) node online."
+
+    $repair = Start-Process -FilePath $installer -ArgumentList $installerArguments -Wait -PassThru -WindowStyle Hidden
+    if ($repair.ExitCode -ne 0) { throw "Installer repair exited with code $($repair.ExitCode)." }
+    foreach ($serviceName in @('NexaGridController', 'NexaGridAgent')) {
+        $service = Get-Service -Name $serviceName
+        $service.WaitForStatus([ServiceProcess.ServiceControllerStatus]::Running, [TimeSpan]::FromSeconds(30))
+    }
+    $healthyAfterRepair = $false
+    for ($attempt = 0; $attempt -lt 60; $attempt++) {
+        try {
+            $health = Invoke-RestMethod -Uri 'http://localhost:5187/health' -TimeoutSec 2
+            if ($health.status -eq 'healthy') { $healthyAfterRepair = $true; break }
+        } catch { }
+        Start-Sleep -Milliseconds 500
+    }
+    if (-not $healthyAfterRepair) { throw 'The repaired Controller did not become healthy.' }
+
+    $repairSession = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
+    $loginBody = @{ username = 'ci.owner'; password = $password } | ConvertTo-Json
+    Invoke-RestMethod -Uri 'http://localhost:5187/api/auth/login' -Method Post -ContentType 'application/json' -Body $loginBody -WebSession $repairSession | Out-Null
+    $devicesAfterRepair = @(Invoke-RestMethod -Uri 'http://localhost:5187/api/devices' -WebSession $repairSession)
+    if ($devicesAfterRepair.Count -ne 1 -or -not $devicesAfterRepair[0].online) {
+        throw 'Repair did not preserve the enrolled online node.'
+    }
+    Write-Output "Installer smoke test passed: clean install, services, enrollment, repair, state preservation, and $($devicesAfterRepair.Count) node online."
 }
 catch {
     if (Test-Path -LiteralPath $logPath) { Get-Content -LiteralPath $logPath -Tail 200 }

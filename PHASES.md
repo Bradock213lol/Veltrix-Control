@@ -13,8 +13,8 @@ A phase is complete only when all of these gates are green:
 
 - The release installs from one genuine `NexaGridSetup.exe` with Controller, Managed
   Node, and combined role choices.
-- Clean install, repair, upgrade from the previous release, and uninstall are exercised
-  on `windows-latest`; user data survives repair and upgrade.
+- Clean install, repair, uninstall, and—once an earlier release exists—upgrade from the
+  previous release are exercised on `windows-latest`; user data survives repair and upgrade.
 - Unit, integration, security, and Controller-to-Agent end-to-end suites pass with no
   skipped release-critical tests.
 - A real packaged Controller and Agent complete the phase's primary workflow. Simulator-
