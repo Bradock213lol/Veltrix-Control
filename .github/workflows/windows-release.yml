@@ -1,0 +1,112 @@
+name: Windows Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-test-release:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate release tag and source
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          [xml]$props = Get-Content -Raw -LiteralPath 'Directory.Build.props'
+          $version = [string]$props.Project.PropertyGroup.Version
+          if ($env:GITHUB_REF_NAME -ne "v$version") {
+            throw "Tag $env:GITHUB_REF_NAME does not match project version $version."
+          }
+          $tagType = (git cat-file -t $env:GITHUB_REF_NAME).Trim()
+          if ($tagType -ne 'tag') { throw 'Release tags must be annotated tags.' }
+          git fetch origin main --no-tags
+          git merge-base --is-ancestor $env:GITHUB_SHA origin/main
+          if ($LASTEXITCODE -ne 0) { throw 'Release tag is not reachable from origin/main.' }
+          $notesPath = Join-Path 'docs\releases' "$($env:GITHUB_REF_NAME).md"
+          if (-not (Test-Path -LiteralPath $notesPath)) {
+            throw "Release notes are missing: $notesPath"
+          }
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.401
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build, test, and package
+        shell: powershell
+        run: .\scripts\build.ps1
+
+      - name: Smoke-test install and repair
+        shell: powershell
+        run: .\scripts\test-installer.ps1 -InstallDirectory (Join-Path $env:RUNNER_TEMP 'NexaGrid-Release-Smoke')
+
+      - name: Verify release payload
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = 'outputs\NexaGridSetup.exe'
+          $manifest = 'outputs\SHA256SUMS.txt'
+          $expected = (Select-String -LiteralPath $manifest -Pattern '^[0-9a-f]{64}  NexaGridSetup\.exe$').Line.Split(' ')[0]
+          $actual = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw 'Installer checksum does not match SHA256SUMS.txt.' }
+          $header = [IO.File]::ReadAllBytes($installer)[0..1]
+          if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
+            throw 'NexaGridSetup.exe is not a Windows PE executable.'
+          }
+
+      - name: Publish GitHub pre-release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = $env:GITHUB_REF_NAME
+          $notes = "docs\releases\$tag.md"
+          $title = "NexaGrid $tag - Phase 1 Preview"
+          $assets = @(
+            'outputs\NexaGridSetup.exe',
+            'outputs\SHA256SUMS.txt',
+            'outputs\VERSION.txt',
+            'outputs\CHANGELOG.md',
+            'outputs\NexaGrid-Windows-x64.zip'
+          )
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          $releaseExists = $LASTEXITCODE -eq 0
+          if ($releaseExists) {
+            gh release edit $tag --repo $env:GITHUB_REPOSITORY --title $title --notes-file $notes --prerelease
+            if ($LASTEXITCODE -ne 0) { throw 'Could not update the existing GitHub release.' }
+            gh release upload $tag --repo $env:GITHUB_REPOSITORY --clobber @assets
+          } else {
+            gh release create $tag --repo $env:GITHUB_REPOSITORY --verify-tag --title $title --notes-file $notes --prerelease @assets
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Could not publish the GitHub release assets.' }
+          gh release view $tag --repo $env:GITHUB_REPOSITORY --json url,isPrerelease,assets
+
+      - name: Upload release diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: NexaGrid-${{ github.ref_name }}-release-diagnostics
+          path: |
+            artifacts/test-results/**/*.trx
+            artifacts/installer-smoke.log
+          if-no-files-found: warn
+          retention-days: 30

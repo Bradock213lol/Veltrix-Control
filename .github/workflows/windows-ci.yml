@@ -1,0 +1,64 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-package:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.401
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build, test, and package
+        shell: powershell
+        run: .\scripts\build.ps1
+
+      - name: Smoke-test combined-role installer
+        shell: powershell
+        run: .\scripts\test-installer.ps1 -InstallDirectory (Join-Path $env:RUNNER_TEMP 'NexaGrid-Installer-Smoke')
+
+      - name: Upload Windows release
+        uses: actions/upload-artifact@v7
+        with:
+          name: NexaGrid-Windows-x64
+          path: |
+            outputs/NexaGridSetup.exe
+            outputs/SHA256SUMS.txt
+            outputs/VERSION.txt
+            outputs/CHANGELOG.md
+            outputs/NexaGrid-Windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: NexaGrid-test-results
+          path: artifacts/test-results/**/*.trx
+          if-no-files-found: warn
+
+      - name: Upload installer smoke log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: NexaGrid-installer-smoke-log
+          path: artifacts/installer-smoke.log
+          if-no-files-found: warn
