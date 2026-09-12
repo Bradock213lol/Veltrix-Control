@@ -2,9 +2,10 @@
 
 ## Status
 
-Phase 1 — Secure fleet foundation is implemented as a usable, testable vertical
-slice. Phase 2 and Phase 3 remain planned in `PHASES.md`; they are not represented
-as completed features.
+Phase 1 — Secure fleet foundation is implemented as a usable, testable release
+candidate. The expanded Phase 2–10 roadmap remains planned in `PHASES.md`; those
+features are not represented as complete. Phase 1 is not a finished release until
+the combined-role installer smoke test passes in GitHub Actions.
 
 ## Architecture
 
@@ -50,24 +51,26 @@ as completed features.
 ## Verification results
 
 - Release build: **PASS**, zero compiler warnings and zero errors.
-- Automated tests: **25/25 PASS** — 12 unit, 6 security, 6 integration, 1 end-to-end.
+- Automated tests: **26/26 PASS** — 12 unit, 6 security, 7 integration, 1 end-to-end.
 - Dependency vulnerability scan: **PASS** — no known vulnerable direct or transitive
   NuGet packages in the configured source at verification time.
 - JavaScript syntax check: **PASS**.
-- Controller runtime smoke test: **PASS** — health response `healthy`, version `0.1.0`,
-  and a valid 64-character certificate SHA-256 sidecar.
+- Controller runtime smoke test: **PASS** — launched from the Windows service working
+  directory, returned health `healthy` and version `0.1.0`, produced a valid 64-character
+  certificate fingerprint, and completed a real HTTPS handshake.
 - Self-contained PE validation: **PASS** for Controller, Agent, and Simulator.
 - Installer compile and PE validation: **PASS**.
 - Installer lifecycle test: configured in Windows CI to install the combined role, verify
   both services, verify automatic Agent enrollment and online state, uninstall, and clean
   the disposable runner's test state.
-- GitHub Actions: **PENDING** until the feature branch is pushed.
+- GitHub Actions: **PENDING RERUN** — the previous three runs exposed the Controller TLS
+  key-storage defect; the local fix and regression test pass and await the next branch run.
 
 ## Release artifacts
 
 - CI artifact name: `NexaGrid-Windows-x64`
 - Installer: `NexaGridSetup.exe`
-- Local installer size: 87,202,335 bytes
+- Local installer size: 87,215,613 bytes
 - Local installer SHA-256: recorded in `outputs/SHA256SUMS.txt`
 - Release archive: `NexaGrid-Windows-x64.zip`
 
@@ -100,3 +103,6 @@ as completed features.
 - The first cloud installer smoke run showed that Windows services start with a system
   working directory; both hosts now resolve configuration and static content explicitly
   from their installed executable directory, with Agent failures also sent to Event Log.
+- The next cloud smoke run showed that Windows Schannel rejects an ephemeral server private
+  key even though Kestrel opens the HTTPS port. The certificate now loads into the service
+  account's user key set, and a loopback TLS handshake regression test protects the fix.

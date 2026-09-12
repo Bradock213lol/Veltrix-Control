@@ -6,6 +6,10 @@ namespace NexaGrid.Controller.Security;
 
 public static class ControllerCertificate
 {
+    // Windows Schannel cannot serve TLS with an ephemeral private key. Import into the
+    // service account's user key set; the PFX at rest remains protected with machine DPAPI.
+    private const X509KeyStorageFlags ServerKeyStorageFlags = X509KeyStorageFlags.UserKeySet;
+
     public static X509Certificate2 LoadOrCreate(string dataDirectory)
     {
         Directory.CreateDirectory(dataDirectory);
@@ -14,7 +18,7 @@ public static class ControllerCertificate
         {
             var protectedBytes = File.ReadAllBytes(path);
             var pfx = ProtectedData.Unprotect(protectedBytes, null, DataProtectionScope.LocalMachine);
-            var loaded = X509CertificateLoader.LoadPkcs12(pfx, null, X509KeyStorageFlags.EphemeralKeySet);
+            var loaded = X509CertificateLoader.LoadPkcs12(pfx, null, ServerKeyStorageFlags);
             WriteFingerprint(dataDirectory, loaded);
             return loaded;
         }
@@ -37,7 +41,7 @@ public static class ControllerCertificate
         using var created = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(2));
         var exported = created.Export(X509ContentType.Pfx);
         File.WriteAllBytes(path, ProtectedData.Protect(exported, null, DataProtectionScope.LocalMachine));
-        var certificate = X509CertificateLoader.LoadPkcs12(exported, null, X509KeyStorageFlags.EphemeralKeySet);
+        var certificate = X509CertificateLoader.LoadPkcs12(exported, null, ServerKeyStorageFlags);
         WriteFingerprint(dataDirectory, certificate);
         return certificate;
     }

@@ -13,3 +13,16 @@ All notable changes follow semantic versioning.
 - Hash-chained audit history and integrity verification.
 - Windows Agent service, safe node simulator, and role-selecting installer.
 - Windows build workflow plus unit, integration, security, and end-to-end tests.
+
+### Changed
+
+- Expanded the roadmap into independently installable and upgrade-tested releases from
+  fleet observability through production hardening.
+- Updated GitHub Actions to maintained Node.js 24-based action versions.
+
+### Fixed
+
+- Load the Controller TLS certificate into the Windows service account key set so Schannel
+  can complete node HTTPS handshakes.
+- Added a real TLS handshake regression test and made dependency/JavaScript checks part of
+  the release build.

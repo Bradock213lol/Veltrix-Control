@@ -15,10 +15,10 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.401
 
@@ -35,7 +35,7 @@ jobs:
         run: .\scripts\test-installer.ps1 -InstallDirectory (Join-Path $env:RUNNER_TEMP 'NexaGrid-Installer-Smoke')
 
       - name: Upload Windows release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: NexaGrid-Windows-x64
           path: |
@@ -49,7 +49,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: NexaGrid-test-results
           path: artifacts/test-results/**/*.trx
@@ -57,7 +57,7 @@ jobs:
 
       - name: Upload installer smoke log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: NexaGrid-installer-smoke-log
           path: artifacts/installer-smoke.log

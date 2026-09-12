@@ -12,7 +12,7 @@ $outputDirectory = Join-Path $repositoryRoot 'outputs'
 $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1
 $localDotnet = Join-Path $repositoryRoot 'work\.dotnet\dotnet.exe'
 if (-not $dotnet -or -not ((& $dotnet --list-sdks) -match '^10\.0\.')) {
-    if (Test-Path -LiteralPath $localDotnet) { $dotnet = $localDotnet }
+    $dotnet = if (Test-Path -LiteralPath $localDotnet) { $localDotnet } else { $null }
 }
 if (-not $dotnet) { throw '.NET SDK 10.0.401 or newer is required.' }
 
@@ -41,6 +41,13 @@ foreach ($releaseFile in $releaseFiles) {
 
 & $dotnet restore (Join-Path $repositoryRoot 'NexaGrid.slnx')
 if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
+$vulnerabilityJson = (& $dotnet list (Join-Path $repositoryRoot 'NexaGrid.slnx') package --vulnerable --include-transitive --format json) | Out-String
+if ($LASTEXITCODE -ne 0) { throw 'Dependency vulnerability scan failed to complete.' }
+if ($vulnerabilityJson -match '"vulnerabilities"\s*:') { throw 'A vulnerable NuGet dependency was detected.' }
+$node = Get-Command node -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1
+if (-not $node) { throw 'Node.js is required for the JavaScript syntax check.' }
+& $node --check (Join-Path $repositoryRoot 'src\NexaGrid.Controller\wwwroot\js\app.js')
+if ($LASTEXITCODE -ne 0) { throw 'JavaScript syntax check failed.' }
 & $dotnet build (Join-Path $repositoryRoot 'NexaGrid.slnx') -c $Configuration --no-restore
 if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 $testProjects = Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'tests') -Filter '*.csproj' -Recurse
