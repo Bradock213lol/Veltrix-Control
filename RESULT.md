@@ -2,10 +2,10 @@
 
 ## Status
 
-Phase 1 — Secure fleet foundation is implemented as a usable, testable release
-candidate. The expanded Phase 2–10 roadmap remains planned in `PHASES.md`; those
-features are not represented as complete. Phase 1 is not a finished release until
-the combined-role installer smoke test passes in GitHub Actions.
+Phase 1 — Secure fleet foundation is implemented and verified as a usable, testable
+release candidate. The expanded Phase 2–10 roadmap remains planned in `PHASES.md`;
+those features are not represented as complete. The candidate remains unreleased
+until it is reviewed, merged to `main`, and tagged.
 
 ## Architecture
 
@@ -60,11 +60,11 @@ the combined-role installer smoke test passes in GitHub Actions.
   certificate fingerprint, and completed a real HTTPS handshake.
 - Self-contained PE validation: **PASS** for Controller, Agent, and Simulator.
 - Installer compile and PE validation: **PASS**.
-- Installer lifecycle test: configured in Windows CI to install the combined role, verify
-  both services, verify automatic Agent enrollment and online state, uninstall, and clean
-  the disposable runner's test state.
-- GitHub Actions: **PENDING RERUN** — the previous three runs exposed the Controller TLS
-  key-storage defect; the local fix and regression test pass and await the next branch run.
+- Installer lifecycle test: **PASS** — clean combined-role install, both Windows services,
+  automatic Agent enrollment/online state, same-version repair, Owner/device-state
+  preservation, uninstall, and disposable test-state cleanup.
+- GitHub Actions: **PASS** — Windows CI run `34715395177` completed successfully for commit
+  `f5619b8` and uploaded all configured artifacts.
 
 ## Release artifacts
 
