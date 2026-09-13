@@ -32,18 +32,18 @@ jobs:
 
       - name: Smoke-test combined-role installer
         shell: powershell
-        run: .\scripts\test-installer.ps1 -InstallDirectory (Join-Path $env:RUNNER_TEMP 'NexaGrid-Installer-Smoke')
+        run: .\scripts\test-installer.ps1 -InstallDirectory (Join-Path $env:RUNNER_TEMP 'Veltrix-Control-Installer-Smoke')
 
       - name: Upload Windows release
         uses: actions/upload-artifact@v7
         with:
-          name: NexaGrid-Windows-x64
+          name: Veltrix-Control-Windows-x64
           path: |
-            outputs/NexaGridSetup.exe
+            outputs/Veltrix-Control-Setup.exe
             outputs/SHA256SUMS.txt
             outputs/VERSION.txt
             outputs/CHANGELOG.md
-            outputs/NexaGrid-Windows-x64.zip
+            outputs/Veltrix-Control-Windows-x64.zip
           if-no-files-found: error
           retention-days: 14
 
@@ -51,7 +51,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: NexaGrid-test-results
+          name: Veltrix-Control-test-results
           path: artifacts/test-results/**/*.trx
           if-no-files-found: warn
 
@@ -59,6 +59,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: NexaGrid-installer-smoke-log
+          name: Veltrix-Control-installer-smoke-log
           path: artifacts/installer-smoke.log
           if-no-files-found: warn

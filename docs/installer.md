@@ -1,6 +1,6 @@
 # Installer design
 
-NexaGrid uses Inno Setup 6.7.3 for v0.1. It produces one genuine Windows PE executable
+Veltrix-Control uses Inno Setup 6.7.3 for v0.1. It produces one genuine Windows PE executable
 while allowing custom role/configuration pages and reliable service/upgrade/uninstall
 steps. This is a better Phase 1 fit than MSIX because the product installs Windows
 services and needs per-machine role configuration; a WiX bootstrapper remains an
@@ -18,7 +18,7 @@ services are stopped before replacement, reconfigured, and restarted. Inno Setup
 transactional file installation provides rollback before the non-cancellable
 post-install stage.
 
-Controller and Agent state under `%ProgramData%\NexaGrid` is retained on uninstall to
+Controller and Agent state under `%ProgramData%\Veltrix-Control` is retained on uninstall to
 avoid silently destroying identities, audit history, and fleet state. Administrators
 may remove that directory manually only after securing any required backup.
 

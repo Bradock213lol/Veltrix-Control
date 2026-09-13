@@ -1,17 +1,17 @@
-# NexaGrid delivery plan
+# Veltrix-Control delivery plan
 
 This plan deliberately ships a small number of complete workflows at a time. Every
 phase ends in an independently installable Windows release that can be demonstrated,
 upgraded, rolled back, and tested without relying on unfinished work from the next
 phase.
 
-Current state: **Phase 1 release candidate** on `feature/phase-1-foundation`.
+Current state: **Phase 1 released** as `v0.1.1`.
 
 ## Release contract for every phase
 
 A phase is complete only when all of these gates are green:
 
-- The release installs from one genuine `NexaGridSetup.exe` with Controller, Managed
+- The release installs from one genuine `Veltrix-Control-Setup.exe` with Controller, Managed
   Node, and combined role choices.
 - Clean install, repair, uninstall, and—once an earlier release exists—upgrade from the
   previous release are exercised on `windows-latest`; user data survives repair and upgrade.
@@ -32,7 +32,7 @@ A phase is complete only when all of these gates are green:
 - `README.md`, relevant documents, `CHANGELOG.md`, and `RESULT.md` describe verified
   behavior only. `main` remains releasable.
 
-## Phase 1 — Secure fleet foundation (v0.1.0)
+## Phase 1 — Secure fleet foundation (v0.1.1)
 
 User outcome: an administrator can install a Controller and an explicitly authorized
 Windows node, enroll it securely, see live health, browse an approved root, request a
@@ -184,7 +184,7 @@ Phase-specific acceptance:
 
 ## Phase 7 — Compute scheduling (v0.7.0)
 
-User outcome: administrators can queue bounded, explicit jobs and have NexaGrid choose a
+User outcome: administrators can queue bounded, explicit jobs and have Veltrix-Control choose a
 suitable authorized worker without pretending multiple PCs are one machine.
 
 Included:
@@ -231,7 +231,7 @@ Phase-specific acceptance:
 ## Phase 9 — Optional integrations (v0.9.0)
 
 User outcome: existing Pterodactyl and Docker environments can be observed and controlled
-without becoming dependencies of NexaGrid's core workflows.
+without becoming dependencies of Veltrix-Control's core workflows.
 
 Included:
 

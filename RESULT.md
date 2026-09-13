@@ -1,9 +1,9 @@
-# Veltrix-Control v0.1.0 result report
+# Veltrix-Control v0.1.1 result report
 
 ## Status
 
 Phase 1 — Secure fleet foundation is implemented and verified as a usable, testable
-release candidate for the `v0.1.0` GitHub release. The expanded Phase 2–10 roadmap
+release candidate for the `v0.1.1` GitHub release. The expanded Phase 2–10 roadmap
 remains planned in `PHASES.md`; those features are not represented as complete.
 Publication is performed only from an annotated tag reachable from `main`, after the
 release workflow rebuilds, retests, installs, repairs, and verifies the payload.
@@ -57,7 +57,7 @@ release workflow rebuilds, retests, installs, repairs, and verifies the payload.
   NuGet packages in the configured source at verification time.
 - JavaScript syntax check: **PASS**.
 - Controller runtime smoke test: **PASS** — launched from the Windows service working
-  directory, returned health `healthy` and version `0.1.0`, produced a valid 64-character
+  directory, returned health `healthy` and version `0.1.1`, produced a valid 64-character
   certificate fingerprint, and completed a real HTTPS handshake.
 - Self-contained PE validation: **PASS** for Controller, Agent, and Simulator.
 - Installer compile and PE validation: **PASS**.
@@ -69,12 +69,12 @@ release workflow rebuilds, retests, installs, repairs, and verifies the payload.
 
 ## Release artifacts
 
-- CI artifact name: `NexaGrid-Windows-x64`
-- GitHub release tag: `v0.1.0`
-- Installer: `NexaGridSetup.exe`
+- CI artifact name: `Veltrix-Control-Windows-x64`
+- GitHub release tag: `v0.1.1`
+- Installer: `Veltrix-Control-Setup.exe`
 - Local validation: all 26 tests passed and the installer checksum was regenerated in
   `outputs/SHA256SUMS.txt`.
-- Release archive: `NexaGrid-Windows-x64.zip`
+- Release archive: `Veltrix-Control-Windows-x64.zip`
 
 ## Security considerations and known limitations
 

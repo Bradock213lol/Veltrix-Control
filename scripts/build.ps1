@@ -9,6 +9,8 @@ $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $artifactsDirectory = Join-Path $repositoryRoot 'artifacts'
 $publishDirectory = Join-Path $artifactsDirectory 'publish'
 $outputDirectory = Join-Path $repositoryRoot 'outputs'
+$buildProperties = [xml](Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'Directory.Build.props'))
+$version = [string]$buildProperties.Project.PropertyGroup.Version
 $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1
 $localDotnet = Join-Path $repositoryRoot 'work\.dotnet\dotnet.exe'
 if (-not $dotnet -or -not ((& $dotnet --list-sdks) -match '^10\.0\.')) {
@@ -25,11 +27,11 @@ if (Test-Path -LiteralPath $artifactsDirectory) {
 }
 New-Item -ItemType Directory -Force -Path $publishDirectory, $outputDirectory | Out-Null
 $releaseFiles = @(
-    'NexaGridSetup.exe',
+    'Veltrix-Control-Setup.exe',
     'SHA256SUMS.txt',
     'VERSION.txt',
     'CHANGELOG.md',
-    'NexaGrid-Windows-x64.zip'
+    'Veltrix-Control-Windows-x64.zip'
 )
 foreach ($releaseFile in $releaseFiles) {
     $releasePath = [IO.Path]::GetFullPath((Join-Path $outputDirectory $releaseFile))
@@ -39,16 +41,16 @@ foreach ($releaseFile in $releaseFiles) {
     if (Test-Path -LiteralPath $releasePath) { Remove-Item -LiteralPath $releasePath -Force }
 }
 
-& $dotnet restore (Join-Path $repositoryRoot 'NexaGrid.slnx')
+& $dotnet restore (Join-Path $repositoryRoot 'Veltrix-Control.slnx')
 if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
-$vulnerabilityJson = (& $dotnet list (Join-Path $repositoryRoot 'NexaGrid.slnx') package --vulnerable --include-transitive --format json) | Out-String
+$vulnerabilityJson = (& $dotnet list (Join-Path $repositoryRoot 'Veltrix-Control.slnx') package --vulnerable --include-transitive --format json) | Out-String
 if ($LASTEXITCODE -ne 0) { throw 'Dependency vulnerability scan failed to complete.' }
 if ($vulnerabilityJson -match '"vulnerabilities"\s*:') { throw 'A vulnerable NuGet dependency was detected.' }
 $node = Get-Command node -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1
 if (-not $node) { throw 'Node.js is required for the JavaScript syntax check.' }
-& $node --check (Join-Path $repositoryRoot 'src\NexaGrid.Controller\wwwroot\js\app.js')
+& $node --check (Join-Path $repositoryRoot 'src\Veltrix-Control.Controller\wwwroot\js\app.js')
 if ($LASTEXITCODE -ne 0) { throw 'JavaScript syntax check failed.' }
-& $dotnet build (Join-Path $repositoryRoot 'NexaGrid.slnx') -c $Configuration --no-restore
+& $dotnet build (Join-Path $repositoryRoot 'Veltrix-Control.slnx') -c $Configuration --no-restore
 if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 $testProjects = Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'tests') -Filter '*.csproj' -Recurse
 foreach ($testProject in $testProjects) {
@@ -58,9 +60,9 @@ foreach ($testProject in $testProjects) {
 }
 
 $projects = @{
-    controller = 'src\NexaGrid.Controller\NexaGrid.Controller.csproj'
-    agent = 'src\NexaGrid.Agent\NexaGrid.Agent.csproj'
-    simulator = 'src\NexaGrid.Simulator\NexaGrid.Simulator.csproj'
+    controller = 'src\Veltrix-Control.Controller\Veltrix-Control.Controller.csproj'
+    agent = 'src\Veltrix-Control.Agent\Veltrix-Control.Agent.csproj'
+    simulator = 'src\Veltrix-Control.Simulator\Veltrix-Control.Simulator.csproj'
 }
 foreach ($item in $projects.GetEnumerator()) {
     & $dotnet publish (Join-Path $repositoryRoot $item.Value) -c $Configuration -r win-x64 --self-contained true -o (Join-Path $publishDirectory $item.Key) -p:PublishReadyToRun=true
@@ -68,9 +70,9 @@ foreach ($item in $projects.GetEnumerator()) {
 }
 
 foreach ($executable in @(
-    (Join-Path $publishDirectory 'controller\NexaGrid.Controller.exe'),
-    (Join-Path $publishDirectory 'agent\NexaGrid.Agent.exe'),
-    (Join-Path $publishDirectory 'simulator\NexaGrid.Simulator.exe')
+    (Join-Path $publishDirectory 'controller\Veltrix-Control.Controller.exe'),
+    (Join-Path $publishDirectory 'agent\Veltrix-Control.Agent.exe'),
+    (Join-Path $publishDirectory 'simulator\Veltrix-Control.Simulator.exe')
 )) {
     $header = [IO.File]::ReadAllBytes($executable)[0..1]
     if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) { throw "$executable is not a Windows PE executable." }
@@ -84,22 +86,22 @@ if (-not $SkipInstaller) {
     )
     $compiler = $compilerCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
     if (-not $compiler) { throw 'Inno Setup 6 is required to build the installer.' }
-    & $compiler '/Qp' (Join-Path $repositoryRoot 'installer\NexaGrid.iss')
+    & $compiler '/Qp' (Join-Path $repositoryRoot 'installer\Veltrix-Control.iss')
     if ($LASTEXITCODE -ne 0) { throw 'Installer compilation failed.' }
-    $installer = Join-Path $outputDirectory 'NexaGridSetup.exe'
+    $installer = Join-Path $outputDirectory 'Veltrix-Control-Setup.exe'
     $header = [IO.File]::ReadAllBytes($installer)[0..1]
     if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) { throw 'The generated installer is not a Windows PE executable.' }
 }
 
-[IO.File]::WriteAllText((Join-Path $outputDirectory 'VERSION.txt'), "0.1.0`r`n")
+[IO.File]::WriteAllText((Join-Path $outputDirectory 'VERSION.txt'), "$version`r`n")
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'CHANGELOG.md') -Destination $outputDirectory -Force
-$hashLines = @('CHANGELOG.md', 'NexaGridSetup.exe', 'VERSION.txt') |
+$hashLines = @('CHANGELOG.md', 'Veltrix-Control-Setup.exe', 'VERSION.txt') |
     ForEach-Object {
         $releasePath = Join-Path $outputDirectory $_
         "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 -LiteralPath $releasePath).Hash.ToLowerInvariant(), $_
     }
 [IO.File]::WriteAllLines((Join-Path $outputDirectory 'SHA256SUMS.txt'), $hashLines)
 
-$archive = Join-Path $outputDirectory 'NexaGrid-Windows-x64.zip'
-Compress-Archive -Path (Join-Path $outputDirectory 'NexaGridSetup.exe'), (Join-Path $outputDirectory 'SHA256SUMS.txt'), (Join-Path $outputDirectory 'VERSION.txt'), (Join-Path $outputDirectory 'CHANGELOG.md') -DestinationPath $archive -CompressionLevel Optimal
+$archive = Join-Path $outputDirectory 'Veltrix-Control-Windows-x64.zip'
+Compress-Archive -Path (Join-Path $outputDirectory 'Veltrix-Control-Setup.exe'), (Join-Path $outputDirectory 'SHA256SUMS.txt'), (Join-Path $outputDirectory 'VERSION.txt'), (Join-Path $outputDirectory 'CHANGELOG.md') -DestinationPath $archive -CompressionLevel Optimal
 Write-Output "Build complete: $outputDirectory"

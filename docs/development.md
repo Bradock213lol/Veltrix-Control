@@ -14,7 +14,7 @@ remote HTTPS listener, and serves the dashboard on loopback. Complete first-owne
 setup in the browser, create an enrollment code, then run a simulator:
 
 ```powershell
-dotnet run --project src/NexaGrid.Simulator -- --token CODE --controller http://localhost:5187 --name Simulated-PC-01
+dotnet run --project src/Veltrix-Control.Simulator -- --token CODE --controller http://localhost:5187 --name Simulated-PC-01
 ```
 
 The simulator uses the production signature/replay protocol but never performs a real
@@ -24,9 +24,9 @@ configured heartbeat window.
 ## Verification
 
 ```powershell
-dotnet restore NexaGrid.slnx
-dotnet build NexaGrid.slnx -c Release --no-restore
-dotnet test NexaGrid.slnx -c Release --no-build
+dotnet restore Veltrix-Control.slnx
+dotnet build Veltrix-Control.slnx -c Release --no-restore
+dotnet test Veltrix-Control.slnx -c Release --no-build
 ```
 
 `scripts/build.ps1` also publishes and packages. Tests use a unique temporary SQLite

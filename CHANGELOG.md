@@ -2,6 +2,21 @@
 
 All notable changes follow semantic versioning.
 
+## [0.1.1] - 2026-09-13
+
+### Changed
+
+- Completed the Veltrix-Control rename across the dashboard, installer, Windows services,
+  application data paths, release assets, solution, projects, namespaces, tests, and docs.
+- Renamed the installer to `Veltrix-Control-Setup.exe` and the release bundle to
+  `Veltrix-Control-Windows-x64.zip`.
+- Updated the README download links to follow the current stable release automatically.
+
+### Fixed
+
+- Removed every remaining reference to the provisional product name from tracked content
+  and repository paths.
+
 ## [0.1.0] - 2026-09-12
 
 ### Added

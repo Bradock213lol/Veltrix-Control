@@ -15,5 +15,5 @@ $env:Controller__EnableHttpsListener = 'false'
 $env:Controller__EnableLocalHttpListener = 'true'
 $env:Controller__LocalHttpPort = [string]$Port
 
-Write-Host "NexaGrid Control will be available at http://localhost:$Port"
-& $dotnet run --project (Join-Path $repositoryRoot 'src\NexaGrid.Controller\NexaGrid.Controller.csproj')
+Write-Host "Veltrix-Control will be available at http://localhost:$Port"
+& $dotnet run --project (Join-Path $repositoryRoot 'src\Veltrix-Control.Controller\Veltrix-Control.Controller.csproj')

@@ -4,7 +4,7 @@
 2. Choose **Add device** and create a 15-minute code.
 3. Verify the Controller HTTPS certificate thumbprint on the Controller host using a
    trusted administrative channel.
-4. Run `NexaGridSetup.exe` on an owned/authorized node and select **Managed Node** or
+4. Run `Veltrix-Control-Setup.exe` on an owned/authorized node and select **Managed Node** or
    **Controller + Managed Node**.
 5. Enter the HTTPS URL, verified thumbprint, code, and permitted file root.
 6. The installer writes the code into an Administrator/SYSTEM-only ProgramData folder.

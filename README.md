@@ -5,14 +5,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Veltrix-Control is a security-first Windows fleet management platform. One installer can
-configure a computer as a **Controller**, **Managed Node**, or both. Version 0.1.0
+configure a computer as a **Controller**, **Managed Node**, or both. Version 0.1.1
 is a finished Phase 1 vertical slice: enroll an authorized device, see live health,
 browse its allowed file root, issue guarded power requests, and inspect every action.
 
 > This project is for systems owned by or explicitly authorized by the administrator.
 > It does not hide its services, bypass Windows security, or silently enroll devices.
 
-## What works in v0.1.0
+## What works in v0.1.1
 
 - First-run Owner setup, secure cookie sessions, four-role permission model
 - Single-use 1–60 minute enrollment codes
@@ -48,8 +48,8 @@ service hosting, and DPAPI key storage live in the Agent. See
 
 ## Install
 
-1. Download [`NexaGridSetup.exe`](https://github.com/Bradock213lol/Veltrix-Control/releases/download/v0.1.0/NexaGridSetup.exe)
-   and [`SHA256SUMS.txt`](https://github.com/Bradock213lol/Veltrix-Control/releases/download/v0.1.0/SHA256SUMS.txt)
+1. Download [`Veltrix-Control-Setup.exe`](https://github.com/Bradock213lol/Veltrix-Control/releases/latest/download/Veltrix-Control-Setup.exe)
+   and [`SHA256SUMS.txt`](https://github.com/Bradock213lol/Veltrix-Control/releases/latest/download/SHA256SUMS.txt)
    from the [latest release](https://github.com/Bradock213lol/Veltrix-Control/releases/latest).
 2. Verify the SHA-256 value, run the installer as administrator, and select a role.
 3. For a Controller, open `http://localhost:5187` and create the first Owner account.
@@ -79,7 +79,7 @@ Complete verification and release packaging:
 For simulator use, create a code in the UI, then run:
 
 ```powershell
-dotnet run --project src/NexaGrid.Simulator -- --token YOUR-CODE --name Simulated-PC-01
+dotnet run --project src/Veltrix-Control.Simulator -- --token YOUR-CODE --name Simulated-PC-01
 ```
 
 More detail is in [development](docs/development.md) and the phased release plan is
