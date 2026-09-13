@@ -54,7 +54,11 @@ public enum OperationKind
 {
     Restart,
     Shutdown,
-    ListDirectory
+    ListDirectory,
+    ListProcesses,
+    ListServices,
+    ListSoftware,
+    ListNetworkAdapters
 }
 
 public enum OperationState
@@ -86,6 +90,36 @@ public sealed record FileEntry(
     bool IsDirectory,
     long? SizeBytes,
     DateTimeOffset LastModified);
+
+public sealed record ProcessSnapshot(
+    int Id,
+    string Name,
+    long WorkingSetBytes,
+    double TotalProcessorSeconds,
+    int ThreadCount);
+
+public sealed record ServiceSnapshot(
+    string Name,
+    string DisplayName,
+    string Status,
+    string StartType);
+
+public sealed record SoftwareSnapshot(
+    string Name,
+    string? Version,
+    string? Publisher,
+    string? InstallDate);
+
+public sealed record NetworkAdapterSnapshot(
+    string Name,
+    string Description,
+    string Status,
+    long SpeedBitsPerSecond,
+    IReadOnlyList<string> Addresses,
+    IReadOnlyList<string> Gateways,
+    IReadOnlyList<string> DnsServers,
+    long BytesSent,
+    long BytesReceived);
 
 public sealed record CreateEnrollmentTokenRequest(int LifetimeMinutes = 15);
 

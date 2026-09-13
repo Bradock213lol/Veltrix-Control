@@ -62,6 +62,8 @@ foreach ($testProject in $testProjects) {
 $projects = @{
     controller = 'src\Veltrix-Control.Controller\Veltrix-Control.Controller.csproj'
     agent = 'src\Veltrix-Control.Agent\Veltrix-Control.Agent.csproj'
+    desktop = 'src\Veltrix-Control.Desktop\Veltrix-Control.Desktop.csproj'
+    launcher = 'src\Veltrix-Control.Launcher\Veltrix-Control.Launcher.csproj'
     simulator = 'src\Veltrix-Control.Simulator\Veltrix-Control.Simulator.csproj'
 }
 foreach ($item in $projects.GetEnumerator()) {
@@ -72,6 +74,8 @@ foreach ($item in $projects.GetEnumerator()) {
 foreach ($executable in @(
     (Join-Path $publishDirectory 'controller\Veltrix-Control.Controller.exe'),
     (Join-Path $publishDirectory 'agent\Veltrix-Control.Agent.exe'),
+    (Join-Path $publishDirectory 'desktop\Veltrix-Control.Desktop.exe'),
+    (Join-Path $publishDirectory 'launcher\Veltrix-Control.exe'),
     (Join-Path $publishDirectory 'simulator\Veltrix-Control.Simulator.exe')
 )) {
     $header = [IO.File]::ReadAllBytes($executable)[0..1]

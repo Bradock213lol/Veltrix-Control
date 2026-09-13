@@ -25,7 +25,7 @@ var inventory = new HardwareInventory(
     12,
     32L * 1024 * 1024 * 1024,
     [new DiskInventory("SIM:\\", "NTFS", 512L * 1024 * 1024 * 1024, 371L * 1024 * 1024 * 1024)],
-    "0.1.1",
+    "0.2.0",
     true);
 var enrollmentRequest = new EnrollmentRequest(token, name, AgentProtocol.ExportPublicKey(key), inventory);
 using var enrollmentResponse = await http.PostAsJsonAsync("api/agent/enroll", enrollmentRequest, json);
@@ -56,13 +56,7 @@ while (!stopping.IsCancellationRequested)
         foreach (var operation in heartbeat.Operations)
         {
             Console.WriteLine($"Simulating {operation.Kind} ({operation.Id:D})");
-            var resultJson = operation.Kind == OperationKind.ListDirectory
-                ? JsonSerializer.Serialize(new[]
-                {
-                    new FileEntry("Documents", "Documents", true, null, DateTimeOffset.UtcNow.AddDays(-2)),
-                    new FileEntry("status.txt", "status.txt", false, 2048, DateTimeOffset.UtcNow)
-                }, json)
-                : JsonSerializer.Serialize(new { simulated = true }, json);
+            var resultJson = CreateSimulatedResult(operation.Kind, json);
             var result = new OperationResultPayload(operation.Id, OperationState.Succeeded, resultJson, null, DateTimeOffset.UtcNow);
             using var resultResponse = await http.PostAsJsonAsync("api/agent/operation-result", AgentProtocol.Create(enrollment.DeviceId, key, result), json, stopping.Token);
             resultResponse.EnsureSuccessStatusCode();
@@ -80,6 +74,36 @@ while (!stopping.IsCancellationRequested)
     }
 }
 return 0;
+
+static string? CreateSimulatedResult(OperationKind kind, JsonSerializerOptions json) => kind switch
+{
+    OperationKind.ListDirectory => JsonSerializer.Serialize(new[]
+    {
+        new FileEntry("Documents", "Documents", true, null, DateTimeOffset.UtcNow.AddDays(-2)),
+        new FileEntry("status.txt", "status.txt", false, 2048, DateTimeOffset.UtcNow)
+    }, json),
+    OperationKind.ListProcesses => JsonSerializer.Serialize(new[]
+    {
+        new ProcessSnapshot(1024, "Veltrix.Simulated.Worker", 128L * 1024 * 1024, 42.5, 12),
+        new ProcessSnapshot(2048, "Sample.Service", 64L * 1024 * 1024, 8.25, 6)
+    }, json),
+    OperationKind.ListServices => JsonSerializer.Serialize(new[]
+    {
+        new ServiceSnapshot("VeltrixSim", "Veltrix-Control Simulated Service", "Running", "Automatic"),
+        new ServiceSnapshot("SampleStopped", "Sample Stopped Service", "Stopped", "Manual")
+    }, json),
+    OperationKind.ListSoftware => JsonSerializer.Serialize(new[]
+    {
+        new SoftwareSnapshot("Veltrix-Control Simulator", "0.2.0", "Veltrix-Control", "20260913"),
+        new SoftwareSnapshot("Example Runtime", "10.0", "Example Publisher", null)
+    }, json),
+    OperationKind.ListNetworkAdapters => JsonSerializer.Serialize(new[]
+    {
+        new NetworkAdapterSnapshot("Simulated Ethernet", "Synthetic development adapter", "Up", 1_000_000_000,
+            ["192.0.2.10", "2001:db8::10"], ["192.0.2.1"], ["192.0.2.53"], 12_582_912, 48_234_496)
+    }, json),
+    _ => null
+};
 
 static Dictionary<string, string> ParseArguments(string[] values)
 {

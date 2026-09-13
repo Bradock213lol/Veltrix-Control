@@ -113,7 +113,7 @@ public sealed class ControllerSecurityTests
     internal static EnrollmentRequest Enrollment(string code, string name, ECDsa key) =>
         new(code, name, AgentProtocol.ExportPublicKey(key), Inventory());
 
-    internal static HardwareInventory Inventory() => new("Windows Test", "10.0", "X64", 8, 16_000, [], "0.1.1", true);
+    internal static HardwareInventory Inventory() => new("Windows Test", "10.0", "X64", 8, 16_000, [], "0.2.0", true);
 
     internal static HeartbeatPayload Heartbeat() => new(
         "Node-1",

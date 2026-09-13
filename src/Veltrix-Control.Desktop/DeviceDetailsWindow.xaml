@@ -1,0 +1,67 @@
+<Window x:Class="VeltrixControl.Desktop.DeviceDetailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Device details · Veltrix-Control" Width="820" Height="650" MinWidth="700" MinHeight="540"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+  <Grid Margin="28">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid>
+      <StackPanel>
+        <TextBlock Text="DEVICE PROFILE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource CyanBrush}"/>
+        <TextBlock x:Name="DeviceNameText" FontSize="28" FontWeight="SemiBold"/>
+        <TextBlock x:Name="DeviceIdentityText" Foreground="{DynamicResource MutedTextBrush}"/>
+      </StackPanel>
+      <Border x:Name="StatusBadge" HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="12" Padding="14,7" Background="{DynamicResource AccentSoftBrush}">
+        <TextBlock x:Name="StatusText" FontWeight="SemiBold"/>
+      </Border>
+    </Grid>
+
+    <Grid Grid.Row="1" Margin="0,24,0,22">
+      <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+      <Border Grid.Column="0" Style="{StaticResource PanelBorder}" Margin="0,0,8,0"><StackPanel><TextBlock Text="HEALTH" FontSize="10" Foreground="{DynamicResource MutedTextBrush}"/><TextBlock x:Name="HealthText" FontSize="25" FontWeight="Bold"/></StackPanel></Border>
+      <Border Grid.Column="1" Style="{StaticResource PanelBorder}" Margin="4,0"><StackPanel><TextBlock Text="CPU" FontSize="10" Foreground="{DynamicResource MutedTextBrush}"/><TextBlock x:Name="CpuText" FontSize="25" FontWeight="Bold"/></StackPanel></Border>
+      <Border Grid.Column="2" Style="{StaticResource PanelBorder}" Margin="4,0"><StackPanel><TextBlock Text="MEMORY" FontSize="10" Foreground="{DynamicResource MutedTextBrush}"/><TextBlock x:Name="MemoryText" FontSize="25" FontWeight="Bold"/></StackPanel></Border>
+      <Border Grid.Column="3" Style="{StaticResource PanelBorder}" Margin="8,0,0,0"><StackPanel><TextBlock Text="UPTIME" FontSize="10" Foreground="{DynamicResource MutedTextBrush}"/><TextBlock x:Name="UptimeText" FontSize="25" FontWeight="Bold"/></StackPanel></Border>
+    </Grid>
+
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="1.05*"/><ColumnDefinition Width="1.5*"/></Grid.ColumnDefinitions>
+      <Border Style="{StaticResource PanelBorder}" Margin="0,0,10,0">
+        <StackPanel>
+          <TextBlock Text="System" FontSize="19" FontWeight="SemiBold" Margin="0,0,0,14"/>
+          <TextBlock Text="Operating system" Foreground="{DynamicResource MutedTextBrush}"/>
+          <TextBlock x:Name="OsText" Margin="0,2,0,12"/>
+          <TextBlock Text="Architecture and processors" Foreground="{DynamicResource MutedTextBrush}"/>
+          <TextBlock x:Name="HardwareText" Margin="0,2,0,12"/>
+          <TextBlock Text="Agent" Foreground="{DynamicResource MutedTextBrush}"/>
+          <TextBlock x:Name="AgentText" Margin="0,2,0,12"/>
+          <TextBlock Text="Last heartbeat" Foreground="{DynamicResource MutedTextBrush}"/>
+          <TextBlock x:Name="HeartbeatText" Margin="0,2,0,16"/>
+          <Button Content="Copy device ID" HorizontalAlignment="Left" Click="CopyId_Click"/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Column="1" Style="{StaticResource PanelBorder}" Margin="10,0,0,0">
+        <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+          <TextBlock Text="Storage" FontSize="19" FontWeight="SemiBold" Margin="0,0,0,14"/>
+          <DataGrid x:Name="DiskGrid" Grid.Row="1">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Drive" Binding="{Binding Name}" Width="*"/>
+              <DataGridTextColumn Header="Format" Binding="{Binding Format}" Width="*"/>
+              <DataGridTextColumn Header="Free" Binding="{Binding Free}" Width="*"/>
+              <DataGridTextColumn Header="Total" Binding="{Binding Total}" Width="*"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <Grid Grid.Row="3" Margin="0,22,0,0">
+      <TextBlock x:Name="ActionStatusText" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <Button x:Name="RestartButton" Content="Restart…" Click="Restart_Click"/>
+        <Button x:Name="ShutdownButton" Content="Shut down…" Style="{StaticResource DangerButton}" Click="Shutdown_Click"/>
+        <Button Content="Close" IsCancel="True"/>
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>

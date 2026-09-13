@@ -5,35 +5,43 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Veltrix-Control is a security-first Windows fleet management platform. One installer can
-configure a computer as a **Controller**, **Managed Node**, or both. Version 0.1.1
-is a finished Phase 1 vertical slice: enroll an authorized device, see live health,
-browse its allowed file root, issue guarded power requests, and inspect every action.
+configure a computer as a **Controller**, **Managed Node**, or both. Version 0.2.0 adds a
+native Windows control center as the primary interface and read-only fleet diagnostics;
+the browser surface is retained only as a recovery fallback when the app cannot start.
 
 > This project is for systems owned by or explicitly authorized by the administrator.
 > It does not hide its services, bypass Windows security, or silently enroll devices.
 
-## What works in v0.1.1
+## What works in v0.2.0
 
 - First-run Owner setup, secure cookie sessions, four-role permission model
 - Single-use 1–60 minute enrollment codes
 - Per-device ECDSA P-256 identity; the Controller stores only public keys
 - Signed, time-bounded, replay-resistant heartbeats and operation results
 - Windows hardware inventory plus live CPU, RAM, disk, and uptime telemetry
-- Automatic online/offline status, health score, and SignalR-driven updates
+- Native resizable Windows app with system light/dark theme and keyboard shortcuts
+- Fleet metrics, manual/automatic refresh, status feedback, search, filters, and sorting
+- Device profiles with OS, CPU, memory, uptime, agent, heartbeat, IDs, and disk capacity
+- Read-only remote process, Windows service, installed-software, and network inventories
+- Searchable diagnostic results for online nodes
 - Confirmed restart/shutdown queue with a separate local node policy switch
-- Asynchronous remote file listing confined to the node's configured root
-- Hash-chained audit log with an integrity verification endpoint
+- Read-only remote file navigation confined to the node's configured root
+- Searchable hash-chained audit history, integrity verification, and CSV export
+- In-app enrollment code creation, expiry display, copy, rotation, and revocation
+- Saved Controller address, secure remote-HTTPS validation, and refresh preferences
 - Clearly labelled multi-node simulator for safe development
-- One role-selecting Inno Setup EXE with repair/upgrade/uninstall support
-- Unit, integration, security, and end-to-end test suites
+- One role-selecting Inno Setup EXE with native launcher, repair/upgrade/uninstall support,
+  and an automatic browser-fallback prompt only when the app fails to start
+- Unit, Agent diagnostic, integration, security, end-to-end, and installer test suites
 
-![Veltrix-Control dashboard placeholder](docs/images/dashboard-placeholder.svg)
+![Veltrix-Control native control center preview](docs/images/dashboard-placeholder.svg)
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    UI[Browser control surface] -->|session + RBAC| C[ASP.NET Core Controller]
+    UI[Native Windows app] -->|session + RBAC| C[ASP.NET Core Controller service]
+    F[Web recovery fallback] -.->|only if app fails| C
     C --> DB[(SQLite + migrations)]
     C -->|SignalR| UI
     A[Windows Agent service] -->|TLS + ECDSA signed messages| C
@@ -52,14 +60,16 @@ service hosting, and DPAPI key storage live in the Agent. See
    and [`SHA256SUMS.txt`](https://github.com/Bradock213lol/Veltrix-Control/releases/latest/download/SHA256SUMS.txt)
    from the [latest release](https://github.com/Bradock213lol/Veltrix-Control/releases/latest).
 2. Verify the SHA-256 value, run the installer as administrator, and select a role.
-3. For a Controller, open `http://localhost:5187` and create the first Owner account.
-4. In **Add device**, generate an enrollment code.
+3. For a Controller, launch **Veltrix-Control** from Start or the desktop and create the
+   first Owner account in the app.
+4. Select **Add device** in the app to generate an enrollment code.
 5. On a Managed Node install, enter the Controller HTTPS URL, its displayed/verified
    certificate thumbprint, the one-time code, and the allowed file root.
 
-The Controller listens on HTTPS port `5443` for nodes and loopback HTTP port `5187`
-for local administration. Read the [installer guide](docs/installer.md) before a
-multi-computer deployment.
+The Controller service listens on HTTPS port `5443` for nodes and loopback HTTP port
+`5187` for the native app. The launcher offers that local browser endpoint only if the
+app is missing or closes during startup. Read the [installer guide](docs/installer.md)
+before a multi-computer deployment.
 
 ## Development
 
@@ -90,15 +100,15 @@ in [PHASES.md](PHASES.md).
 Enrollment is explicit, temporary, and single-use. Each node generates its identity
 key locally; the real Agent protects its private key with Windows DPAPI. Remote
 commands use a closed operation enum, permission checks, confirmations, operation
-IDs, and local node policy. No arbitrary terminal exists in Phase 1. Power actions
+IDs, and local node policy. No arbitrary terminal exists in v0.2. Power actions
 are disabled on every real node until an administrator opts in locally.
 
 Report suspected vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
-- **v0.2:** fleet observability and read-only Windows diagnostics.
-- **v0.3:** safe file operations, resumable transfers, and configuration editor.
+- **v0.2:** native control center and first read-only Windows diagnostics — delivered.
+- **v0.3:** expanded observability, safe file operations, resumable transfers, and editor.
 - **v0.4:** controlled processes, services, power scheduling, and audited terminal.
 - **v0.5:** approved software deployment and Windows Update lifecycle.
 - **v0.6:** verified backups, alerts, and loop-safe automation.

@@ -1,6 +1,6 @@
 # Architecture
 
-## Phase 1 boundaries
+## v0.2 boundaries
 
 Veltrix-Control uses a modular monolith for the Controller and a separate, visible Windows
 service for the Agent. This is deliberately simpler than a distributed control plane
@@ -21,7 +21,8 @@ flowchart TB
     PROBE[Windows telemetry probe]
     OPS[Allow-listed operation executor]
   end
-  UI[Static control surface] --> AUTH --> API
+  UI[Native WPF control center] --> AUTH --> API
+  FALLBACK[Static recovery surface] -.-> AUTH
   API --> STORE
   API --> AUDIT
   HUB --> UI
@@ -37,6 +38,8 @@ flowchart TB
 - `Veltrix-Control.Core`: cryptography, permissions, path policy, and health scoring.
 - `Veltrix-Control.Infrastructure`: SQLite schema/migrations and persistence.
 - `Veltrix-Control.Controller`: HTTPS API, authentication, SignalR, and control surface.
+- `Veltrix-Control.Desktop`: primary native Windows management interface.
+- `Veltrix-Control.Launcher`: app-first startup and failure-only browser fallback.
 - `Veltrix-Control.Agent`: service host, telemetry, protected identity, and operations.
 - `Veltrix-Control.Simulator`: development node using the production wire protocol.
 
@@ -49,5 +52,5 @@ Controller domain logic.
 
 SQLite and a single Controller target the first 10–100 devices. Metrics are indexed by
 device/time and kept for 30 days. The persistence boundary can move to PostgreSQL in
-the v1.0 hardening phase. Phase 1 intentionally avoids message brokers and distributed
+the v1.0 hardening phase. The current design intentionally avoids message brokers and distributed
 coordination until measured load requires them.

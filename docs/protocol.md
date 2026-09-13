@@ -1,7 +1,7 @@
-# Controller–Agent protocol v0.1
+# Controller–Agent protocol v0.2
 
-The Phase 1 protocol is JSON over HTTPS. Browser administration uses cookie sessions;
-Agent endpoints use device signatures and never accept browser credentials.
+The protocol is JSON over HTTPS. Native-app administration and the recovery web surface
+use cookie sessions; Agent endpoints use device signatures and never accept UI credentials.
 
 ## Enrollment
 
