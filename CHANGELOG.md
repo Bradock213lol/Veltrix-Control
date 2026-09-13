@@ -28,3 +28,5 @@ All notable changes follow semantic versioning.
   can complete node HTTPS handshakes.
 - Added a real TLS handshake regression test and made dependency/JavaScript checks part of
   the release build.
+- Allow the release workflow's first publication to distinguish an expected missing
+  release from a fatal GitHub CLI error.
