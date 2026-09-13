@@ -88,8 +88,12 @@ jobs:
             'outputs\CHANGELOG.md',
             'outputs\NexaGrid-Windows-x64.zip'
           )
+          # GitHub CLI writes a missing-release lookup to PowerShell's error stream.
+          # Treat that expected first-publication result as a status check, not a failure.
+          $ErrorActionPreference = 'SilentlyContinue'
           gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           $releaseExists = $LASTEXITCODE -eq 0
+          $ErrorActionPreference = 'Stop'
           if ($releaseExists) {
             gh release edit $tag --repo $env:GITHUB_REPOSITORY --title $title --notes-file $notes --prerelease
             if ($LASTEXITCODE -ne 0) { throw 'Could not update the existing GitHub release.' }
