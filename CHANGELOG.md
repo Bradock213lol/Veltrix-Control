@@ -2,6 +2,31 @@
 
 All notable changes follow semantic versioning.
 
+## [0.2.0] - 2026-09-13
+
+### Added
+
+- Native WPF Windows control center as the primary interface, including setup, sign-in,
+  overview metrics, device directory, responsive navigation, settings, and shortcuts.
+- Device search/status filters, detailed inventory, disk capacity, identifier copy, and
+  guarded restart/shutdown actions.
+- Read-only remote process, Windows service, installed-software, and network-adapter
+  diagnostics with searchable result tables.
+- In-app managed-root file navigation, enrollment code lifecycle, audit search, audit-chain
+  verification, and CSV export.
+- System light/dark theme adaptation, accessible semantic colors, clear busy/error states,
+  saved refresh preferences, and secure Controller URL validation.
+- Native launcher that offers the browser recovery surface only if the desktop app is
+  missing or exits during startup.
+- Agent diagnostic tests plus installer checks for the native desktop and launcher files.
+
+### Changed
+
+- The installer and its shortcuts now launch the native app instead of a website.
+- Read-only diagnostic operations have an explicit role permission and use typed,
+  camel-case JSON contracts.
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.2.0.
+
 ## [0.1.1] - 2026-09-13
 
 ### Changed

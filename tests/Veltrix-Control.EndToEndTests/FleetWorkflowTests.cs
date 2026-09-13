@@ -27,7 +27,7 @@ public sealed class FleetWorkflowTests
         var token = await PostUiAsync<EnrollmentTokenResponse>(client, "/api/enrollment/tokens", new CreateEnrollmentTokenRequest(15));
 
         using var deviceKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-        var inventory = new HardwareInventory("Windows Simulator", "10.0", "X64", 12, 32_000, [], "0.1.1", true);
+        var inventory = new HardwareInventory("Windows Simulator", "10.0", "X64", 12, 32_000, [], "0.2.0", true);
         var enrollmentResponse = await client.PostAsJsonAsync("/api/agent/enroll", new EnrollmentRequest(token.Code, "E2E-Node", AgentProtocol.ExportPublicKey(deviceKey), inventory));
         enrollmentResponse.EnsureSuccessStatusCode();
         var enrollment = (await enrollmentResponse.Content.ReadFromJsonAsync<EnrollmentResponse>(JsonOptions))!;

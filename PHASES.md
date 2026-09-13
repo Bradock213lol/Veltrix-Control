@@ -5,7 +5,8 @@ phase ends in an independently installable Windows release that can be demonstra
 upgraded, rolled back, and tested without relying on unfinished work from the next
 phase.
 
-Current state: **Phase 1 released** as `v0.1.1`.
+Current state: **Phase 2 implemented** for `v0.2.0`; publication follows the same clean
+build, installer lifecycle, pull-request, and tag gates as Phase 1.
 
 ## Release contract for every phase
 
@@ -66,22 +67,30 @@ changes to a node.
 
 Included:
 
-- Per-core CPU and frequency, GPU/VRAM where supported, disk capacity and I/O, network
-  throughput, battery/power state, temperatures, and SMART health where reliable.
-- Read-only process tree, Windows service inventory, installed-software inventory,
-  Windows Update status/history, adapters, addresses, routes, DNS, drives, and partitions.
-- Historical metric charts, configurable/adaptive collection intervals, groups, tags,
-  favorites, search, filters, sorting, and health explanations.
-- Capability reporting so unsupported sensors are shown as unavailable, never fabricated.
+- Native Windows control center as the primary interface; web UI is a recovery fallback.
+- First-run setup, login/logout, saved Controller connection, secure URL validation,
+  manual refresh, 5–60 second automatic refresh, and connection status.
+- Fleet cards for online devices, average CPU, memory use, and nodes needing attention.
+- Searchable/filterable/sortable device directory and profiles with inventory, telemetry,
+  disk capacity, health, heartbeat, agent version, and copyable device ID.
+- Read-only remote running-process, Windows-service, installed-software, and network-adapter
+  inventories, with searchable results and bounded collection sizes.
+- In-app enrollment code creation/copy/revoke, managed-root navigation, guarded power
+  actions, audit search/integrity verification/CSV export, and role-aware controls.
+- System light/dark adaptation, semantic design tokens, resizable layouts, keyboard
+  shortcuts, accessible names, busy states, understandable errors, and destructive-action
+  confirmations.
+- Native launcher, self-contained packaging, and an automatic browser-fallback offer only
+  when the app cannot start.
 
 Phase-specific acceptance:
 
-- Collector contract tests cover supported, denied, partial, and unavailable data sources.
-- Ten simulated nodes with varied health states remain live for a soak test without
-  unbounded database, memory, or network growth.
-- A packaged real Agent reports Windows inventory and survives Controller disconnect,
-  restart, and reconnect.
-- Upgrade from v0.1 preserves users, enrolled devices, identities, and history.
+- Agent tests execute all four diagnostic collectors and verify typed JSON output.
+- Native app and launcher compile without warnings and publish as self-contained Windows
+  PE executables.
+- A packaged combined-role install starts both services, enrolls its Agent, preserves
+  state across repair, and includes the desktop and launcher binaries.
+- Upgrade from v0.1 uses the stable installer identity and retains Controller/Agent data.
 
 ## Phase 3 — Files, transfers, and editor (v0.3.0)
 

@@ -3,11 +3,14 @@
     <Project Path="src/Veltrix-Control.Agent/Veltrix-Control.Agent.csproj" />
     <Project Path="src/Veltrix-Control.Controller/Veltrix-Control.Controller.csproj" />
     <Project Path="src/Veltrix-Control.Core/Veltrix-Control.Core.csproj" />
+    <Project Path="src/Veltrix-Control.Desktop/Veltrix-Control.Desktop.csproj" />
     <Project Path="src/Veltrix-Control.Infrastructure/Veltrix-Control.Infrastructure.csproj" />
+    <Project Path="src/Veltrix-Control.Launcher/Veltrix-Control.Launcher.csproj" />
     <Project Path="src/Veltrix-Control.Shared/Veltrix-Control.Shared.csproj" />
     <Project Path="src/Veltrix-Control.Simulator/Veltrix-Control.Simulator.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Veltrix-Control.AgentTests/Veltrix-Control.AgentTests.csproj" />
     <Project Path="tests/Veltrix-Control.EndToEndTests/Veltrix-Control.EndToEndTests.csproj" />
     <Project Path="tests/Veltrix-Control.IntegrationTests/Veltrix-Control.IntegrationTests.csproj" />
     <Project Path="tests/Veltrix-Control.SecurityTests/Veltrix-Control.SecurityTests.csproj" />

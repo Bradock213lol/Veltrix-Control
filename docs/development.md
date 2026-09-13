@@ -11,7 +11,14 @@
 
 `scripts/start-development.ps1` stores disposable state under `work/`, disables the
 remote HTTPS listener, and serves the dashboard on loopback. Complete first-owner
-setup in the browser, create an enrollment code, then run a simulator:
+setup in the native app, create an enrollment code, then run a simulator. Start the
+desktop project after the Controller is listening:
+
+```powershell
+dotnet run --project src/Veltrix-Control.Desktop
+```
+
+Then start the simulator:
 
 ```powershell
 dotnet run --project src/Veltrix-Control.Simulator -- --token CODE --controller http://localhost:5187 --name Simulated-PC-01

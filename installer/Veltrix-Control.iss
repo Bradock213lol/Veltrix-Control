@@ -1,5 +1,5 @@
 #define MyAppName "Veltrix-Control"
-#define MyAppVersion "0.1.1"
+#define MyAppVersion "0.2.0"
 #define MyAppPublisher "Veltrix-Control"
 #define MyAppExeName "Veltrix-Control.Controller.exe"
 
@@ -35,6 +35,8 @@ RestartApplications=no
 Source: "..\artifacts\publish\controller\*"; DestDir: "{app}\Controller"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: InstallController
 Source: "..\artifacts\publish\agent\*"; DestDir: "{app}\Agent"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: InstallAgent
 Source: "..\artifacts\publish\simulator\*"; DestDir: "{app}\Simulator"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: InstallController
+Source: "..\artifacts\publish\desktop\*"; DestDir: "{app}\Desktop"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: InstallController
+Source: "..\artifacts\publish\launcher\*"; DestDir: "{app}\Launcher"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: InstallController
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
 
@@ -43,8 +45,8 @@ Name: "{commonappdata}\Veltrix-Control"; Permissions: admins-full system-full; C
 Name: "{commonappdata}\Veltrix-Control\Agent"; Permissions: admins-full system-full; Check: InstallAgent
 
 [Icons]
-Name: "{group}\Veltrix-Control Control"; Filename: "http://localhost:5187"; Check: InstallController
-Name: "{autodesktop}\Veltrix-Control Control"; Filename: "http://localhost:5187"; Tasks: desktopicon; Check: InstallController
+Name: "{group}\Veltrix-Control"; Filename: "{app}\Launcher\Veltrix-Control.exe"; WorkingDir: "{app}\Launcher"; Check: InstallController
+Name: "{autodesktop}\Veltrix-Control"; Filename: "{app}\Launcher\Veltrix-Control.exe"; WorkingDir: "{app}\Launcher"; Tasks: desktopicon; Check: InstallController
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Shortcuts:"; Check: InstallController
@@ -64,7 +66,7 @@ Filename: "{sys}\sc.exe"; Parameters: "config Veltrix-Control-Agent binPath= ""{
 Filename: "{sys}\sc.exe"; Parameters: "description Veltrix-Control-Agent ""Visible management service for an explicitly authorized Veltrix-Control node."""; Flags: runhidden waituntilterminated; Check: InstallAgent
 Filename: "{sys}\sc.exe"; Parameters: "start Veltrix-Control-Agent"; Flags: runhidden waituntilterminated; Check: InstallAgent
 
-Filename: "http://localhost:5187"; Description: "Launch Veltrix-Control Control"; Flags: shellexec postinstall nowait skipifsilent; Check: InstallController
+Filename: "{app}\Launcher\Veltrix-Control.exe"; Description: "Launch Veltrix-Control"; Flags: postinstall nowait skipifsilent; Check: InstallController
 
 [UninstallRun]
 Filename: "{sys}\sc.exe"; Parameters: "stop Veltrix-Control-Agent"; Flags: runhidden waituntilterminated; RunOnceId: "StopAgent"
@@ -138,7 +140,7 @@ begin
   WizardForm.WelcomeLabel2.Caption := 'One secure installer for your Controller and explicitly authorized Windows nodes.';
 
   RolePage := CreateCustomPage(wpWelcome, 'Choose this computer''s role', 'Install only the components this device needs.');
-  AddRoleOption(RolePage, RoleController, 12, 'Controller', 'Manage enrolled devices from this computer. Includes the web control plane and node simulator.');
+  AddRoleOption(RolePage, RoleController, 12, 'Controller', 'Manage enrolled devices in the native desktop app. Includes a browser fallback and node simulator.');
   AddRoleOption(RolePage, RoleAgent, 90, 'Managed Node', 'Connect this computer to an existing Controller using a single-use enrollment code.');
   AddRoleOption(RolePage, RoleBoth, 168, 'Controller + Managed Node', 'Manage the fleet and enroll this computer as a managed node.');
   RoleParameter := Lowercase(ExpandConstant('{param:ROLE|controller}'));

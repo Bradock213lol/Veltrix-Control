@@ -28,6 +28,7 @@ public sealed class SecurityAndDomainTests
     [InlineData("Owner", "admin.manage", true)]
     [InlineData("Administrator", "device.power", true)]
     [InlineData("Operator", "device.files", true)]
+    [InlineData("Viewer", "device.diagnostics", true)]
     [InlineData("Viewer", "device.power", false)]
     [InlineData("Unknown", "device.view", false)]
     public void RolePermissionsAreExplicit(string role, string permission, bool expected)

@@ -42,12 +42,12 @@ Sensitive events append a SHA-256 chain containing the previous hash plus normal
 event fields. This detects database-level edits, deletions, or reordering but is not a
 substitute for external append-only/WORM storage. Export/signing is planned for v1.0.
 
-## Known Phase 1 limits
+## Known current limits
 
 - The self-signed Controller certificate must be verified out of band before pinning.
 - SQLite is not encrypted by the application; rely on Windows volume protection and
   restrictive ACLs, and protect database backups.
-- Only the bootstrap Owner user can currently be created through the UI; full user
-  administration arrives with Phase 2.
+- Only the bootstrap Owner user can currently be created through the app; full user
+  administration remains planned for a later hardening release.
 - Executable and installer code signing requires an organization-owned certificate
   and is not performed by this repository.

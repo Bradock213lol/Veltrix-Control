@@ -6,9 +6,9 @@ public static class RolePermissions
         new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
         {
             ["Owner"] = ["*"],
-            ["Administrator"] = ["device.view", "device.power", "device.files", "admin.manage", "audit.view"],
-            ["Operator"] = ["device.view", "device.power", "device.files", "audit.view"],
-            ["Viewer"] = ["device.view", "audit.view"]
+            ["Administrator"] = ["device.view", "device.power", "device.files", "device.diagnostics", "admin.manage", "audit.view"],
+            ["Operator"] = ["device.view", "device.power", "device.files", "device.diagnostics", "audit.view"],
+            ["Viewer"] = ["device.view", "device.diagnostics", "audit.view"]
         };
 
     public static bool HasPermission(string role, string permission) =>

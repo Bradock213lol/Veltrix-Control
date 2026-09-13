@@ -1,18 +1,20 @@
 # Installer design
 
-Veltrix-Control uses Inno Setup 6.7.3 for v0.1. It produces one genuine Windows PE executable
+Veltrix-Control uses Inno Setup 6.7.3. It produces one genuine Windows PE executable
 while allowing custom role/configuration pages and reliable service/upgrade/uninstall
-steps. This is a better Phase 1 fit than MSIX because the product installs Windows
+steps. This is a better fit than MSIX because the product installs Windows
 services and needs per-machine role configuration; a WiX bootstrapper remains an
 option when enterprise MSI deployment becomes a release requirement.
 
 ## Roles
 
-- **Controller:** Controller service, control surface, and simulator.
+- **Controller:** Controller service, native desktop app, recovery web surface, and simulator.
 - **Managed Node:** Agent service and enrollment configuration.
 - **Controller + Managed Node:** both internal components from the same installer.
 
 The package is self-contained for Windows x64, so ordinary users do not install .NET.
+The Start menu and optional desktop shortcut open the native app. If it is missing or
+closes during startup, the launcher asks whether to open the local browser fallback.
 The same `AppId` supports version detection, repair, and in-place upgrades. Existing
 services are stopped before replacement, reconfigured, and restarted. Inno Setup's
 transactional file installation provides rollback before the non-cancellable

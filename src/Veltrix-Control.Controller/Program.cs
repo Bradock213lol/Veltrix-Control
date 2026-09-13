@@ -139,7 +139,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.1.1" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.2.0" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>
@@ -261,7 +261,13 @@ management.MapGet("/operations/{operationId:guid}", async (Guid operationId, Vel
 });
 management.MapPost("/devices/{deviceId:guid}/operations", async (Guid deviceId, OperationRequest request, ClaimsPrincipal user, VeltrixControlStore database, CancellationToken ct) =>
 {
-    var permission = request.Kind == OperationKind.ListDirectory ? "device.files" : "device.power";
+    if (!Enum.IsDefined(request.Kind)) return Results.BadRequest(new { error = "Operation kind is invalid." });
+    var permission = request.Kind switch
+    {
+        OperationKind.Restart or OperationKind.Shutdown => "device.power",
+        OperationKind.ListDirectory => "device.files",
+        _ => "device.diagnostics"
+    };
     if (!user.HasPermission(permission)) return Results.Forbid();
     if (!request.Confirmed) return Results.BadRequest(new { error = "Explicit confirmation is required." });
     if (request.Kind == OperationKind.ListDirectory && (request.Argument?.Length ?? 0) > 1024) return Results.BadRequest(new { error = "Path is too long." });

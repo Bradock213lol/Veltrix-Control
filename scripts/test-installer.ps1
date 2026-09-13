@@ -38,6 +38,15 @@ try {
     $setup = Start-Process -FilePath $installer -ArgumentList $installerArguments -Wait -PassThru -WindowStyle Hidden
     if ($setup.ExitCode -ne 0) { throw "Installer exited with code $($setup.ExitCode)." }
 
+    foreach ($application in @(
+        (Join-Path $installRoot 'Desktop\Veltrix-Control.Desktop.exe'),
+        (Join-Path $installRoot 'Launcher\Veltrix-Control.exe')
+    )) {
+        if (-not (Test-Path -LiteralPath $application)) { throw "Installed application is missing: $application" }
+        $header = [IO.File]::ReadAllBytes($application)[0..1]
+        if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) { throw "Installed application is not a Windows executable: $application" }
+    }
+
     foreach ($serviceName in @('Veltrix-Control-Controller', 'Veltrix-Control-Agent')) {
         $service = Get-Service -Name $serviceName
         $service.WaitForStatus([ServiceProcess.ServiceControllerStatus]::Running, [TimeSpan]::FromSeconds(30))
