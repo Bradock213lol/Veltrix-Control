@@ -238,7 +238,7 @@ public partial class MainWindow : Window
     private void DiagnosticSearch_Changed(object sender, TextChangedEventArgs e)
     {
         if (_diagnosticTable is null) return;
-        var query = DiagnosticSearchBox.Text.Trim().Replace("'", "''", StringComparison.Ordinal);
+        var query = EscapeDataViewLike(DiagnosticSearchBox.Text.Trim());
         _diagnosticTable.DefaultView.RowFilter = string.IsNullOrWhiteSpace(query)
             ? string.Empty
             : string.Join(" OR ", _diagnosticTable.Columns.Cast<DataColumn>()
@@ -350,8 +350,15 @@ public partial class MainWindow : Window
         var csv = new StringBuilder("Timestamp,Actor,Action,Target,Outcome,Details\r\n");
         foreach (var item in _auditEvents)
             csv.AppendLine(string.Join(',', new[] { item.Timestamp.ToString("O"), item.Actor, item.Action, item.Target, item.Outcome, item.Metadata ?? string.Empty }.Select(Csv)));
-        File.WriteAllText(dialog.FileName, csv.ToString(), new UTF8Encoding(true));
-        SetStatus($"Exported {Path.GetFileName(dialog.FileName)}", true);
+        try
+        {
+            File.WriteAllText(dialog.FileName, csv.ToString(), new UTF8Encoding(true));
+            SetStatus($"Exported {Path.GetFileName(dialog.FileName)}", true);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            SetStatus($"Could not export the audit history: {exception.Message}", false, true);
+        }
     }
 
     private void AddDevice_Click(object sender, RoutedEventArgs e)
@@ -550,6 +557,12 @@ public partial class MainWindow : Window
     };
 
     private static string Csv(string value) => $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+
+    private static string EscapeDataViewLike(string value) => value
+        .Replace("[", "[[]", StringComparison.Ordinal)
+        .Replace("%", "[%]", StringComparison.Ordinal)
+        .Replace("*", "[*]", StringComparison.Ordinal)
+        .Replace("'", "''", StringComparison.Ordinal);
 
     private static bool IsExpected(Exception exception) =>
         exception is ControllerApiException or HttpRequestException or TaskCanceledException or TimeoutException or IOException or

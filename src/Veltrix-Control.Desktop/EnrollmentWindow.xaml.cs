@@ -22,7 +22,14 @@ public partial class EnrollmentWindow : Window
         StatusText.Text = string.Empty;
         try
         {
-            if (_token is not null) await _api.RevokeEnrollmentTokenAsync(_token.Id);
+            if (_token is not null)
+            {
+                await _api.RevokeEnrollmentTokenAsync(_token.Id);
+                _token = null;
+                CodeBox.Text = "Previous code revoked";
+                ExpiryText.Text = string.Empty;
+                CopyButton.IsEnabled = RevokeButton.IsEnabled = false;
+            }
             var lifetime = int.TryParse((LifetimeBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(), out var value) ? value : 15;
             _token = await _api.CreateEnrollmentTokenAsync(lifetime);
             CodeBox.Text = _token.Code;
