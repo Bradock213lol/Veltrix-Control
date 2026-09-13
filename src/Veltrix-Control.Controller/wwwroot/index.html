@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b12">
+  <title>Veltrix-Control</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <main id="auth" class="auth-shell" hidden>
+    <section class="auth-card glass">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p class="eyebrow">VELTRIXCONTROL CONTROL</p>
+      <h1 id="auth-title">Welcome back</h1>
+      <p id="auth-copy" class="muted">Sign in to your authorized fleet.</p>
+      <form id="auth-form">
+        <label>Username<input id="username" name="username" autocomplete="username" required minlength="3" maxlength="64"></label>
+        <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required minlength="12" maxlength="256"></label>
+        <p id="auth-error" class="form-error" role="alert"></p>
+        <button class="primary wide" type="submit"><span id="auth-action">Sign in</span><i class="arrow">→</i></button>
+      </form>
+      <p class="security-note"><span class="status-dot online"></span> Encrypted controller • v0.1.1</p>
+    </section>
+  </main>
+
+  <div id="shell" class="app-shell" hidden>
+    <aside class="sidebar glass">
+      <div class="brand"><div class="brand-mark small"><span></span><span></span><span></span></div><div><b>Veltrix-Control</b><small>CONTROL PLANE</small></div></div>
+      <nav id="nav" aria-label="Primary navigation">
+        <button class="nav-item active" data-view="overview"><i>⌂</i><span>Overview</span></button>
+        <button class="nav-item" data-view="devices"><i>◇</i><span>Devices</span><b id="nav-device-count">0</b></button>
+        <button class="nav-item" data-view="files"><i>▱</i><span>Files</span></button>
+        <button class="nav-item" data-view="audit"><i>≡</i><span>Audit Log</span></button>
+        <p class="nav-label">COMING IN PHASE 2</p>
+        <button class="nav-item locked" disabled><i>⌁</i><span>Processes</span></button>
+        <button class="nav-item locked" disabled><i>⚙</i><span>Services</span></button>
+        <button class="nav-item locked" disabled><i>›_</i><span>Terminal</span></button>
+        <button class="nav-item locked" disabled><i>⬡</i><span>Software & Updates</span></button>
+      </nav>
+      <div class="sidebar-foot"><div class="connection"><span id="live-dot" class="status-dot online"></span><span><b id="live-label">Live</b><small>Controller connected</small></span></div><button id="logout" class="icon-button" title="Sign out">↪</button></div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div><p class="eyebrow" id="breadcrumb">FLEET OVERVIEW</p><h1 id="view-title">Command center</h1></div>
+        <div class="top-actions"><div class="user-chip"><span id="user-initial">A</span><div><b id="user-name">Admin</b><small id="user-role">Owner</small></div></div><button id="add-device" class="primary">＋ Add device</button></div>
+      </header>
+
+      <div id="loading" class="loading-grid" aria-label="Loading"><div></div><div></div><div></div><div></div></div>
+      <div id="content" hidden>
+        <section id="overview-view" class="view active">
+          <div class="metrics-grid">
+            <article class="metric glass"><div class="metric-icon cyan">◇</div><div><small>DEVICES ONLINE</small><strong id="online-count">0</strong><span id="online-caption">Waiting for nodes</span></div></article>
+            <article class="metric glass"><div class="metric-icon purple">◒</div><div><small>CPU LOAD</small><strong id="cpu-average">0%</strong><span>Fleet average</span></div></article>
+            <article class="metric glass"><div class="metric-icon blue">▤</div><div><small>MEMORY USED</small><strong id="memory-total">0 GB</strong><span id="memory-caption">Across live nodes</span></div></article>
+            <article class="metric glass"><div class="metric-icon amber">!</div><div><small>ATTENTION</small><strong id="attention-count">0</strong><span>Health below 75</span></div></article>
+          </div>
+          <div class="section-heading"><div><p class="eyebrow">LIVE FLEET</p><h2>Device health</h2></div><span class="last-sync">Updated <b id="last-sync">now</b></span></div>
+          <div id="device-grid" class="device-grid"></div>
+        </section>
+
+        <section id="devices-view" class="view">
+          <div class="panel glass"><div class="panel-head"><div><p class="eyebrow">AUTHORIZED NODES</p><h2>All devices</h2></div><input id="device-search" class="search" placeholder="Search devices" aria-label="Search devices"></div><div id="device-table" class="device-table"></div></div>
+        </section>
+
+        <section id="files-view" class="view">
+          <div class="empty glass"><div class="empty-icon">▱</div><p class="eyebrow">REMOTE FILES</p><h2>Select a connected device</h2><p>Open an authorized node’s managed root. All paths are validated locally by that node.</p><button id="files-select" class="secondary">Choose device</button></div>
+        </section>
+
+        <section id="audit-view" class="view">
+          <div class="panel glass"><div class="panel-head"><div><p class="eyebrow">TAMPER-EVIDENT HISTORY</p><h2>Audit log</h2></div><span id="audit-integrity" class="integrity">Checking chain…</span></div><div id="audit-table" class="audit-table"></div></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <dialog id="modal" class="modal glass"><form method="dialog"><button class="modal-close" value="cancel" aria-label="Close">×</button></form><div id="modal-content"></div></dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/js/app.js"></script>
+</body>
+</html>

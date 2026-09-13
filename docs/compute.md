@@ -1,6 +1,6 @@
 # Compute roadmap
 
-Compute scheduling is Phase 3. NexaGrid will schedule independent distributed jobs;
+Compute scheduling is Phase 3. Veltrix-Control will schedule independent distributed jobs;
 it will not claim to merge ordinary computers into one transparent CPU/GPU.
 
 The planned scheduler scores eligible nodes by declared policy, available logical

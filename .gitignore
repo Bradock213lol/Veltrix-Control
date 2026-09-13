@@ -16,6 +16,6 @@ work/
 *.key
 *.cer
 *.log
-src/NexaGrid.Agent/agent-identity.dat
-src/NexaGrid.Agent/appsettings.Local.json
+src/Veltrix-Control.Agent/agent-identity.dat
+src/Veltrix-Control.Agent/appsettings.Local.json
 installer/Output/

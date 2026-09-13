@@ -2,7 +2,7 @@
 
 ## Phase 1 boundaries
 
-NexaGrid uses a modular monolith for the Controller and a separate, visible Windows
+Veltrix-Control uses a modular monolith for the Controller and a separate, visible Windows
 service for the Agent. This is deliberately simpler than a distributed control plane
 while the product proves its security and operation model.
 
@@ -33,12 +33,12 @@ flowchart TB
 
 ## Projects
 
-- `NexaGrid.Contracts` (assembly `NexaGrid.Shared`): transport records and enums.
-- `NexaGrid.Core`: cryptography, permissions, path policy, and health scoring.
-- `NexaGrid.Infrastructure`: SQLite schema/migrations and persistence.
-- `NexaGrid.Controller`: HTTPS API, authentication, SignalR, and control surface.
-- `NexaGrid.Agent`: service host, telemetry, protected identity, and operations.
-- `NexaGrid.Simulator`: development node using the production wire protocol.
+- `VeltrixControl.Contracts` (assembly `Veltrix-Control.Shared`): transport records and enums.
+- `Veltrix-Control.Core`: cryptography, permissions, path policy, and health scoring.
+- `Veltrix-Control.Infrastructure`: SQLite schema/migrations and persistence.
+- `Veltrix-Control.Controller`: HTTPS API, authentication, SignalR, and control surface.
+- `Veltrix-Control.Agent`: service host, telemetry, protected identity, and operations.
+- `Veltrix-Control.Simulator`: development node using the production wire protocol.
 
 The Controller is stateless above SQLite. All operation states are explicit:
 `Queued`, `Running`, `Succeeded`, `Failed`, `Cancelled`, or `TimedOut`. The Agent

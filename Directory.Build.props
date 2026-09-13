@@ -8,9 +8,9 @@
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
-    <Version>0.1.0</Version>
-    <Company>NexaGrid</Company>
-    <Product>NexaGrid</Product>
-    <Authors>NexaGrid Contributors</Authors>
+    <Version>0.1.1</Version>
+    <Company>Veltrix-Control</Company>
+    <Product>Veltrix-Control</Product>
+    <Authors>Veltrix-Control Contributors</Authors>
   </PropertyGroup>
 </Project>

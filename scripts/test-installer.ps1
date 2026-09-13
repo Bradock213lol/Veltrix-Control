@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$InstallerPath = (Join-Path $PSScriptRoot '..\outputs\NexaGridSetup.exe'),
-    [string]$InstallDirectory = (Join-Path $env:TEMP 'NexaGrid-Installer-Smoke')
+    [string]$InstallerPath = (Join-Path $PSScriptRoot '..\outputs\Veltrix-Control-Setup.exe'),
+    [string]$InstallDirectory = (Join-Path $env:TEMP 'Veltrix-Control-Installer-Smoke')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -10,8 +10,8 @@ $installRoot = [IO.Path]::GetFullPath($InstallDirectory)
 $temporaryRoots = @($env:TEMP, $env:RUNNER_TEMP) |
     Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
     ForEach-Object { [IO.Path]::GetFullPath($_).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar }
-$productData = [IO.Path]::GetFullPath((Join-Path $env:ProgramData 'NexaGrid'))
-$expectedProductData = [IO.Path]::GetFullPath('C:\ProgramData\NexaGrid')
+$productData = [IO.Path]::GetFullPath((Join-Path $env:ProgramData 'Veltrix-Control'))
+$expectedProductData = [IO.Path]::GetFullPath('C:\ProgramData\Veltrix-Control')
 $logPath = Join-Path ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\artifacts'))) 'installer-smoke.log'
 $startedAt = Get-Date
 
@@ -20,9 +20,9 @@ if (-not ($temporaryRoots | Where-Object { $installRoot.StartsWith($_, [StringCo
     throw 'The smoke-test installation directory must be below the temporary directory.'
 }
 if ($productData -ne $expectedProductData) { throw "Unexpected product-data path: $productData" }
-if (Test-Path -LiteralPath $productData) { throw "Refusing to overwrite existing NexaGrid data: $productData" }
-if (Get-Service -Name 'NexaGridController', 'NexaGridAgent' -ErrorAction SilentlyContinue) {
-    throw 'Refusing to replace an existing NexaGrid Windows service.'
+if (Test-Path -LiteralPath $productData) { throw "Refusing to overwrite existing Veltrix-Control data: $productData" }
+if (Get-Service -Name 'Veltrix-Control-Controller', 'Veltrix-Control-Agent' -ErrorAction SilentlyContinue) {
+    throw 'Refusing to replace an existing Veltrix-Control Windows service.'
 }
 
 $installerArguments = @(
@@ -38,7 +38,7 @@ try {
     $setup = Start-Process -FilePath $installer -ArgumentList $installerArguments -Wait -PassThru -WindowStyle Hidden
     if ($setup.ExitCode -ne 0) { throw "Installer exited with code $($setup.ExitCode)." }
 
-    foreach ($serviceName in @('NexaGridController', 'NexaGridAgent')) {
+    foreach ($serviceName in @('Veltrix-Control-Controller', 'Veltrix-Control-Agent')) {
         $service = Get-Service -Name $serviceName
         $service.WaitForStatus([ServiceProcess.ServiceControllerStatus]::Running, [TimeSpan]::FromSeconds(30))
     }
@@ -68,7 +68,7 @@ try {
 
     $repair = Start-Process -FilePath $installer -ArgumentList $installerArguments -Wait -PassThru -WindowStyle Hidden
     if ($repair.ExitCode -ne 0) { throw "Installer repair exited with code $($repair.ExitCode)." }
-    foreach ($serviceName in @('NexaGridController', 'NexaGridAgent')) {
+    foreach ($serviceName in @('Veltrix-Control-Controller', 'Veltrix-Control-Agent')) {
         $service = Get-Service -Name $serviceName
         $service.WaitForStatus([ServiceProcess.ServiceControllerStatus]::Running, [TimeSpan]::FromSeconds(30))
     }
@@ -94,7 +94,7 @@ try {
 catch {
     if (Test-Path -LiteralPath $logPath) { Get-Content -LiteralPath $logPath -Tail 200 }
     Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $startedAt } -ErrorAction SilentlyContinue |
-        Where-Object { $_.ProviderName -like '*NexaGrid*' -or $_.Message -like '*NexaGrid*' } |
+        Where-Object { $_.ProviderName -like '*Veltrix-Control*' -or $_.Message -like '*Veltrix-Control*' } |
         Select-Object -First 50 TimeCreated, ProviderName, Id, LevelDisplayName, Message |
         Format-List
     throw

@@ -56,20 +56,20 @@ jobs:
 
       - name: Smoke-test install and repair
         shell: powershell
-        run: .\scripts\test-installer.ps1 -InstallDirectory (Join-Path $env:RUNNER_TEMP 'NexaGrid-Release-Smoke')
+        run: .\scripts\test-installer.ps1 -InstallDirectory (Join-Path $env:RUNNER_TEMP 'Veltrix-Control-Release-Smoke')
 
       - name: Verify release payload
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $installer = 'outputs\NexaGridSetup.exe'
+          $installer = 'outputs\Veltrix-Control-Setup.exe'
           $manifest = 'outputs\SHA256SUMS.txt'
-          $expected = (Select-String -LiteralPath $manifest -Pattern '^[0-9a-f]{64}  NexaGridSetup\.exe$').Line.Split(' ')[0]
+          $expected = (Select-String -LiteralPath $manifest -Pattern '^[0-9a-f]{64}  Veltrix-Control-Setup\.exe$').Line.Split(' ')[0]
           $actual = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($actual -ne $expected) { throw 'Installer checksum does not match SHA256SUMS.txt.' }
           $header = [IO.File]::ReadAllBytes($installer)[0..1]
           if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
-            throw 'NexaGridSetup.exe is not a Windows PE executable.'
+            throw 'Veltrix-Control-Setup.exe is not a Windows PE executable.'
           }
 
       - name: Publish GitHub release
@@ -82,11 +82,11 @@ jobs:
           $notes = "docs\releases\$tag.md"
           $title = "Veltrix-Control $tag - Phase 1"
           $assets = @(
-            'outputs\NexaGridSetup.exe',
+            'outputs\Veltrix-Control-Setup.exe',
             'outputs\SHA256SUMS.txt',
             'outputs\VERSION.txt',
             'outputs\CHANGELOG.md',
-            'outputs\NexaGrid-Windows-x64.zip'
+            'outputs\Veltrix-Control-Windows-x64.zip'
           )
           # GitHub CLI writes a missing-release lookup to PowerShell's error stream.
           # Treat that expected first-publication result as a status check, not a failure.
@@ -108,7 +108,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: NexaGrid-${{ github.ref_name }}-release-diagnostics
+          name: Veltrix-Control-${{ github.ref_name }}-release-diagnostics
           path: |
             artifacts/test-results/**/*.trx
             artifacts/installer-smoke.log
