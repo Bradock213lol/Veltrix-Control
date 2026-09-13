@@ -21,6 +21,7 @@ All notable changes follow semantic versioning.
 - Updated GitHub Actions to maintained Node.js 24-based action versions.
 - Added a tag-gated GitHub release workflow that rebuilds, tests, smoke-installs, verifies,
   and publishes the installer and checksum assets only from `main`.
+- Adopted the MIT License and aligned repository branding with the NexaGrid product name.
 
 ### Fixed
 

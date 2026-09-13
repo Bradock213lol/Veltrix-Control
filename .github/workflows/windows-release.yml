@@ -72,7 +72,7 @@ jobs:
             throw 'NexaGridSetup.exe is not a Windows PE executable.'
           }
 
-      - name: Publish GitHub pre-release
+      - name: Publish GitHub release
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
@@ -80,7 +80,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $tag = $env:GITHUB_REF_NAME
           $notes = "docs\releases\$tag.md"
-          $title = "NexaGrid $tag - Phase 1 Preview"
+          $title = "NexaGrid $tag - Phase 1"
           $assets = @(
             'outputs\NexaGridSetup.exe',
             'outputs\SHA256SUMS.txt',
@@ -95,11 +95,11 @@ jobs:
           $releaseExists = $LASTEXITCODE -eq 0
           $ErrorActionPreference = 'Stop'
           if ($releaseExists) {
-            gh release edit $tag --repo $env:GITHUB_REPOSITORY --title $title --notes-file $notes --prerelease
+            gh release edit $tag --repo $env:GITHUB_REPOSITORY --title $title --notes-file $notes --prerelease=false
             if ($LASTEXITCODE -ne 0) { throw 'Could not update the existing GitHub release.' }
             gh release upload $tag --repo $env:GITHUB_REPOSITORY --clobber @assets
           } else {
-            gh release create $tag --repo $env:GITHUB_REPOSITORY --verify-tag --title $title --notes-file $notes --prerelease @assets
+            gh release create $tag --repo $env:GITHUB_REPOSITORY --verify-tag --title $title --notes-file $notes @assets
           }
           if ($LASTEXITCODE -ne 0) { throw 'Could not publish the GitHub release assets.' }
           gh release view $tag --repo $env:GITHUB_REPOSITORY --json url,isPrerelease,assets

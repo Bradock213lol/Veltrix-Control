@@ -3,7 +3,7 @@
 ## Status
 
 Phase 1 — Secure fleet foundation is implemented and verified as a usable, testable
-release candidate for the `v0.1.0` GitHub preview. The expanded Phase 2–10 roadmap
+release candidate for the `v0.1.0` GitHub release. The expanded Phase 2–10 roadmap
 remains planned in `PHASES.md`; those features are not represented as complete.
 Publication is performed only from an annotated tag reachable from `main`, after the
 release workflow rebuilds, retests, installs, repairs, and verifies the payload.
@@ -70,7 +70,7 @@ release workflow rebuilds, retests, installs, repairs, and verifies the payload.
 ## Release artifacts
 
 - CI artifact name: `NexaGrid-Windows-x64`
-- GitHub release tag: `v0.1.0` (preview)
+- GitHub release tag: `v0.1.0`
 - Installer: `NexaGridSetup.exe`
 - Local validation: all 26 tests passed and the installer checksum was regenerated in
   `outputs/SHA256SUMS.txt`.
