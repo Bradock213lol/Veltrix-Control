@@ -1,7 +1,7 @@
 # NexaGrid
 
-[![Windows CI](https://github.com/Bradock213lol/NexaGrid/actions/workflows/windows-ci.yml/badge.svg?branch=main)](https://github.com/Bradock213lol/NexaGrid/actions/workflows/windows-ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/Bradock213lol/NexaGrid)](https://github.com/Bradock213lol/NexaGrid/releases/latest)
+[![Windows CI](https://github.com/Bradock213lol/Veltrix-Control/actions/workflows/windows-ci.yml/badge.svg?branch=main)](https://github.com/Bradock213lol/Veltrix-Control/actions/workflows/windows-ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/Bradock213lol/Veltrix-Control)](https://github.com/Bradock213lol/Veltrix-Control/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 NexaGrid is a security-first Windows fleet management platform. One installer can
@@ -48,9 +48,9 @@ service hosting, and DPAPI key storage live in the Agent. See
 
 ## Install
 
-1. Download [`NexaGridSetup.exe`](https://github.com/Bradock213lol/NexaGrid/releases/download/v0.1.0/NexaGridSetup.exe)
-   and [`SHA256SUMS.txt`](https://github.com/Bradock213lol/NexaGrid/releases/download/v0.1.0/SHA256SUMS.txt)
-   from the [latest release](https://github.com/Bradock213lol/NexaGrid/releases/latest).
+1. Download [`NexaGridSetup.exe`](https://github.com/Bradock213lol/Veltrix-Control/releases/download/v0.1.0/NexaGridSetup.exe)
+   and [`SHA256SUMS.txt`](https://github.com/Bradock213lol/Veltrix-Control/releases/download/v0.1.0/SHA256SUMS.txt)
+   from the [latest release](https://github.com/Bradock213lol/Veltrix-Control/releases/latest).
 2. Verify the SHA-256 value, run the installer as administrator, and select a role.
 3. For a Controller, open `http://localhost:5187` and create the first Owner account.
 4. In **Add device**, generate an enrollment code.
