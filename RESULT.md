@@ -1,4 +1,4 @@
-# NexaGrid v0.1.0 result report
+# Veltrix-Control v0.1.0 result report
 
 ## Status
 

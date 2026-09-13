@@ -80,7 +80,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $tag = $env:GITHUB_REF_NAME
           $notes = "docs\releases\$tag.md"
-          $title = "NexaGrid $tag - Phase 1"
+          $title = "Veltrix-Control $tag - Phase 1"
           $assets = @(
             'outputs\NexaGridSetup.exe',
             'outputs\SHA256SUMS.txt',

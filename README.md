@@ -1,10 +1,10 @@
-# NexaGrid
+# Veltrix-Control
 
 [![Windows CI](https://github.com/Bradock213lol/Veltrix-Control/actions/workflows/windows-ci.yml/badge.svg?branch=main)](https://github.com/Bradock213lol/Veltrix-Control/actions/workflows/windows-ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/Bradock213lol/Veltrix-Control)](https://github.com/Bradock213lol/Veltrix-Control/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-NexaGrid is a security-first Windows fleet management platform. One installer can
+Veltrix-Control is a security-first Windows fleet management platform. One installer can
 configure a computer as a **Controller**, **Managed Node**, or both. Version 0.1.0
 is a finished Phase 1 vertical slice: enroll an authorized device, see live health,
 browse its allowed file root, issue guarded power requests, and inspect every action.
@@ -27,7 +27,7 @@ browse its allowed file root, issue guarded power requests, and inspect every ac
 - One role-selecting Inno Setup EXE with repair/upgrade/uninstall support
 - Unit, integration, security, and end-to-end test suites
 
-![NexaGrid dashboard placeholder](docs/images/dashboard-placeholder.svg)
+![Veltrix-Control dashboard placeholder](docs/images/dashboard-placeholder.svg)
 
 ## Architecture
 
@@ -114,4 +114,4 @@ in [RESULT.md](RESULT.md).
 
 ## License
 
-NexaGrid is available under the [MIT License](LICENSE).
+Veltrix-Control is available under the [MIT License](LICENSE).

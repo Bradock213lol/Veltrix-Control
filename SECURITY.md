@@ -14,7 +14,7 @@ have explicit authorization to manage.
 
 ## Operating boundary
 
-NexaGrid intentionally requires interactive, expiring enrollment and keeps its
+Veltrix-Control intentionally requires interactive, expiring enrollment and keeps its
 Windows services visible. It does not include credential collection, keylogging,
 security bypass, exploitation, stealth, or a custom kernel driver. Administrators
 must use TLS, verify Controller certificate fingerprints during self-signed
