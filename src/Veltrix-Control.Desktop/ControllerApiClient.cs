@@ -162,6 +162,21 @@ public sealed class ControllerApiClient : IDisposable
     public Task<AutomationRunView[]> GetAutomationRunsAsync(CancellationToken cancellationToken = default) =>
         GetAsync<AutomationRunView[]>("api/automations/runs?limit=100", cancellationToken);
 
+    public Task<ComputePolicyView> GetComputePolicyAsync(Guid deviceId, CancellationToken cancellationToken = default) =>
+        GetAsync<ComputePolicyView>($"api/devices/{deviceId:D}/compute-policy", cancellationToken);
+
+    public Task<ComputePolicyView> SetComputePolicyAsync(Guid deviceId, ComputePolicyRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<ComputePolicyView>(HttpMethod.Put, $"api/devices/{deviceId:D}/compute-policy", request, true, cancellationToken);
+
+    public Task<ComputeJobView[]> GetComputeJobsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<ComputeJobView[]>("api/compute/jobs?limit=200", cancellationToken);
+
+    public Task<ComputeJobView> CreateComputeJobAsync(ComputeJobRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<ComputeJobView>(HttpMethod.Post, "api/compute/jobs", request, true, cancellationToken);
+
+    public async Task CancelComputeJobAsync(Guid jobId, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Post, $"api/compute/jobs/{jobId:D}/cancel", null, true, cancellationToken);
+
     public async Task<TransferView> UploadFileAsync(Guid deviceId, string localPath, string remotePath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var info = new FileInfo(localPath);

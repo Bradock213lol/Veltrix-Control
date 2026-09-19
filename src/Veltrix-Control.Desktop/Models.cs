@@ -174,3 +174,16 @@ public sealed class AutomationRunRowView(AutomationRunView source)
     public string Detail => source.Detail ?? string.Empty;
     public string Started => source.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
 }
+
+public sealed class ComputeJobRowView(ComputeJobView source)
+{
+    public ComputeJobView Source { get; } = source;
+    public Guid Id => Source.Id;
+    public string Name => Source.Name;
+    public string State => Source.State;
+    public int Priority => Source.Priority;
+    public string Device => Source.AssignedDeviceId?.ToString("N")[..8] ?? "—";
+    public string Attempts => $"{Source.Attempts}/{Source.MaxAttempts}";
+    public string Created => Source.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
+    public string Detail => Source.Error ?? Source.ResultJson ?? string.Empty;
+}

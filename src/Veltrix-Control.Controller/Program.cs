@@ -68,6 +68,7 @@ builder.Services.AddSingleton<VeltrixControlStore>();
 builder.Services.AddScoped<AgentMessageVerifier>();
 builder.Services.AddHostedService<AlertEvaluator>();
 builder.Services.AddHostedService<AutomationEngine>();
+builder.Services.AddHostedService<ComputeScheduler>();
 builder.Services.AddSignalR();
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -142,7 +143,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.6.0" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.7.0" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>
@@ -276,6 +277,40 @@ app.MapPost("/api/agent/operation-result", async (SignedAgentMessage message, Ag
             // A malformed argument is rejected before the operation is queued.
         }
     }
+    if (operation?.Kind == OperationKind.RunComputeJob && operation.Argument is not null)
+    {
+        try
+        {
+            using var argumentDocument = System.Text.Json.JsonDocument.Parse(operation.Argument);
+            if (argumentDocument.RootElement.TryGetProperty("jobId", out var jobIdElement) && jobIdElement.TryGetGuid(out var jobId))
+            {
+                var succeeded = false;
+                string? error = result.Error;
+                if (result.State == OperationState.Succeeded && result.ResultJson is not null)
+                {
+                    var jobResult = System.Text.Json.JsonSerializer.Deserialize<ComputeJobResult>(result.ResultJson,
+                        new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+                    if (jobResult is not null)
+                    {
+                        succeeded = !jobResult.TimedOut && jobResult.ExitCode == 0;
+                        if (!succeeded) error = jobResult.TimedOut ? "The job timed out." : $"The job exited with code {jobResult.ExitCode}.";
+                    }
+                }
+                if (succeeded)
+                {
+                    await database.CompleteComputeJobAsync(jobId, "Succeeded", result.ResultJson, null, ct);
+                }
+                else
+                {
+                    await database.RequeueOrFailComputeJobAsync(jobId, error ?? "The job failed.", ct);
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // A malformed argument is rejected before the operation is queued.
+        }
+    }
     await hub.Clients.All.SendAsync("operationUpdated", result.OperationId, ct);
     return Results.NoContent();
 }).RequireRateLimiting("agent");
@@ -321,6 +356,7 @@ management.MapManagementTransfers();
 management.MapManagementAdmin();
 management.MapManagementSoftware();
 management.MapManagementMonitoring();
+management.MapManagementCompute();
 
 app.MapAgentTransfers();
 

@@ -5,7 +5,7 @@ phase ends in an independently installable Windows release that can be demonstra
 upgraded, rolled back, and tested without relying on unfinished work from the next
 phase.
 
-Current state: **Phase 6 implemented** for `v0.6.0`; publication follows the same clean
+Current state: **Phase 7 implemented** for `v0.7.0`; publication follows the same clean
 build, installer lifecycle, pull-request, and tag gates as earlier phases.
 
 ## Release contract for every phase

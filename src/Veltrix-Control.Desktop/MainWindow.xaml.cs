@@ -182,17 +182,20 @@ public partial class MainWindow : Window
         var adminId = (AdminDeviceBox.SelectedItem as DeviceRow)?.Id;
         var updateId = (UpdateDeviceBox.SelectedItem as DeviceRow)?.Id;
         var backupId = (BackupDeviceBox.SelectedItem as DeviceRow)?.Id;
+        var computeId = (ComputeDeviceBox.SelectedItem as DeviceRow)?.Id;
         var onlineRows = rows.Where(row => row.Source.Online).ToList();
         DiagnosticsDeviceBox.ItemsSource = onlineRows;
         FilesDeviceBox.ItemsSource = onlineRows;
         AdminDeviceBox.ItemsSource = onlineRows;
         UpdateDeviceBox.ItemsSource = onlineRows;
         BackupDeviceBox.ItemsSource = onlineRows;
+        ComputeDeviceBox.ItemsSource = onlineRows;
         DiagnosticsDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == diagnosticsId) ?? onlineRows.FirstOrDefault();
         FilesDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == filesId) ?? onlineRows.FirstOrDefault();
         AdminDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == adminId) ?? onlineRows.FirstOrDefault();
         UpdateDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == updateId) ?? onlineRows.FirstOrDefault();
         BackupDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == backupId) ?? onlineRows.FirstOrDefault();
+        ComputeDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == computeId) ?? onlineRows.FirstOrDefault();
     }
 
     private void ApplyDeviceFilter()
@@ -682,6 +685,108 @@ public partial class MainWindow : Window
     private void Automation_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         // Run history is grouped globally; selection is retained for enable/disable/delete actions.
+    }
+
+    private async void ComputeDevice_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        await LoadComputePolicyAsync();
+        await LoadComputeJobsAsync();
+    }
+
+    private async void ComputeRefresh_Click(object sender, RoutedEventArgs e) => await LoadComputeJobsAsync();
+
+    private async Task LoadComputePolicyAsync()
+    {
+        if (_api is null || ComputeDeviceBox.SelectedItem is not DeviceRow device) return;
+        try
+        {
+            var policy = await _api.GetComputePolicyAsync(device.Id);
+            ComputeModeBox.SelectedIndex = Math.Max(0, Array.IndexOf(ComputeModes.All, policy.Mode));
+            ReservedCpuBox.Text = policy.ReservedCpuThreads.ToString(CultureInfo.InvariantCulture);
+            ReservedMemoryBox.Text = (policy.ReservedMemoryBytes / (1024 * 1024 * 1024)).ToString(CultureInfo.InvariantCulture);
+            ReservedDiskBox.Text = (policy.ReservedDiskBytes / (1024 * 1024 * 1024)).ToString(CultureInfo.InvariantCulture);
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            ComputeCaption.Text = exception.Message;
+        }
+    }
+
+    private async void ComputeSavePolicy_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || ComputeDeviceBox.SelectedItem is not DeviceRow device) return;
+        if (!int.TryParse(ReservedCpuBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var cpu) ||
+            !long.TryParse(ReservedMemoryBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var memoryGb) ||
+            !long.TryParse(ReservedDiskBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var diskGb))
+        {
+            SetStatus("Reservations must be whole numbers.", false, true);
+            return;
+        }
+        var mode = (ComputeModeBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Idle";
+        try
+        {
+            await _api.SetComputePolicyAsync(device.Id, new ComputePolicyRequest(mode, cpu, memoryGb * 1024 * 1024 * 1024, diskGb * 1024 * 1024 * 1024));
+            SetStatus($"Compute policy saved for {device.Name}", true);
+            await LoadComputeJobsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void ComputeNewJob_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null) return;
+        var device = ComputeDeviceBox.SelectedItem as DeviceRow;
+        var window = new ComputeJobWindow(device?.Id, device?.Name ?? "the selected node") { Owner = this };
+        if (window.ShowDialog() != true || window.Result is null) return;
+        try
+        {
+            await _api.CreateComputeJobAsync(window.Result);
+            SetStatus("Compute job queued", true);
+            await LoadComputeJobsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void ComputeCancelJob_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || ComputeJobsGrid.SelectedItem is not ComputeJobRowView row) return;
+        if (row.State is not ("Queued" or "Running"))
+        {
+            SetStatus("Only queued or running jobs can be cancelled.", false, true);
+            return;
+        }
+        if (MessageBox.Show(this, $"Cancel job '{row.Name}'?", "Cancel compute job", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            await _api.CancelComputeJobAsync(row.Id);
+            SetStatus("Compute job cancelled", true);
+            await LoadComputeJobsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async Task LoadComputeJobsAsync()
+    {
+        if (_api is null) return;
+        try
+        {
+            var jobs = await _api.GetComputeJobsAsync();
+            ComputeJobsGrid.ItemsSource = jobs.Select(job => new ComputeJobRowView(job)).ToList();
+            ComputeCaption.Text = $"{jobs.Length} job(s)";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            ComputeCaption.Text = exception.Message;
+        }
     }
 
     private async void SoftwareRefresh_Click(object sender, RoutedEventArgs e) => await LoadSoftwareAsync();
@@ -1319,7 +1424,7 @@ public partial class MainWindow : Window
         };
         if (view == "AuditView" && _auditEvents.Count == 0) _ = LoadAuditAsync();
         if (view == "DeploymentView") _ = LoadSoftwareAsync();
-        if (view == "OperationsView") { _ = LoadBackupsAsync(); _ = LoadAlertsAsync(); _ = LoadAutomationsAsync(); }
+        if (view == "OperationsView") { _ = LoadBackupsAsync(); _ = LoadAlertsAsync(); _ = LoadAutomationsAsync(); _ = LoadComputeJobsAsync(); }
         if (view == "DevicesView") DeviceSearchBox.Focus();
     }
 

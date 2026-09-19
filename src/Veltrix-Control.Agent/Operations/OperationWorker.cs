@@ -21,10 +21,18 @@ public sealed partial class OperationWorker(
 
     private string PendingDirectory => Path.Combine(options.DataDirectory, "pending-results");
 
+    private readonly SemaphoreSlim _computeGate = new(1, 1);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await foreach (var operation in queue.ReadAllAsync(stoppingToken))
         {
+            if (operation.Kind == OperationKind.RunComputeJob)
+            {
+                _ = RunComputeJobAsync(operation, stoppingToken);
+                continue;
+            }
+
             try
             {
                 var identity = identityStore.Load();
@@ -47,6 +55,33 @@ public sealed partial class OperationWorker(
             {
                 LogExecutionFailed(logger, exception, operation.Id);
             }
+        }
+    }
+
+    private async Task RunComputeJobAsync(OperationAssignment operation, CancellationToken stoppingToken)
+    {
+        await _computeGate.WaitAsync(stoppingToken);
+        try
+        {
+            var identity = identityStore.Load();
+            if (identity is null)
+            {
+                LogNotEnrolled(logger, operation.Id);
+                return;
+            }
+            var result = await executor.ExecuteAsync(operation, stoppingToken);
+            await DeliverAsync(identity, result, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            LogExecutionFailed(logger, exception, operation.Id);
+        }
+        finally
+        {
+            _computeGate.Release();
         }
     }
 

@@ -190,6 +190,16 @@ public static partial class InputValidator
                 if (updates?.UpdateIds is null || updates.UpdateIds.Length is 0 or > SoftwareLimits.MaxWindowsUpdatesPerInstall) return "Select between 1 and 100 updates.";
                 if (updates.UpdateIds.Any(id => !Guid.TryParse(id, out _))) return "The update identifiers are invalid.";
                 return null;
+            case OperationKind.RunComputeJob:
+                var job = Parse<ComputeJobArgument>(argument);
+                if (job is null || job.JobId == Guid.Empty || string.IsNullOrWhiteSpace(job.Executable) || job.Executable.Length > 1024) return "A valid compute job is required.";
+                if (job.Arguments is { Length: > 2048 } || job.WorkingDirectory is { Length: > 1024 }) return "The job arguments exceed the allowed size.";
+                if (job.TimeoutSeconds is < ComputeLimits.MinTimeoutSeconds or > ComputeLimits.MaxTimeoutSeconds) return "The job timeout is outside the allowed range.";
+                return null;
+            case OperationKind.CancelComputeJob:
+                var cancelJob = Parse<ComputeCancelArgument>(argument);
+                if (cancelJob is null || cancelJob.JobId == Guid.Empty) return "A valid job identifier is required.";
+                return null;
             default:
                 return argument is null || argument.Length <= 4096 ? null : "The operation argument exceeds the allowed size.";
         }

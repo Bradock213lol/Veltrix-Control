@@ -445,6 +445,49 @@
                   </DataGrid>
                 </Grid>
               </TabItem>
+              <TabItem Header="Compute">
+                <Grid Margin="0,12,0,0">
+                  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                  <Border Style="{StaticResource PanelBorder}">
+                    <Grid>
+                      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                      <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="150"/><ColumnDefinition Width="110"/><ColumnDefinition Width="120"/><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <ComboBox x:Name="ComputeDeviceBox" DisplayMemberPath="Name" SelectionChanged="ComputeDevice_Changed"/>
+                        <ComboBox x:Name="ComputeModeBox" Grid.Column="1" Margin="10,0,0,0">
+                          <ComboBoxItem Content="Idle" IsSelected="True"/>
+                          <ComboBoxItem Content="Server"/>
+                          <ComboBoxItem Content="Compute"/>
+                          <ComboBoxItem Content="Gaming"/>
+                          <ComboBoxItem Content="Maintenance"/>
+                        </ComboBox>
+                        <TextBox x:Name="ReservedCpuBox" Grid.Column="2" Margin="10,0,0,0" Text="0" ToolTip="Reserved CPU threads"/>
+                        <TextBox x:Name="ReservedMemoryBox" Grid.Column="3" Margin="10,0,0,0" Text="0" ToolTip="Reserved memory (GB)"/>
+                        <TextBox x:Name="ReservedDiskBox" Grid.Column="4" Margin="10,0,0,0" Text="0" ToolTip="Reserved disk (GB)"/>
+                        <TextBlock Grid.Column="5" Text="Mode and reservations; Gaming/Maintenance block compute placement." Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="10,0,0,0" TextWrapping="Wrap"/>
+                      </Grid>
+                      <WrapPanel Grid.Row="1" Margin="0,12,0,0">
+                        <Button Content="Save policy" Click="ComputeSavePolicy_Click"/>
+                        <Button Content="New job" Margin="8,0,0,0" Click="ComputeNewJob_Click"/>
+                        <Button Content="Cancel job" Margin="8,0,0,0" Click="ComputeCancelJob_Click"/>
+                        <Button Content="Refresh" Margin="8,0,0,0" Click="ComputeRefresh_Click"/>
+                        <TextBlock x:Name="ComputeCaption" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                      </WrapPanel>
+                    </Grid>
+                  </Border>
+                  <DataGrid x:Name="ComputeJobsGrid" Grid.Row="1" Margin="0,12,0,0">
+                    <DataGrid.Columns>
+                      <DataGridTextColumn Header="Job" Binding="{Binding Name}" Width="1.5*"/>
+                      <DataGridTextColumn Header="State" Binding="{Binding State}" Width="*"/>
+                      <DataGridTextColumn Header="Priority" Binding="{Binding Priority}" Width="*"/>
+                      <DataGridTextColumn Header="Node" Binding="{Binding Device}" Width="*"/>
+                      <DataGridTextColumn Header="Attempts" Binding="{Binding Attempts}" Width="*"/>
+                      <DataGridTextColumn Header="Created" Binding="{Binding Created}" Width="1.2*"/>
+                      <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="2.5*"/>
+                    </DataGrid.Columns>
+                  </DataGrid>
+                </Grid>
+              </TabItem>
             </TabControl>
           </Grid>
 

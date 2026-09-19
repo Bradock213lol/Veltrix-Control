@@ -57,6 +57,7 @@ public sealed class OperationExecutorTests : IDisposable
             new SoftwareOperations(options, NullLogger<SoftwareOperations>.Instance),
             new WindowsUpdateOperations(options, NullLogger<WindowsUpdateOperations>.Instance),
             new BackupOperations(options, NullLogger<BackupOperations>.Instance),
+            new ComputeOperations(NullLogger<ComputeOperations>.Instance),
             NullLogger<OperationExecutor>.Instance);
     }
 

@@ -2,6 +2,22 @@
 
 All notable changes follow semantic versioning.
 
+## [0.7.0] - 2026-09-19
+
+### Added
+
+- Resource-aware compute scheduler that places bounded jobs on eligible online nodes by capacity, priority, and per-node workload policy.
+- Compute policies per node: Idle, Server, Compute, Gaming, and Maintenance modes with reserved CPU, memory, and disk.
+- Job queue with priorities, bounded timeouts and attempts, automatic retry, cancellation that kills the running process, and complete run history.
+- Agent compute execution for approved `.exe` fixtures with bounded output, process-tree termination on timeout/cancel, and one concurrent job per node.
+- GPU requirements are refused with a clear message instead of pretending unsupported hardware.
+- Desktop Compute workspace: policy editor, job queue, create/cancel actions, and live states.
+
+### Changed
+
+- Compute jobs execute on a dedicated agent worker so long jobs no longer block other operations.
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.7.0.
+
 ## [0.6.0] - 2026-09-19
 
 ### Added
