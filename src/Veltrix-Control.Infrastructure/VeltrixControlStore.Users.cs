@@ -1,11 +1,28 @@
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 using VeltrixControl.Contracts;
+using VeltrixControl.Core.Security;
 
 namespace VeltrixControl.Infrastructure;
 
 public sealed partial class VeltrixControlStore
 {
+    public async Task<bool> HasOwnerAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = OpenConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT EXISTS(SELECT 1 FROM users WHERE role = 'Owner' LIMIT 1);";
+        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture) == 1;
+    }
+
+    public async Task<bool> EnsureRecoveryAccountAsync(string username, string password, CancellationToken cancellationToken = default)
+    {
+        if (await ValidateUsernameAsync(username, cancellationToken) is not null) return false;
+        var created = await CreateUserAsync("recovery", new CreateUserRequest(username, password, "Administrator"), PasswordHasher.Hash(password), cancellationToken);
+        return created is not null;
+    }
+
     public async Task<IReadOnlyList<UserView>> GetUsersAsync(CancellationToken cancellationToken = default)
     {
         var users = new List<UserView>();

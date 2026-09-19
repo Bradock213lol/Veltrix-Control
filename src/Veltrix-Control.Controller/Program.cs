@@ -131,6 +131,14 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 var store = app.Services.GetRequiredService<VeltrixControlStore>();
 await store.InitializeAsync();
+if (controllerConfiguration.EnableRecoveryAccount && await store.HasOwnerAsync())
+{
+    var recoveryCreated = await store.EnsureRecoveryAccountAsync(controllerConfiguration.RecoveryAccountUsername, controllerConfiguration.RecoveryAccountPassword);
+    if (recoveryCreated)
+    {
+        RecoveryAccountLog.Created(app.Logger, controllerConfiguration.RecoveryAccountUsername);
+    }
+}
 var runtimeControllerOptions = app.Services.GetRequiredService<IOptions<ControllerOptions>>().Value;
 var bootstrapCodePath = Path.Combine(runtimeControllerOptions.DataDirectory, CombinedRoleBootstrap.BootstrapFileName);
 if (File.Exists(bootstrapCodePath))
@@ -176,14 +184,19 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.10.1" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.10.2" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
-app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>
+app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, IOptions<ControllerOptions> controllerOptions, CancellationToken ct) =>
 {
     var error = InputValidator.Setup(request);
     if (error is not null) return Results.BadRequest(new { error });
     if (!await database.CreateOwnerAsync(request.Username, PasswordHasher.Hash(request.Password), ct)) return Results.Conflict(new { error = "Controller setup is already complete." });
+    var options = controllerOptions.Value;
+    if (options.EnableRecoveryAccount)
+    {
+        await database.EnsureRecoveryAccountAsync(options.RecoveryAccountUsername, options.RecoveryAccountPassword, ct);
+    }
     await SignInAsync(context, request.Username, "Owner");
     return Results.Ok(new { username = request.Username, role = "Owner" });
 }).RequireRateLimiting("authentication");
@@ -414,3 +427,12 @@ static async Task SignInAsync(HttpContext context, string username, string role)
 }
 
 public partial class Program;
+
+namespace VeltrixControl.Controller
+{
+    public static partial class RecoveryAccountLog
+    {
+        [LoggerMessage(300, LogLevel.Warning, "Recovery account '{username}' was created with the configured default password. Change or delete it in Settings -> User accounts once Owner access is verified.")]
+        public static partial void Created(ILogger logger, string username);
+    }
+}

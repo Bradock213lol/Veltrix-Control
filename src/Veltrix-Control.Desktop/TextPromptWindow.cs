@@ -9,6 +9,7 @@ public sealed class TextPromptWindow : Window
 
     private TextPromptWindow(string title, string prompt, string initial, bool multiline)
     {
+        Style = (Style)Application.Current.FindResource(typeof(Window));
         Title = title;
         Width = 460;
         SizeToContent = SizeToContent.Height;

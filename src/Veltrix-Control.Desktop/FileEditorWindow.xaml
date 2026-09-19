@@ -1,4 +1,4 @@
-<Window x:Class="VeltrixControl.Desktop.FileEditorWindow"
+<Window x:Class="VeltrixControl.Desktop.FileEditorWindow" Style="{StaticResource {x:Type Window}}"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Edit file" Width="1040" Height="740" MinWidth="720" MinHeight="520"

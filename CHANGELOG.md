@@ -2,6 +2,28 @@
 
 All notable changes follow semantic versioning.
 
+## [0.10.2] - 2026-09-19
+
+### Added
+
+- Recovery Administrator account: after first-run setup the Controller automatically
+  creates an `admin` account (password `admin!` by default) so a forgotten Owner password
+  can never lock anyone out. It is created only when missing, is configurable under
+  `Controller:RecoveryAccount*`, and should be changed or deleted once Owner access is
+  verified. The Controller logs a warning when it is created.
+
+### Fixed
+
+- The desktop window background now follows the dark/light theme on every window instead
+  of leaving a large white area around the content.
+- Interactive uninstall now removes every product file: services, firewall rule, program
+  files, the database with user accounts, certificates, node identities, transfers, and
+  desktop settings. Silent uninstall (used by upgrades and repair) still preserves data.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.10.2.
+
 ## [0.10.1] - 2026-09-19
 
 ### Fixed

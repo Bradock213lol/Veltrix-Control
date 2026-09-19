@@ -1,4 +1,4 @@
-<Window x:Class="VeltrixControl.Desktop.DeviceDetailsWindow"
+<Window x:Class="VeltrixControl.Desktop.DeviceDetailsWindow" Style="{StaticResource {x:Type Window}}"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Device details · Veltrix-Control" Width="820" Height="650" MinWidth="700" MinHeight="540"

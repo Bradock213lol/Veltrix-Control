@@ -8,6 +8,7 @@ public sealed class DiffWindow : Window
 {
     public DiffWindow(string title, string original, string current)
     {
+        Style = (Style)Application.Current.FindResource(typeof(Window));
         Title = $"Compare · {title}";
         Width = 980;
         Height = 700;

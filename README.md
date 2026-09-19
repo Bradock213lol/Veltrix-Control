@@ -11,7 +11,7 @@ platform, compute scheduling, backups, alerts, automation, and administration.
 > This project is for systems owned by or explicitly authorized by the administrator.
 > It does not hide its services, bypass Windows security, or silently enroll devices.
 
-## What works in v0.10.1
+## What works in v0.10.2
 
 - First-run Owner setup, secure cookie sessions, four-role permission model
 - Single-use 1–60 minute enrollment codes
@@ -81,14 +81,21 @@ service hosting, and DPAPI key storage live in the Agent. See
 5. On a Managed Node install, enter the Controller HTTPS URL, its displayed/verified
    certificate thumbprint, the one-time code, and the allowed file root.
 
-If the Owner password is ever lost, open an elevated prompt on the Controller machine and
-reset it without deleting any data:
+If the Owner password is ever lost, the platform also creates a recovery Administrator
+account after first-run setup (`admin` / `admin!` by default). Sign in with it, open
+**Settings → User accounts**, and change its password or delete the account once Owner
+access is restored. A local recovery command is also available:
 
 ```powershell
 $env:VELTRIX_OWNER_PASSWORD = 'a-new-owner-password'
 & "$env:ProgramFiles\Veltrix-Control\Controller\Veltrix-Control.Controller.exe" --reset-owner owner-username
 Remove-Item Env:\VELTRIX_OWNER_PASSWORD
 ```
+
+Uninstalling through Windows Settings removes everything the product created: services,
+firewall rule, program files, the database with user accounts, certificates, node
+identities, transfers, and desktop settings. Silent uninstalls (used by upgrades and
+repair) preserve data so fleet state survives.
 
 The Controller service listens on HTTPS port `5443` for nodes and loopback HTTP port
 `5187` for the native app. The launcher offers that local browser endpoint only if the

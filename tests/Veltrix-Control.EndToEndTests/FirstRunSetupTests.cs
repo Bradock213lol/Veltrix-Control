@@ -59,6 +59,24 @@ public sealed class FirstRunSetupTests
         Assert.Contains("password", missingPasswordBody!.Error, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task RecoveryAccountIsCreatedAfterSetupAndCanSignIn()
+    {
+        using var factory = new EndToEndFactory();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        (await client.PostAsJsonAsync("/api/setup", new SetupRequest("recovery.owner", "a secure recovery password"))).EnsureSuccessStatusCode();
+
+        using var login = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest("admin", "admin!"));
+        login.EnsureSuccessStatusCode();
+        var identity = await login.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        Assert.Equal("admin", identity.GetProperty("username").GetString());
+        Assert.Equal("Administrator", identity.GetProperty("role").GetString());
+
+        var users = await client.GetFromJsonAsync<UserView[]>("/api/users", JsonOptions);
+        Assert.Contains(users!, user => user.Username == "admin" && user.Role == "Administrator");
+        Assert.Contains(users!, user => user.Username == "recovery.owner" && user.Role == "Owner");
+    }
+
     private sealed record SetupStatus(bool Required);
     private sealed record ErrorEnvelope(string? Error);
 }

@@ -1,5 +1,5 @@
 #define MyAppName "Veltrix-Control"
-#define MyAppVersion "0.10.1"
+#define MyAppVersion "0.10.2"
 #define MyAppPublisher "Veltrix-Control"
 #define MyAppExeName "Veltrix-Control.Controller.exe"
 
@@ -77,7 +77,6 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
-
 [Code]
 var
   RolePage: TWizardPage;
@@ -269,4 +268,16 @@ begin
   Result := '';
   Exec(ExpandConstant('{sys}\sc.exe'), 'stop Veltrix-Control-Agent', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec(ExpandConstant('{sys}\sc.exe'), 'stop Veltrix-Control-Controller', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  // Interactive uninstall removes everything this product created: the database with
+  // user accounts, certificates, node identity, transfers, desktop settings, and logs.
+  // Silent uninstalls (used by upgrades and repair) keep the data so fleet state survives.
+  if (CurUninstallStep = usPostUninstall) and (not UninstallSilent) then
+  begin
+    DelTree(ExpandConstant('{commonappdata}\Veltrix-Control'), True, True, True);
+    DelTree(ExpandConstant('{localappdata}\Veltrix-Control'), True, True, True);
+  end;
 end;

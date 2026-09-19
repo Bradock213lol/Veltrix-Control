@@ -1,4 +1,4 @@
-<Window x:Class="VeltrixControl.Desktop.AutomationWindow"
+<Window x:Class="VeltrixControl.Desktop.AutomationWindow" Style="{StaticResource {x:Type Window}}"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="New automation" Width="580" SizeToContent="Height" ResizeMode="NoResize"
