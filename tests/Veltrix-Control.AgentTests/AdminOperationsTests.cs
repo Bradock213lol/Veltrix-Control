@@ -92,25 +92,37 @@ public sealed class AdminOperationsTests : IDisposable
     }
 
     [Fact]
-    public void TerminalSessionRunsCommandsAndStops()
+    public async Task TerminalSessionRunsCommandsAndStops()
     {
         var operations = Create(allowProcess: false, allowService: false, allowTerminal: true);
         var sessionId = Guid.NewGuid();
         var start = Execute(operations, OperationKind.TerminalStart, Json(new TerminalStartArgument(sessionId, "CommandPrompt", _root)));
         Assert.Equal(OperationState.Succeeded, start.State);
 
-        var input = Execute(operations, OperationKind.TerminalInput, Json(new TerminalInputArgument(sessionId, "echo veltrix-terminal-check\r\n")));
-        Assert.Equal(OperationState.Succeeded, input.State);
-        var output = JsonSerializer.Deserialize<TerminalOutputResult>(input.ResultJson!, JsonOptions);
-        Assert.NotNull(output);
-        Assert.Contains("veltrix-terminal-check", output!.Output, StringComparison.OrdinalIgnoreCase);
-        Assert.True(output.Sequence > 0);
+        try
+        {
+            var input = Execute(operations, OperationKind.TerminalInput, Json(new TerminalInputArgument(sessionId, "echo veltrix-terminal-check\r\n")));
+            Assert.Equal(OperationState.Succeeded, input.State);
+            var output = JsonSerializer.Deserialize<TerminalOutputResult>(input.ResultJson!, JsonOptions);
+            Assert.NotNull(output);
+            Assert.True(output!.Sequence > 0);
 
-        var drain = Execute(operations, OperationKind.TerminalOutput, Json(new TerminalOutputArgument(sessionId, 0)));
-        Assert.Equal(OperationState.Succeeded, drain.State);
+            var deadline = DateTimeOffset.UtcNow.AddSeconds(15);
+            while (DateTimeOffset.UtcNow < deadline && !output.Output.Contains("veltrix-terminal-check", StringComparison.OrdinalIgnoreCase) && !output.Exited)
+            {
+                await Task.Delay(300);
+                var drain = Execute(operations, OperationKind.TerminalOutput, Json(new TerminalOutputArgument(sessionId, 0)));
+                Assert.Equal(OperationState.Succeeded, drain.State);
+                output = JsonSerializer.Deserialize<TerminalOutputResult>(drain.ResultJson!, JsonOptions)!;
+            }
+            Assert.Contains("veltrix-terminal-check", output.Output, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            var stop = Execute(operations, OperationKind.TerminalStop, Json(new TerminalStopArgument(sessionId)));
+            Assert.Equal(OperationState.Succeeded, stop.State);
+        }
 
-        var stop = Execute(operations, OperationKind.TerminalStop, Json(new TerminalStopArgument(sessionId)));
-        Assert.Equal(OperationState.Succeeded, stop.State);
         Assert.Equal(OperationState.Failed, Execute(operations, OperationKind.TerminalOutput, Json(new TerminalOutputArgument(sessionId, 0))).State);
     }
 
@@ -146,6 +158,17 @@ public sealed class AdminOperationsTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_root)) Directory.Delete(_root, true);
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            try
+            {
+                if (Directory.Exists(_root)) Directory.Delete(_root, true);
+                return;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                Thread.Sleep(250);
+            }
+        }
     }
 }
