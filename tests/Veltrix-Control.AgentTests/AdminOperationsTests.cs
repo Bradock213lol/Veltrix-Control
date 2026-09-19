@@ -50,7 +50,7 @@ public sealed class AdminOperationsTests : IDisposable
     }
 
     [Fact]
-    public void FixtureProcessCanBeStartedAndStopped()
+    public async Task FixtureProcessCanBeStartedAndStopped()
     {
         var operations = Create(allowProcess: true, allowService: false, allowTerminal: false);
         var ping = Path.Combine(Environment.SystemDirectory, "ping.exe");
@@ -63,6 +63,12 @@ public sealed class AdminOperationsTests : IDisposable
 
         var stop = Execute(operations, OperationKind.StopProcess, Json(new ProcessTargetArgument(started!.ProcessId, "ping")));
         Assert.Equal(OperationState.Succeeded, stop.State);
+
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(10);
+        while (DateTimeOffset.UtcNow < deadline && Process.GetProcesses().Any(process => process.Id == started.ProcessId))
+        {
+            await Task.Delay(200);
+        }
         Assert.DoesNotContain(Process.GetProcesses(), process => process.Id == started.ProcessId);
     }
 
