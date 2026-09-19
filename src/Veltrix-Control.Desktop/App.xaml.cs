@@ -86,6 +86,7 @@ public partial class App : Application
         SetColor("HoverBrush", "#E4E9F5");
         SetColor("TextBrush", "#171A29");
         SetColor("MutedTextBrush", "#596178");
+        SetColor("SubtleTextBrush", "#68718A");
         SetColor("BorderBrush", "#D4D9E6");
         SetColor("ControlHoverBorderBrush", "#A9B4CC");
         SetColor("AccentBrush", "#4054D9");

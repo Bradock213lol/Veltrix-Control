@@ -9,7 +9,8 @@
     <SolidColorBrush x:Key="ElevatedBrush" Color="#1A2032" />
     <SolidColorBrush x:Key="HoverBrush" Color="#202844" />
     <SolidColorBrush x:Key="TextBrush" Color="#F2F5FF" />
-    <SolidColorBrush x:Key="MutedTextBrush" Color="#9AA3BF" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#A6AFC9" />
+    <SolidColorBrush x:Key="SubtleTextBrush" Color="#7E88A6" />
     <SolidColorBrush x:Key="BorderBrush" Color="#2A3450" />
     <SolidColorBrush x:Key="ControlHoverBorderBrush" Color="#3D4A6B" />
     <SolidColorBrush x:Key="AccentBrush" Color="#5B6CFF" />
@@ -132,6 +133,7 @@
 
     <Style x:Key="NavLabel" TargetType="TextBlock">
       <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
       <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
     </Style>
 
@@ -528,6 +530,53 @@
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="10" />
       <Setter Property="Padding" Value="20" />
+    </Style>
+
+    <Style x:Key="EyebrowText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{DynamicResource CyanBrush}" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="PageTitleText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="26" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="MetricValueText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="28" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="MetricLabelText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{DynamicResource SubtleTextBrush}" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="CaptionText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+
+    <Style x:Key="SubtleText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource SubtleTextBrush}" />
+    </Style>
+
+    <Style x:Key="EmptyStateText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="Foreground" Value="{DynamicResource SubtleTextBrush}" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextAlignment" Value="Center" />
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Margin" Value="24" />
     </Style>
   </Application.Resources>
 </Application>

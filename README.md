@@ -11,7 +11,7 @@ platform, compute scheduling, backups, alerts, automation, and administration.
 > This project is for systems owned by or explicitly authorized by the administrator.
 > It does not hide its services, bypass Windows security, or silently enroll devices.
 
-## What works in v0.10.3
+## What works in v0.10.4
 
 - First-run Owner setup, secure cookie sessions, four-role permission model
 - Single-use 1–60 minute enrollment codes

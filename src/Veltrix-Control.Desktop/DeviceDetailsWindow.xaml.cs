@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Globalization;
 using System.Net.Http;
+using System.Windows.Media;
 using VeltrixControl.Contracts;
+using VeltrixControl.Core.Formatting;
 
 namespace VeltrixControl.Desktop;
 
@@ -16,28 +18,48 @@ public partial class DeviceDetailsWindow : Window
         _api = api;
         _device = device;
         DeviceNameText.Text = device.Name;
-        DeviceIdentityText.Text = device.Id.ToString("D");
+        DeviceIdentityText.Text = $"ID {device.Id:D}";
         StatusText.Text = device.Online ? "Online" : "Offline";
+        StatusText.Foreground = (Brush)FindResource(device.Online ? "SuccessBrush" : "SubtleTextBrush");
+        StatusDot.Fill = (Brush)FindResource(device.Online ? "SuccessBrush" : "SubtleTextBrush");
         HealthText.Text = $"{device.HealthScore}/100";
-        CpuText.Text = device.Telemetry is null ? "—" : $"{device.Telemetry.CpuPercent:0}%";
-        MemoryText.Text = device.Telemetry is null ? "—" : DeviceRow.FormatBytes(device.Telemetry.UsedMemoryBytes);
-        UptimeText.Text = device.Telemetry is null ? "—" : FormatUptime(device.Telemetry.UptimeSeconds);
+        HealthCaption.Text = device.Online
+            ? device.HealthScore switch
+            {
+                >= 90 => "Excellent",
+                >= 75 => "Good",
+                >= 50 => "Needs attention",
+                _ => "At risk"
+            }
+            : "Offline — health unavailable";
+
+        var telemetry = device.Telemetry;
+        CpuText.Text = telemetry is null ? "—" : $"{telemetry.CpuPercent:0}%";
+        CpuCaption.Text = $"{device.Inventory.LogicalProcessors} logical processors";
+        MemoryText.Text = telemetry is null ? "—" : MetricFormatter.Memory(telemetry.UsedMemoryBytes, telemetry.TotalMemoryBytes);
+        MemoryCaption.Text = telemetry is null ? "No memory telemetry" : MetricFormatter.MemoryDetail(telemetry.UsedMemoryBytes, telemetry.TotalMemoryBytes);
+        UptimeText.Text = telemetry is null ? "—" : MetricFormatter.Uptime(telemetry.UptimeSeconds);
+
         OsText.Text = $"{device.Inventory.OperatingSystem} · {device.Inventory.OsVersion}";
-        HardwareText.Text = $"{device.Inventory.Architecture} · {device.Inventory.LogicalProcessors} logical CPUs";
+        HardwareText.Text = $"{device.Inventory.Architecture} · {device.Inventory.LogicalProcessors} logical CPUs · {MetricFormatter.Bytes(device.Inventory.TotalMemoryBytes)} RAM";
         AgentText.Text = device.Inventory.IsSimulation ? "Simulator" : $"Veltrix-Control Agent {device.Inventory.AgentVersion}";
         HeartbeatText.Text = device.LastHeartbeat.LocalDateTime.ToString("F", CultureInfo.CurrentCulture);
+
         DiskGrid.ItemsSource = device.Inventory.Disks.Select(disk => new
         {
             disk.Name,
             disk.Format,
-            Free = DeviceRow.FormatBytes(disk.AvailableBytes),
-            Total = DeviceRow.FormatBytes(disk.TotalBytes)
-        });
+            UsedTotal = MetricFormatter.Memory(Math.Max(0, disk.TotalBytes - disk.AvailableBytes), disk.TotalBytes),
+            Free = MetricFormatter.Bytes(disk.AvailableBytes),
+            UsedPercent = disk.TotalBytes <= 0 ? "—" : $"{MetricFormatter.Percent(Math.Max(0, disk.TotalBytes - disk.AvailableBytes), disk.TotalBytes):0}%"
+        }).ToList();
+
         RestartButton.IsEnabled = canUsePower && device.Online && !device.Inventory.IsSimulation;
         ShutdownButton.IsEnabled = RestartButton.IsEnabled;
         if (!canUsePower) ActionStatusText.Text = "Your role does not include power actions.";
         else if (!device.Online) ActionStatusText.Text = "Power actions require an online device.";
         else if (device.Inventory.IsSimulation) ActionStatusText.Text = "Power actions are disabled for simulator devices.";
+        else ActionStatusText.Text = "Power actions are also subject to the node's local policy.";
     }
 
     private void CopyId_Click(object sender, RoutedEventArgs e)

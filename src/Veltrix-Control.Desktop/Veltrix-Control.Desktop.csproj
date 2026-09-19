@@ -8,6 +8,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Veltrix-Control.Core\Veltrix-Control.Core.csproj" />
     <ProjectReference Include="..\Veltrix-Control.Shared\Veltrix-Control.Shared.csproj" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 using VeltrixControl.Contracts;
+using VeltrixControl.Core.Formatting;
 using System.Globalization;
 
 namespace VeltrixControl.Desktop;
@@ -16,24 +17,15 @@ public sealed class DeviceRow(DeviceSummary source)
     public string Name => Source.Name;
     public string Status => Source.Online ? "Online" : "Offline";
     public string Cpu => Source.Telemetry is null ? "—" : $"{Source.Telemetry.CpuPercent:0}%";
-    public string Memory => Source.Telemetry is null ? "—" : FormatBytes(Source.Telemetry.UsedMemoryBytes);
+    public string Memory => Source.Telemetry is null ? "—" : MetricFormatter.Memory(Source.Telemetry.UsedMemoryBytes, Source.Telemetry.TotalMemoryBytes);
+    public string FreeMemory => Source.Telemetry is null ? "—" : MetricFormatter.Bytes(Math.Max(0, Source.Telemetry.TotalMemoryBytes - Source.Telemetry.UsedMemoryBytes));
     public int Health => Source.HealthScore;
+    public string HealthDetail => Source.Online ? $"{Source.HealthScore}/100" : "Offline";
     public string LastSeen => Source.LastHeartbeat.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
     public string OperatingSystem => Source.Inventory.OperatingSystem;
     public string Agent => Source.Inventory.IsSimulation ? "Simulator" : $"v{Source.Inventory.AgentVersion}";
 
-    public static string FormatBytes(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB", "TB"];
-        var value = Math.Max(0, (double)bytes);
-        var unit = 0;
-        while (value >= 1024 && unit < units.Length - 1)
-        {
-            value /= 1024;
-            unit++;
-        }
-        return $"{value:0.#} {units[unit]}";
-    }
+    public static string FormatBytes(long bytes) => MetricFormatter.Bytes(bytes);
 }
 
 public sealed class FileRow(FileEntry source)

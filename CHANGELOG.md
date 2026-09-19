@@ -2,6 +2,38 @@
 
 All notable changes follow semantic versioning.
 
+## [0.10.4] - 2026-09-19
+
+### Changed
+
+- Memory telemetry now always reads as used / total with free capacity: Overview shows
+  e.g. `6.3 GB / 32 GB` with `25.7 GB free across online nodes`, the device directory has
+  Memory used / total and Free RAM columns, and the device profile shows the same values
+  with a detail caption.
+- Metric typography uses tabular figures for stable alignment; labels, captions, and
+  secondary text follow one hierarchy, and secondary text contrast was raised to meet
+  accessibility targets (secondary ~8:1, subtle ~4.9:1 on surfaces).
+- Device profile redesigned: metric cards carry captions (health band, logical processors,
+  memory detail, uptime), and the storage table now shows used / total, free, and used
+  percent per drive.
+- Navigation is role-aware: sections the signed-in role cannot use are disabled with an
+  explanation tooltip instead of failing later.
+- One primary action per toolbar (Create backup, Register package, Deploy selected,
+  New rule, New server, New integration) to clarify hierarchy.
+- Motion: a 150 ms content fade on navigation and a pulsing refresh indicator, both
+  automatically disabled when Windows animations are turned off.
+
+### Fixed
+
+- Health now reads as `82/100` in tables and offline devices report "Offline" instead of a
+  bare zero.
+- Empty states added for the Overview, Devices, Files, Alerts, and Audit grids so blank
+  tables explain themselves.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.10.4.
+
 ## [0.10.3] - 2026-09-19
 
 ### Changed

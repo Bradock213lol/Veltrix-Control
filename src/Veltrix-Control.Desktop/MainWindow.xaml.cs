@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using VeltrixControl.Contracts;
+using VeltrixControl.Core.Formatting;
 
 namespace VeltrixControl.Desktop;
 
@@ -236,7 +237,7 @@ public partial class MainWindow : Window
         SignedInRole.Text = _user.Role;
         AddDeviceButton.IsEnabled = HasAdminPermission();
         VerifyAuditButton.IsEnabled = HasAdminPermission();
-        FilesNav.IsEnabled = _user.Role is not "Viewer";
+        ConfigureNavigationForRole(_user.Role);
         SettingsControllerUrl.Text = _api.BaseAddress.AbsoluteUri;
         ConfigureTimer();
         try
@@ -256,6 +257,7 @@ public partial class MainWindow : Window
     {
         if (_api is null || _user is null || _refreshing) return;
         _refreshing = true;
+        Motion.SetBusy(BusyDot, true);
         try
         {
             SetStatus("Refreshing fleet…");
@@ -267,10 +269,21 @@ public partial class MainWindow : Window
 
             var online = _devices.Where(device => device.Online).ToList();
             OnlineMetric.Text = online.Count.ToString(CultureInfo.CurrentCulture);
-            OnlineCaption.Text = $"of {_devices.Count} enrolled";
-            CpuMetric.Text = online.Count == 0 ? "0%" : $"{online.Average(device => device.Telemetry?.CpuPercent ?? 0):0}%";
-            MemoryMetric.Text = DeviceRow.FormatBytes(online.Sum(device => device.Telemetry?.UsedMemoryBytes ?? 0));
-            AttentionMetric.Text = _devices.Count(device => device.HealthScore < 75).ToString(CultureInfo.CurrentCulture);
+            OnlineCaption.Text = _devices.Count == 0 ? "No devices enrolled" : $"of {_devices.Count} enrolled";
+            CpuMetric.Text = online.Count == 0 ? "—" : $"{online.Average(device => device.Telemetry?.CpuPercent ?? 0):0}%";
+            CpuCaption.Text = online.Count == 0 ? "No online devices" : $"Across {online.Count} online node{(online.Count == 1 ? string.Empty : "s")}";
+
+            var totalMemory = online.Sum(device => device.Telemetry?.TotalMemoryBytes ?? 0);
+            var usedMemory = online.Sum(device => device.Telemetry?.UsedMemoryBytes ?? 0);
+            MemoryMetric.Text = totalMemory == 0 ? "—" : MetricFormatter.Memory(usedMemory, totalMemory);
+            MemoryCaption.Text = totalMemory == 0
+                ? "No memory telemetry"
+                : $"{MetricFormatter.Bytes(Math.Max(0, totalMemory - usedMemory))} free across online nodes";
+
+            var attention = _devices.Count(device => device.HealthScore < 75);
+            AttentionMetric.Text = attention.ToString(CultureInfo.CurrentCulture);
+            AttentionCaption.Text = attention == 0 ? "All monitored nodes healthy" : $"of {_devices.Count} node{(_devices.Count == 1 ? string.Empty : "s")} below 75";
+
             DashboardGettingStarted.Visibility = _devices.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             DashboardDevicesGrid.Visibility = _devices.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
             LastRefreshText.Text = $"Updated {DateTime.Now:t}";
@@ -283,6 +296,7 @@ public partial class MainWindow : Window
         finally
         {
             _refreshing = false;
+            Motion.SetBusy(BusyDot, false);
         }
     }
 
@@ -1783,7 +1797,14 @@ public partial class MainWindow : Window
     private void NavigateTo(string view)
     {
         var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AdminView, DeploymentView, OperationsView, IntegrationsView, AuditView, SettingsView };
-        foreach (var item in views) item.Visibility = item.Name == view ? Visibility.Visible : Visibility.Collapsed;
+        FrameworkElement? target = null;
+        foreach (var item in views)
+        {
+            var visible = item.Name == view;
+            item.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            if (visible) target = item;
+        }
+        if (target is not null) Motion.FadeIn(target);
 
         var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AdminNav, DeploymentNav, OperationsNav, IntegrationsNav, AuditNav, SettingsNav };
         foreach (var button in nav)
@@ -1882,6 +1903,24 @@ public partial class MainWindow : Window
 
     private bool HasAdminPermission() => _user?.Role is "Owner" or "Administrator";
     private bool HasPowerPermission() => _user?.Role is "Owner" or "Administrator" or "Operator";
+
+    private void ConfigureNavigationForRole(string role)
+    {
+        var viewer = role is "Viewer";
+        var administrator = role is "Owner" or "Administrator";
+
+        FilesNav.IsEnabled = !viewer;
+        AdminNav.IsEnabled = !viewer;
+        OperationsNav.IsEnabled = !viewer;
+        DeploymentNav.IsEnabled = administrator;
+        IntegrationsNav.IsEnabled = administrator;
+
+        ToolTipService.SetToolTip(FilesNav, viewer ? "Managed files require the Operator role or higher." : null);
+        ToolTipService.SetToolTip(AdminNav, viewer ? "Administration requires the Operator role or higher." : null);
+        ToolTipService.SetToolTip(OperationsNav, viewer ? "Operations requires the Operator role or higher." : null);
+        ToolTipService.SetToolTip(DeploymentNav, administrator ? null : "Deployment requires the Administrator role.");
+        ToolTipService.SetToolTip(IntegrationsNav, administrator ? null : "Integrations require the Administrator role.");
+    }
 
     private void SetStatus(string text, bool success = false, bool error = false)
     {
