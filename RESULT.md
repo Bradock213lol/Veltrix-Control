@@ -1,36 +1,34 @@
-# Veltrix-Control v0.7.0 result report
+# Veltrix-Control v0.8.0 result report
 
 ## Status
 
-Phase 7 is implemented: a resource-aware compute scheduler places bounded jobs on eligible
-nodes with per-node workload policies, retries, cancellation, and full audit history.
-Phases 1-6 remain intact.
+Phase 8 is implemented: game servers can be provisioned, started, stopped, updated, and
+operated through a live console with crash recovery and crash-loop protection. Phases 1-7
+remain intact.
 
 ## Delivered workflows
 
-- Compute job queue with requirements (CPU, memory, disk, optional device target), command,
-  priority, timeout, attempts, and explicit confirmation.
-- Scheduler placement by priority and available capacity after reservations and running
-  jobs, with per-node Idle, Server, Compute, Gaming, and Maintenance policies.
-- Job lifecycle: queued, running, succeeded, failed, cancelled, and timed-out, with
-  automatic retry and process-tree cancellation.
-- Agent execution of approved .exe jobs on a dedicated worker, one job per node, bounded
-  output, and timeout enforcement.
-- GPU jobs are rejected with an explicit capability message.
-- Desktop Compute workspace with policy editor, job queue, and create/cancel actions.
+- Versioned adapter contract with a production Minecraft Java adapter that downloads the
+  official server jar, verifies the published SHA-1, accepts the EULA explicitly, and
+  writes safe default configuration.
+- Instance lifecycle: provision, start, stop, update, console input, and streamed console
+  output with bounded buffers.
+- Crash detection with automatic restart, crash-loop protection, and actionable alerts.
+- Complete instance event history and audit trail for every action.
+- Desktop Game servers workspace with creation, lifecycle actions, and a live console.
 
 ## Verification
 
 - Release build: **PASS**, zero compiler warnings and zero errors.
-- Automated tests: **119 PASS** across unit, security, Agent, integration, and
+- Automated tests: **127 PASS** across unit, security, Agent, integration, and
   Controller-to-Agent end-to-end suites.
-- New coverage: scheduler assignment end to end, Gaming-mode blocking, GPU refusal,
-  queued-job cancellation, invalid job rejection, unsafe path rejection, fixture
-  execution with exit codes, timeout reporting, and unknown-job cancellation.
+- New coverage: adapter validation, unsafe install paths, unprovisioned starts, process
+  manager fixture lifecycle, full lifecycle through agent operations, automatic restart
+  after a crash, invalid request rejection, and viewer permission denial.
 
 ## Release artifacts
 
-- Tag: `v0.7.0`
+- Tag: `v0.8.0`
 - Installer: `Veltrix-Control-Setup.exe`
 - Checksum manifest: `SHA256SUMS.txt`
 - Archive: `Veltrix-Control-Windows-x64.zip`
@@ -38,8 +36,10 @@ Phases 1-6 remain intact.
 
 ## Known limitations
 
-- Capacity is enforced by scheduler reservation, not by operating-system quotas.
-- GPU scheduling awaits node GPU capability reporting.
+- Minecraft Java requires Java 21 or newer on the managed node; provisioning fails with a
+  clear message when Java is missing.
+- Only the Minecraft Java adapter is present; the contract is ready for additional
+  adapters in later phases.
 - Binaries are not Authenticode-signed because no organization signing certificate was
   supplied; Windows may display an unknown-publisher warning.
-- Game-server adapters and integrations remain planned phases.
+- Optional Pterodactyl and Docker integrations remain a planned phase.

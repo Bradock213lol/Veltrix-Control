@@ -5,13 +5,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Veltrix-Control is a security-first Windows fleet management platform. One installer can
-configure a computer as a **Controller**, **Managed Node**, or both. Version 0.7.0 adds a resource-aware compute scheduler with per-node workload policies on
-top of backups, alerts, automation, software deployment, and controlled administration.
+configure a computer as a **Controller**, **Managed Node**, or both. Version 0.8.0 adds a first-class game server platform with a versioned adapter contract
+and a Minecraft Java adapter, on top of compute scheduling, backups, alerts, and automation.
 
 > This project is for systems owned by or explicitly authorized by the administrator.
 > It does not hide its services, bypass Windows security, or silently enroll devices.
 
-## What works in v0.7.0
+## What works in v0.8.0
 
 - First-run Owner setup, secure cookie sessions, four-role permission model
 - Single-use 1–60 minute enrollment codes
@@ -33,6 +33,7 @@ top of backups, alerts, automation, software deployment, and controlled administ
 - Fleet alerts with acknowledgement and automatic resolution
 - Automation rules with triggers, cooldowns, allow-listed actions, and run history
 - Resource-aware compute job scheduler with per-node workload policies
+- Game server platform with a Minecraft Java adapter, console, crash recovery, and updates
 - Managed-root file management: create, rename, move, copy, delete, search, size, ZIP
 - Chunked, resumable, checksum-verified uploads and downloads with progress and cancellation
 - Text editor with find/replace, atomic saves, pre-save backups, history, and diff view

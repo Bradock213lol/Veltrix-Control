@@ -488,6 +488,31 @@
                   </DataGrid>
                 </Grid>
               </TabItem>
+              <TabItem Header="Game servers">
+                <Grid Margin="0,12,0,0">
+                  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                  <WrapPanel>
+                    <Button Content="New server" Click="GameServerCreate_Click"/>
+                    <Button Content="Start" Margin="8,0,0,0" Click="GameServerStart_Click"/>
+                    <Button Content="Stop" Margin="8,0,0,0" Click="GameServerStop_Click"/>
+                    <Button Content="Update" Margin="8,0,0,0" Click="GameServerUpdate_Click"/>
+                    <Button Content="Console" Margin="8,0,0,0" Click="GameServerConsole_Click"/>
+                    <Button Content="Refresh" Margin="8,0,0,0" Click="GameServerRefresh_Click"/>
+                    <TextBlock x:Name="GameServerCaption" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                  </WrapPanel>
+                  <DataGrid x:Name="GameServersGrid" Grid.Row="1" Margin="0,12,0,0">
+                    <DataGrid.Columns>
+                      <DataGridTextColumn Header="Server" Binding="{Binding Name}" Width="1.5*"/>
+                      <DataGridTextColumn Header="Node" Binding="{Binding Device}" Width="1.2*"/>
+                      <DataGridTextColumn Header="State" Binding="{Binding State}" Width="*"/>
+                      <DataGridTextColumn Header="Adapter" Binding="{Binding Adapter}" Width="*"/>
+                      <DataGridTextColumn Header="Port" Binding="{Binding Address}" Width="*"/>
+                      <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="*"/>
+                      <DataGridTextColumn Header="Recovery" Binding="{Binding AutoRestart}" Width="*"/>
+                    </DataGrid.Columns>
+                  </DataGrid>
+                </Grid>
+              </TabItem>
             </TabControl>
           </Grid>
 

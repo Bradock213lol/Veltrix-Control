@@ -18,6 +18,7 @@ public sealed partial class OperationExecutor(
     WindowsUpdateOperations windowsUpdateOperations,
     BackupOperations backupOperations,
     ComputeOperations computeOperations,
+    Agent.GameServers.GameServerOperations gameServerOperations,
     ILogger<OperationExecutor> logger)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -52,6 +53,10 @@ public sealed partial class OperationExecutor(
             if (ComputeOperations.Handles(operation.Kind))
             {
                 return await computeOperations.ExecuteAsync(operation, cancellationToken);
+            }
+            if (Agent.GameServers.GameServerOperations.Handles(operation.Kind))
+            {
+                return await gameServerOperations.ExecuteAsync(operation, cancellationToken);
             }
 
             return operation.Kind switch

@@ -177,6 +177,30 @@ public sealed class ControllerApiClient : IDisposable
     public async Task CancelComputeJobAsync(Guid jobId, CancellationToken cancellationToken = default) =>
         await SendAsync<object?>(HttpMethod.Post, $"api/compute/jobs/{jobId:D}/cancel", null, true, cancellationToken);
 
+    public Task<GameServerView[]> GetGameServersAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<GameServerView[]>("api/gameservers", cancellationToken);
+
+    public Task<JsonElement> CreateGameServerAsync(Guid deviceId, GameServerRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<JsonElement>(HttpMethod.Post, $"api/devices/{deviceId:D}/gameservers", request, true, cancellationToken);
+
+    public Task<OperationView> StartGameServerAsync(Guid serverId, CancellationToken cancellationToken = default) =>
+        SendAsync<OperationView>(HttpMethod.Post, $"api/gameservers/{serverId:D}/start", null, true, cancellationToken);
+
+    public Task<OperationView> StopGameServerAsync(Guid serverId, CancellationToken cancellationToken = default) =>
+        SendAsync<OperationView>(HttpMethod.Post, $"api/gameservers/{serverId:D}/stop", null, true, cancellationToken);
+
+    public Task<OperationView> UpdateGameServerAsync(Guid serverId, CancellationToken cancellationToken = default) =>
+        SendAsync<OperationView>(HttpMethod.Post, $"api/gameservers/{serverId:D}/update", null, true, cancellationToken);
+
+    public Task<OperationView> GameServerConsoleAsync(Guid serverId, string data, CancellationToken cancellationToken = default) =>
+        SendAsync<OperationView>(HttpMethod.Post, $"api/gameservers/{serverId:D}/console", new TerminalInputRequest(data), true, cancellationToken);
+
+    public Task<OperationView> GameServerOutputAsync(Guid serverId, long since, CancellationToken cancellationToken = default) =>
+        SendAsync<OperationView>(HttpMethod.Post, $"api/gameservers/{serverId:D}/output?since={since}", null, true, cancellationToken);
+
+    public Task<GameServerEventView[]> GetGameServerEventsAsync(Guid serverId, CancellationToken cancellationToken = default) =>
+        GetAsync<GameServerEventView[]>($"api/gameservers/{serverId:D}/events", cancellationToken);
+
     public async Task<TransferView> UploadFileAsync(Guid deviceId, string localPath, string remotePath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var info = new FileInfo(localPath);

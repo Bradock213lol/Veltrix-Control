@@ -187,3 +187,16 @@ public sealed class ComputeJobRowView(ComputeJobView source)
     public string Created => Source.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
     public string Detail => Source.Error ?? Source.ResultJson ?? string.Empty;
 }
+
+public sealed class GameServerRowView(GameServerView source)
+{
+    public GameServerView Source { get; } = source;
+    public Guid Id => Source.Id;
+    public string Name => Source.Name;
+    public string Device => Source.DeviceName;
+    public string Adapter => Source.Adapter;
+    public string State => Source.State;
+    public string Address => $":{Source.Port}";
+    public string Version => Source.Version ?? "—";
+    public string AutoRestart => Source.AutoRestart ? "Auto restart" : "Manual";
+}

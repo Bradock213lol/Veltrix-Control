@@ -109,7 +109,9 @@ public enum OperationKind
     GameServerProvision,
     GameServerStart,
     GameServerStop,
-    GameServerUpdate
+    GameServerUpdate,
+    GameServerInput,
+    GameServerOutput
 }
 
 public enum OperationState

@@ -8,7 +8,7 @@
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
-    <Version>0.7.0</Version>
+    <Version>0.8.0</Version>
     <Company>Veltrix-Control</Company>
     <Product>Veltrix-Control</Product>
     <Authors>Veltrix-Control Contributors</Authors>

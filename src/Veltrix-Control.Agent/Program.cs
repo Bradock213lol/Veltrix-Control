@@ -1,4 +1,5 @@
 using VeltrixControl.Agent;
+using VeltrixControl.Agent.GameServers;
 using VeltrixControl.Agent.Operations;
 using VeltrixControl.Agent.Security;
 using VeltrixControl.Agent.Telemetry;
@@ -26,6 +27,9 @@ builder.Services.AddSingleton<SoftwareOperations>();
 builder.Services.AddSingleton<WindowsUpdateOperations>();
 builder.Services.AddSingleton<BackupOperations>();
 builder.Services.AddSingleton<ComputeOperations>();
+builder.Services.AddSingleton<GameServerManager>();
+builder.Services.AddSingleton<MinecraftJavaAdapter>();
+builder.Services.AddSingleton<GameServerOperations>();
 builder.Services.AddSingleton<OperationInbox>();
 builder.Services.AddSingleton<OperationExecutor>();
 builder.Services.AddSingleton(new HttpClient(CreateHandler(options))

@@ -789,6 +789,107 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void GameServerRefresh_Click(object sender, RoutedEventArgs e) => await LoadGameServersAsync();
+
+    private async Task LoadGameServersAsync()
+    {
+        if (_api is null) return;
+        try
+        {
+            var servers = await _api.GetGameServersAsync();
+            GameServersGrid.ItemsSource = servers.Select(server => new GameServerRowView(server)).ToList();
+            GameServerCaption.Text = $"{servers.Length} game server(s)";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            GameServerCaption.Text = exception.Message;
+        }
+    }
+
+    private async void GameServerCreate_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || ComputeDeviceBox.SelectedItem is not DeviceRow device)
+        {
+            SetStatus("Select a device in the Compute tab first.", false, true);
+            return;
+        }
+        var window = new GameServerWindow { Owner = this };
+        if (window.ShowDialog() != true || window.Result is null) return;
+        try
+        {
+            var response = await _api.CreateGameServerAsync(device.Id, window.Result);
+            var operationId = response.GetProperty("operation").GetProperty("id").GetGuid();
+            var completed = await _api.WaitForOperationAsync(operationId, TimeSpan.FromMinutes(20));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"Provisioning ended with {completed.State}.");
+            SetStatus("Game server provisioned", true);
+            await LoadGameServersAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException or JsonException)
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void GameServerStart_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || GameServersGrid.SelectedItem is not GameServerRowView row) return;
+        try
+        {
+            var operation = await _api.StartGameServerAsync(row.Id);
+            var completed = await _api.WaitForOperationAsync(operation.Id, TimeSpan.FromMinutes(3));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"Start ended with {completed.State}.");
+            SetStatus($"{row.Name} started", true);
+            await LoadGameServersAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException)
+        {
+            SetStatus(exception.Message, false, true);
+            await LoadGameServersAsync();
+        }
+    }
+
+    private async void GameServerStop_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || GameServersGrid.SelectedItem is not GameServerRowView row) return;
+        if (MessageBox.Show(this, $"Stop game server '{row.Name}'?", "Stop server", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            var operation = await _api.StopGameServerAsync(row.Id);
+            var completed = await _api.WaitForOperationAsync(operation.Id, TimeSpan.FromMinutes(3));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"Stop ended with {completed.State}.");
+            SetStatus($"{row.Name} stopped", true);
+            await LoadGameServersAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException)
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void GameServerUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || GameServersGrid.SelectedItem is not GameServerRowView row) return;
+        try
+        {
+            var operation = await _api.UpdateGameServerAsync(row.Id);
+            var completed = await _api.WaitForOperationAsync(operation.Id, TimeSpan.FromMinutes(20));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"Update ended with {completed.State}.");
+            SetStatus($"{row.Name} updated", true);
+            await LoadGameServersAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException)
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private void GameServerConsole_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || GameServersGrid.SelectedItem is not GameServerRowView row) return;
+        new GameServerConsoleWindow(_api, row.Source) { Owner = this }.ShowDialog();
+        _ = LoadGameServersAsync();
+    }
+
     private async void SoftwareRefresh_Click(object sender, RoutedEventArgs e) => await LoadSoftwareAsync();
 
     private async Task LoadSoftwareAsync()
@@ -1424,7 +1525,7 @@ public partial class MainWindow : Window
         };
         if (view == "AuditView" && _auditEvents.Count == 0) _ = LoadAuditAsync();
         if (view == "DeploymentView") _ = LoadSoftwareAsync();
-        if (view == "OperationsView") { _ = LoadBackupsAsync(); _ = LoadAlertsAsync(); _ = LoadAutomationsAsync(); _ = LoadComputeJobsAsync(); }
+        if (view == "OperationsView") { _ = LoadBackupsAsync(); _ = LoadAlertsAsync(); _ = LoadAutomationsAsync(); _ = LoadComputeJobsAsync(); _ = LoadGameServersAsync(); }
         if (view == "DevicesView") DeviceSearchBox.Focus();
     }
 

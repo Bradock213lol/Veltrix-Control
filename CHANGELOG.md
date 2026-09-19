@@ -2,6 +2,21 @@
 
 All notable changes follow semantic versioning.
 
+## [0.8.0] - 2026-09-19
+
+### Added
+
+- Game server platform with a versioned adapter contract and a production Minecraft Java adapter.
+- Provisioning that downloads the official server jar, verifies the published SHA-1 from the Mojang manifest, accepts the EULA explicitly, and writes safe default server.properties.
+- Instance lifecycle: create (provision), start, stop, update, console input, and streamed console output with bounded buffers.
+- Crash detection with automatic restart when enabled, crash-loop protection that stops repeated restarts and raises one actionable alert, and complete instance event history.
+- Desktop Game servers workspace with creation, lifecycle actions, and a live console window.
+- Agent and end-to-end coverage for adapter validation, process management, lifecycle operations, automatic restart, and permissions.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.8.0.
+
 ## [0.7.0] - 2026-09-19
 
 ### Added

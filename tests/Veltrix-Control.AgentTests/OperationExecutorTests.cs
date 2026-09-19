@@ -58,6 +58,10 @@ public sealed class OperationExecutorTests : IDisposable
             new WindowsUpdateOperations(options, NullLogger<WindowsUpdateOperations>.Instance),
             new BackupOperations(options, NullLogger<BackupOperations>.Instance),
             new ComputeOperations(NullLogger<ComputeOperations>.Instance),
+            new VeltrixControl.Agent.GameServers.GameServerOperations(options,
+                new VeltrixControl.Agent.GameServers.MinecraftJavaAdapter(options, NullLogger<VeltrixControl.Agent.GameServers.MinecraftJavaAdapter>.Instance),
+                new VeltrixControl.Agent.GameServers.GameServerManager(NullLogger<VeltrixControl.Agent.GameServers.GameServerManager>.Instance),
+                NullLogger<VeltrixControl.Agent.GameServers.GameServerOperations>.Instance),
             NullLogger<OperationExecutor>.Instance);
     }
 

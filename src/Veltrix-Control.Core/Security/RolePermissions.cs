@@ -64,7 +64,7 @@ public static class RolePermissions
         OperationKind.ScanWindowsUpdates or OperationKind.InstallWindowsUpdate => DeviceUpdates,
         OperationKind.CreateBackup or OperationKind.RestoreBackup or OperationKind.VerifyBackup => DeviceBackup,
         OperationKind.RunComputeJob or OperationKind.CancelComputeJob => DeviceCompute,
-        OperationKind.GameServerProvision or OperationKind.GameServerStart or OperationKind.GameServerStop or OperationKind.GameServerUpdate => GameManage,
+        OperationKind.GameServerProvision or OperationKind.GameServerStart or OperationKind.GameServerStop or OperationKind.GameServerUpdate or OperationKind.GameServerInput or OperationKind.GameServerOutput => GameManage,
         _ => DeviceDiagnostics
     };
 }

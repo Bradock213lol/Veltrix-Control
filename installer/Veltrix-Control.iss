@@ -1,5 +1,5 @@
 #define MyAppName "Veltrix-Control"
-#define MyAppVersion "0.7.0"
+#define MyAppVersion "0.8.0"
 #define MyAppPublisher "Veltrix-Control"
 #define MyAppExeName "Veltrix-Control.Controller.exe"
 

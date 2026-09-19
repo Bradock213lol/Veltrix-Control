@@ -200,6 +200,35 @@ public static partial class InputValidator
                 var cancelJob = Parse<ComputeCancelArgument>(argument);
                 if (cancelJob is null || cancelJob.JobId == Guid.Empty) return "A valid job identifier is required.";
                 return null;
+            case OperationKind.GameServerProvision:
+                var provision = Parse<GameServerProvisionArgument>(argument);
+                if (provision is null || provision.ServerId == Guid.Empty || !GameServerAdapters.IsKnown(provision.Adapter)) return "A valid game server provisioning request is required.";
+                if (!ValidPath(provision.InstallPath)) return "A valid install path is required.";
+                if (provision.Port is < 1 or > GameServerLimits.MaxPort) return "The port is outside the allowed range.";
+                if (provision.MemoryMb is < GameServerLimits.MinMemoryMb or > GameServerLimits.MaxMemoryMb) return "The memory setting is outside the allowed range.";
+                return null;
+            case OperationKind.GameServerStart:
+                var startServer = Parse<GameServerStartArgument>(argument);
+                if (startServer is null || startServer.ServerId == Guid.Empty || !ValidPath(startServer.InstallPath)) return "A valid game server start request is required.";
+                if (startServer.MemoryMb is < GameServerLimits.MinMemoryMb or > GameServerLimits.MaxMemoryMb) return "The memory setting is outside the allowed range.";
+                return null;
+            case OperationKind.GameServerStop:
+                var stopServer = Parse<GameServerStopArgument>(argument);
+                if (stopServer is null || stopServer.ServerId == Guid.Empty) return "A valid game server identifier is required.";
+                return null;
+            case OperationKind.GameServerUpdate:
+                var updateServer = Parse<GameServerUpdateArgument>(argument);
+                if (updateServer is null || updateServer.ServerId == Guid.Empty || !GameServerAdapters.IsKnown(updateServer.Adapter) || !ValidPath(updateServer.InstallPath)) return "A valid game server update request is required.";
+                return null;
+            case OperationKind.GameServerInput:
+                var serverInput = Parse<GameServerInputArgument>(argument);
+                if (serverInput is null || serverInput.ServerId == Guid.Empty) return "A valid game server identifier is required.";
+                if (string.IsNullOrEmpty(serverInput.Data) || serverInput.Data.Length > AdminLimits.MaxCommandLength) return "The console command is empty or too long.";
+                return null;
+            case OperationKind.GameServerOutput:
+                var serverOutput = Parse<GameServerOutputArgument>(argument);
+                if (serverOutput is null || serverOutput.ServerId == Guid.Empty || serverOutput.SinceSequence < 0) return "A valid game server output request is required.";
+                return null;
             default:
                 return argument is null || argument.Length <= 4096 ? null : "The operation argument exceeds the allowed size.";
         }

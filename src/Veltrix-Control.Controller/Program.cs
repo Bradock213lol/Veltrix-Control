@@ -69,6 +69,8 @@ builder.Services.AddScoped<AgentMessageVerifier>();
 builder.Services.AddHostedService<AlertEvaluator>();
 builder.Services.AddHostedService<AutomationEngine>();
 builder.Services.AddHostedService<ComputeScheduler>();
+builder.Services.AddSingleton<GameServerCoordinator>();
+builder.Services.AddHostedService<GameServerMonitor>();
 builder.Services.AddSignalR();
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -143,7 +145,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.7.0" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.8.0" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>
@@ -226,7 +228,7 @@ app.MapPost("/api/agent/heartbeat", async (SignedAgentMessage message, AgentMess
     return Results.Ok(new HeartbeatResponse(operations, Math.Clamp(options.Value.HeartbeatSeconds, 2, 60)));
 }).RequireRateLimiting("agent");
 
-app.MapPost("/api/agent/operation-result", async (SignedAgentMessage message, AgentMessageVerifier verifier, VeltrixControlStore database, IHubContext<FleetHub> hub, CancellationToken ct) =>
+app.MapPost("/api/agent/operation-result", async (SignedAgentMessage message, AgentMessageVerifier verifier, VeltrixControlStore database, GameServerCoordinator gameServers, IHubContext<FleetHub> hub, CancellationToken ct) =>
 {
     var result = await verifier.VerifyAsync<OperationResultPayload>(message, ct);
     if (result is null) return Results.Unauthorized();
@@ -311,6 +313,10 @@ app.MapPost("/api/agent/operation-result", async (SignedAgentMessage message, Ag
             // A malformed argument is rejected before the operation is queued.
         }
     }
+    if (operation is not null)
+    {
+        await gameServers.HandleResultAsync(operation, result, ct);
+    }
     await hub.Clients.All.SendAsync("operationUpdated", result.OperationId, ct);
     return Results.NoContent();
 }).RequireRateLimiting("agent");
@@ -357,6 +363,7 @@ management.MapManagementAdmin();
 management.MapManagementSoftware();
 management.MapManagementMonitoring();
 management.MapManagementCompute();
+management.MapManagementGameServers();
 
 app.MapAgentTransfers();
 
