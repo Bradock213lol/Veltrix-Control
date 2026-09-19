@@ -200,3 +200,16 @@ public sealed class GameServerRowView(GameServerView source)
     public string Version => Source.Version ?? "—";
     public string AutoRestart => Source.AutoRestart ? "Auto restart" : "Manual";
 }
+
+public sealed class IntegrationRowView(IntegrationView source)
+{
+    public IntegrationView Source { get; } = source;
+    public Guid Id => Source.Id;
+    public string Name => Source.Name;
+    public string Kind => Source.Kind;
+    public string Endpoint => Source.BaseUrl;
+    public string Enabled => Source.Enabled ? "Enabled" : "Disabled";
+    public string Health => Source.HealthState ?? "Unknown";
+    public string LastChecked => Source.LastCheckedAt?.LocalDateTime.ToString("g", CultureInfo.CurrentCulture) ?? "Never";
+    public string Detail => Source.HealthDetail ?? (Source.HasCredential ? "Credential stored" : "No credential");
+}

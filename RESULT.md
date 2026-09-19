@@ -1,34 +1,35 @@
-# Veltrix-Control v0.8.0 result report
+# Veltrix-Control v0.9.0 result report
 
 ## Status
 
-Phase 8 is implemented: game servers can be provisioned, started, stopped, updated, and
-operated through a live console with crash recovery and crash-loop protection. Phases 1-7
-remain intact.
+Phase 9 is implemented: existing Pterodactyl and Docker environments can be observed and
+controlled through optional, isolated integrations. Phases 1-8 remain intact.
 
 ## Delivered workflows
 
-- Versioned adapter contract with a production Minecraft Java adapter that downloads the
-  official server jar, verifies the published SHA-1, accepts the EULA explicitly, and
-  writes safe default configuration.
-- Instance lifecycle: provision, start, stop, update, console input, and streamed console
-  output with bounded buffers.
-- Crash detection with automatic restart, crash-loop protection, and actionable alerts.
-- Complete instance event history and audit trail for every action.
-- Desktop Game servers workspace with creation, lifecycle actions, and a live console.
+- Pterodactyl Panel integration: health check, node and server listing, and confirmed
+  power actions through the official application API.
+- Docker integration: engine health, containers, images, volumes, container lifecycle
+  actions, and bounded container logs over npipe or HTTPS endpoints.
+- AES-GCM credential protection with a Controller-local key; credentials are never exposed
+  in API responses and are deleted with the integration.
+- A separate `Veltrix-Control.Integrations` module so integration outages cannot degrade
+  core workflows.
+- Desktop Integrations workspace with creation, health, resources, actions, logs, and
+  deletion.
 
 ## Verification
 
 - Release build: **PASS**, zero compiler warnings and zero errors.
-- Automated tests: **127 PASS** across unit, security, Agent, integration, and
+- Automated tests: **134 PASS** across unit, security, Agent, integration, and
   Controller-to-Agent end-to-end suites.
-- New coverage: adapter validation, unsafe install paths, unprovisioned starts, process
-  manager fixture lifecycle, full lifecycle through agent operations, automatic restart
-  after a crash, invalid request rejection, and viewer permission denial.
+- New coverage: credential round trip and tamper rejection, key reuse, redaction in
+  responses, health reporting for unavailable endpoints, endpoint and kind validation,
+  permission denial, and confirmation requirements.
 
 ## Release artifacts
 
-- Tag: `v0.8.0`
+- Tag: `v0.9.0`
 - Installer: `Veltrix-Control-Setup.exe`
 - Checksum manifest: `SHA256SUMS.txt`
 - Archive: `Veltrix-Control-Windows-x64.zip`
@@ -36,10 +37,10 @@ remain intact.
 
 ## Known limitations
 
-- Minecraft Java requires Java 21 or newer on the managed node; provisioning fails with a
-  clear message when Java is missing.
-- Only the Minecraft Java adapter is present; the contract is ready for additional
-  adapters in later phases.
+- Pterodactyl console logs require the client API and websocket access; the application
+  API does not expose them, and the integration says so explicitly.
+- Docker remote endpoints require npipe or HTTPS; plaintext TCP is limited to loopback.
 - Binaries are not Authenticode-signed because no organization signing certificate was
   supplied; Windows may display an unknown-publisher warning.
-- Optional Pterodactyl and Docker integrations remain a planned phase.
+- Production hardening (PostgreSQL option, signed self-update, enterprise identity) is
+  the remaining milestone.

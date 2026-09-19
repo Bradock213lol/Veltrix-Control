@@ -16,6 +16,7 @@ using VeltrixControl.Controller.Services;
 using VeltrixControl.Controller.Validation;
 using VeltrixControl.Core.Security;
 using VeltrixControl.Infrastructure;
+using VeltrixControl.Integrations;
 using VeltrixControl.Contracts;
 
 if (args is ["--prepare-combined-role"])
@@ -71,6 +72,10 @@ builder.Services.AddHostedService<AutomationEngine>();
 builder.Services.AddHostedService<ComputeScheduler>();
 builder.Services.AddSingleton<GameServerCoordinator>();
 builder.Services.AddHostedService<GameServerMonitor>();
+// Integration credential protection uses a local AES-GCM key stored beside the database.
+builder.Services.AddSingleton<IntegrationCredentialProtector>();
+builder.Services.AddSingleton<IIntegrationAdapter, PterodactylAdapter>();
+builder.Services.AddSingleton<IIntegrationAdapter, DockerAdapter>();
 builder.Services.AddSignalR();
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -145,7 +150,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.8.0" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.9.0" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>
@@ -364,6 +369,7 @@ management.MapManagementSoftware();
 management.MapManagementMonitoring();
 management.MapManagementCompute();
 management.MapManagementGameServers();
+management.MapManagementIntegrations();
 
 app.MapAgentTransfers();
 

@@ -49,6 +49,7 @@
             <Button x:Name="AdminNav" Content="Administration" Tag="AdminView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
             <Button x:Name="DeploymentNav" Content="Deployment" Tag="DeploymentView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
             <Button x:Name="OperationsNav" Content="Operations" Tag="OperationsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
+            <Button x:Name="IntegrationsNav" Content="Integrations" Tag="IntegrationsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
             <Button x:Name="AuditNav" Content="Audit history" Tag="AuditView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
             <TextBlock Text="APPLICATION" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" Margin="14,22,0,6"/>
             <Button x:Name="SettingsNav" Content="Settings" Tag="SettingsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
@@ -514,6 +515,29 @@
                 </Grid>
               </TabItem>
             </TabControl>
+          </Grid>
+
+          <Grid x:Name="IntegrationsView" Visibility="Collapsed">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <WrapPanel>
+              <Button Content="New integration" Click="IntegrationCreate_Click"/>
+              <Button Content="Check health" Margin="8,0,0,0" Click="IntegrationHealth_Click"/>
+              <Button Content="Resources..." Margin="8,0,0,0" Click="IntegrationResources_Click"/>
+              <Button Content="Delete" Margin="8,0,0,0" Click="IntegrationDelete_Click"/>
+              <Button Content="Refresh" Margin="8,0,0,0" Click="IntegrationRefresh_Click"/>
+              <TextBlock x:Name="IntegrationCaption" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+            </WrapPanel>
+            <DataGrid x:Name="IntegrationsGrid" Grid.Row="1" Margin="0,12,0,0">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="1.5*"/>
+                <DataGridTextColumn Header="Kind" Binding="{Binding Kind}" Width="*"/>
+                <DataGridTextColumn Header="Endpoint" Binding="{Binding Endpoint}" Width="2.5*"/>
+                <DataGridTextColumn Header="State" Binding="{Binding Enabled}" Width="*"/>
+                <DataGridTextColumn Header="Health" Binding="{Binding Health}" Width="*"/>
+                <DataGridTextColumn Header="Last checked" Binding="{Binding LastChecked}" Width="1.2*"/>
+                <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="2.5*"/>
+              </DataGrid.Columns>
+            </DataGrid>
           </Grid>
 
           <Grid x:Name="AuditView" Visibility="Collapsed">

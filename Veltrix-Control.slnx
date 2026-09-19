@@ -5,6 +5,7 @@
     <Project Path="src/Veltrix-Control.Core/Veltrix-Control.Core.csproj" />
     <Project Path="src/Veltrix-Control.Desktop/Veltrix-Control.Desktop.csproj" />
     <Project Path="src/Veltrix-Control.Infrastructure/Veltrix-Control.Infrastructure.csproj" />
+    <Project Path="src/Veltrix-Control.Integrations/Veltrix-Control.Integrations.csproj" />
     <Project Path="src/Veltrix-Control.Launcher/Veltrix-Control.Launcher.csproj" />
     <Project Path="src/Veltrix-Control.Shared/Veltrix-Control.Shared.csproj" />
     <Project Path="src/Veltrix-Control.Simulator/Veltrix-Control.Simulator.csproj" />

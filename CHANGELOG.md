@@ -2,6 +2,21 @@
 
 All notable changes follow semantic versioning.
 
+## [0.9.0] - 2026-09-19
+
+### Added
+
+- Optional Pterodactyl integration for nodes and servers with health checks, resource listing, confirmed power actions, and clear API limitations.
+- Optional Docker integration for containers, images, and volumes with health checks, lifecycle actions, and bounded container logs.
+- AES-GCM credential protection with a Controller-local key; credentials are never returned to clients and are removed with the integration.
+- A dedicated `Veltrix-Control.Integrations` module so integrations never become dependencies of core workflows.
+- Desktop Integrations workspace with creation, health, resources, actions, logs, and deletion.
+- Coverage for credential round trips, tamper rejection, key reuse, endpoint validation, health reporting, confirmation requirements, and permissions.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.9.0.
+
 ## [0.8.0] - 2026-09-19
 
 ### Added

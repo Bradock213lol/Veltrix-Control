@@ -201,6 +201,27 @@ public sealed class ControllerApiClient : IDisposable
     public Task<GameServerEventView[]> GetGameServerEventsAsync(Guid serverId, CancellationToken cancellationToken = default) =>
         GetAsync<GameServerEventView[]>($"api/gameservers/{serverId:D}/events", cancellationToken);
 
+    public Task<IntegrationView[]> GetIntegrationsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<IntegrationView[]>("api/integrations", cancellationToken);
+
+    public Task<IntegrationView> CreateIntegrationAsync(IntegrationRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<IntegrationView>(HttpMethod.Post, "api/integrations", request, true, cancellationToken);
+
+    public async Task DeleteIntegrationAsync(Guid integrationId, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Delete, $"api/integrations/{integrationId:D}", null, true, cancellationToken);
+
+    public Task<JsonElement> CheckIntegrationHealthAsync(Guid integrationId, CancellationToken cancellationToken = default) =>
+        SendAsync<JsonElement>(HttpMethod.Post, $"api/integrations/{integrationId:D}/health", null, true, cancellationToken);
+
+    public Task<IntegrationResourceView[]> GetIntegrationResourcesAsync(Guid integrationId, CancellationToken cancellationToken = default) =>
+        GetAsync<IntegrationResourceView[]>($"api/integrations/{integrationId:D}/resources", cancellationToken);
+
+    public Task<JsonElement> ExecuteIntegrationActionAsync(Guid integrationId, string action, string resourceId, CancellationToken cancellationToken = default) =>
+        SendAsync<JsonElement>(HttpMethod.Post, $"api/integrations/{integrationId:D}/actions", new IntegrationActionRequest(action, resourceId, true), true, cancellationToken);
+
+    public Task<JsonElement> GetIntegrationLogsAsync(Guid integrationId, string resourceId, CancellationToken cancellationToken = default) =>
+        GetAsync<JsonElement>($"api/integrations/{integrationId:D}/logs?resourceId={Uri.EscapeDataString(resourceId)}", cancellationToken);
+
     public async Task<TransferView> UploadFileAsync(Guid deviceId, string localPath, string remotePath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var info = new FileInfo(localPath);

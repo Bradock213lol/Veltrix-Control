@@ -890,6 +890,79 @@ public partial class MainWindow : Window
         _ = LoadGameServersAsync();
     }
 
+    private async void IntegrationRefresh_Click(object sender, RoutedEventArgs e) => await LoadIntegrationsAsync();
+
+    private async Task LoadIntegrationsAsync()
+    {
+        if (_api is null) return;
+        try
+        {
+            var integrations = await _api.GetIntegrationsAsync();
+            IntegrationsGrid.ItemsSource = integrations.Select(integration => new IntegrationRowView(integration)).ToList();
+            IntegrationCaption.Text = $"{integrations.Length} integration(s)";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            IntegrationCaption.Text = exception.Message;
+        }
+    }
+
+    private async void IntegrationCreate_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null) return;
+        var window = new IntegrationWindow { Owner = this };
+        if (window.ShowDialog() != true || window.Result is null) return;
+        try
+        {
+            await _api.CreateIntegrationAsync(window.Result);
+            SetStatus("Integration added", true);
+            await LoadIntegrationsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void IntegrationHealth_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || IntegrationsGrid.SelectedItem is not IntegrationRowView row) return;
+        try
+        {
+            IntegrationCaption.Text = "Checking health…";
+            var result = await _api.CheckIntegrationHealthAsync(row.Id);
+            var state = result.TryGetProperty("state", out var stateElement) ? stateElement.GetString() : null;
+            var detail = result.TryGetProperty("detail", out var detailElement) ? detailElement.GetString() : null;
+            IntegrationCaption.Text = $"{state}: {detail}";
+            await LoadIntegrationsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            IntegrationCaption.Text = exception.Message;
+        }
+    }
+
+    private void IntegrationResources_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || IntegrationsGrid.SelectedItem is not IntegrationRowView row) return;
+        new IntegrationResourcesWindow(_api, row.Source) { Owner = this }.ShowDialog();
+    }
+
+    private async void IntegrationDelete_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || IntegrationsGrid.SelectedItem is not IntegrationRowView row) return;
+        if (MessageBox.Show(this, $"Delete integration '{row.Name}'? Stored credentials are removed with it.", "Delete integration", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            await _api.DeleteIntegrationAsync(row.Id);
+            await LoadIntegrationsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
     private async void SoftwareRefresh_Click(object sender, RoutedEventArgs e) => await LoadSoftwareAsync();
 
     private async Task LoadSoftwareAsync()
@@ -1504,10 +1577,10 @@ public partial class MainWindow : Window
 
     private void NavigateTo(string view)
     {
-        var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AdminView, DeploymentView, OperationsView, AuditView, SettingsView };
+        var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AdminView, DeploymentView, OperationsView, IntegrationsView, AuditView, SettingsView };
         foreach (var item in views) item.Visibility = item.Name == view ? Visibility.Visible : Visibility.Collapsed;
 
-        var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AdminNav, DeploymentNav, OperationsNav, AuditNav, SettingsNav };
+        var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AdminNav, DeploymentNav, OperationsNav, IntegrationsNav, AuditNav, SettingsNav };
         foreach (var button in nav)
             button.Background = Equals(button.Tag, view) ? (Brush)FindResource("AccentSoftBrush") : Brushes.Transparent;
 
@@ -1519,6 +1592,7 @@ public partial class MainWindow : Window
             "AdminView" => ("CONTROLLED ADMIN", "Processes, services, terminal"),
             "DeploymentView" => ("SOFTWARE LIFECYCLE", "Packages and Windows Update"),
             "OperationsView" => ("PROTECTION AND AUTOMATION", "Backups, alerts, rules"),
+            "IntegrationsView" => ("OPTIONAL INTEGRATIONS", "Pterodactyl and Docker"),
             "AuditView" => ("ACCOUNTABILITY", "Audit history"),
             "SettingsView" => ("APPLICATION", "Settings"),
             _ => ("FLEET OVERVIEW", "Command center")
@@ -1526,6 +1600,7 @@ public partial class MainWindow : Window
         if (view == "AuditView" && _auditEvents.Count == 0) _ = LoadAuditAsync();
         if (view == "DeploymentView") _ = LoadSoftwareAsync();
         if (view == "OperationsView") { _ = LoadBackupsAsync(); _ = LoadAlertsAsync(); _ = LoadAutomationsAsync(); _ = LoadComputeJobsAsync(); _ = LoadGameServersAsync(); }
+        if (view == "IntegrationsView") _ = LoadIntegrationsAsync();
         if (view == "DevicesView") DeviceSearchBox.Focus();
     }
 

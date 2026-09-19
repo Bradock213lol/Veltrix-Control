@@ -310,6 +310,7 @@ public sealed partial class VeltrixControlStore
             credential TEXT NULL,
             enabled INTEGER NOT NULL DEFAULT 1,
             health_state TEXT NULL,
+            health_detail TEXT NULL,
             last_checked_at TEXT NULL,
             created_by TEXT NOT NULL,
             created_at TEXT NOT NULL,
@@ -336,6 +337,21 @@ public sealed partial class VeltrixControlStore
         await using var command = connection.CreateCommand();
         command.CommandText = Schema;
         await command.ExecuteNonQueryAsync(cancellationToken);
+        await EnsureColumnAsync(connection, "integrations", "health_detail", "TEXT NULL", cancellationToken);
+    }
+
+    private static async Task EnsureColumnAsync(SqliteConnection connection, string table, string column, string definition, CancellationToken cancellationToken)
+    {
+        await using (var check = connection.CreateCommand())
+        {
+            check.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name = $column;";
+            check.Parameters.AddWithValue("$column", column);
+            var exists = Convert.ToInt64(await check.ExecuteScalarAsync(cancellationToken), System.Globalization.CultureInfo.InvariantCulture) > 0;
+            if (exists) return;
+        }
+        await using var alter = connection.CreateCommand();
+        alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition};";
+        await alter.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private SqliteConnection OpenConnection() => new(new SqliteConnectionStringBuilder
