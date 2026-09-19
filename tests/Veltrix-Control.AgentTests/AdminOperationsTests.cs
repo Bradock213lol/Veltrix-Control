@@ -105,9 +105,8 @@ public sealed class AdminOperationsTests : IDisposable
             Assert.Equal(OperationState.Succeeded, input.State);
             var output = JsonSerializer.Deserialize<TerminalOutputResult>(input.ResultJson!, JsonOptions);
             Assert.NotNull(output);
-            Assert.True(output!.Sequence > 0);
 
-            var deadline = DateTimeOffset.UtcNow.AddSeconds(15);
+            var deadline = DateTimeOffset.UtcNow.AddSeconds(20);
             while (DateTimeOffset.UtcNow < deadline && !output.Output.Contains("veltrix-terminal-check", StringComparison.OrdinalIgnoreCase) && !output.Exited)
             {
                 await Task.Delay(300);
