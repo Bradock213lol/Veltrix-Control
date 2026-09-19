@@ -2,6 +2,28 @@
 
 All notable changes follow semantic versioning.
 
+## [0.5.0] - 2026-09-19
+
+### Added
+
+- Software package registry with WinGet catalog identifiers or checksum-pinned HTTPS MSI/EXE downloads.
+- Multi-device deployments with install, uninstall, and upgrade actions, per-device operation
+  tracking, progress counts, cancellation, and audit events.
+- Agent software execution with silent install support, restart-required handling, bounded
+  output, and mandatory SHA-256 verification before any downloaded installer runs.
+- Windows Update scan and install through supported Windows APIs, with stored scan history,
+  selective installation, reboot-required reporting, and Administrator-only access.
+- Desktop Deployment workspace covering packages, deployments, per-device results, scans,
+  and update installation.
+- Background agent operation execution so long installs and updates no longer delay
+  heartbeats, with persisted result delivery and automatic retry.
+
+### Changed
+
+- Agent operations now run on a dedicated background worker instead of the heartbeat cycle.
+- Enum values serialize by name across stores and contracts for interoperable payloads.
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.5.0.
+
 ## [0.4.0] - 2026-09-19
 
 ### Added

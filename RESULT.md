@@ -1,40 +1,37 @@
-# Veltrix-Control v0.4.0 result report
+# Veltrix-Control v0.5.0 result report
 
 ## Status
 
-Phase 4 is implemented: authorized administrators can control processes, Windows services,
-power state, and audited terminal sessions on explicitly enrolled nodes, with protection
-policies enforced on the node. Phases 1–3 remain intact.
+Phase 5 is implemented: administrators can register approved software, deploy it to one or
+many nodes with per-device tracking, and manage Windows Update with scan, selective
+install, and reboot reporting. Phases 1–4 remain intact.
 
 ## Delivered workflows
 
-- Process management: start approved executables, stop processes, and change priority with
-  identity re-verification and a protected-process policy.
-- Windows service management: start, stop, and startup-type changes with a protected-service
-  policy and confirmation for stop operations.
-- Scheduled restart/shutdown, logoff, sleep, hibernation, and Wake-on-LAN for nodes that
-  report a MAC address.
-- Audited PowerShell and CMD terminal sessions with streaming output, sequence-based
-  draining, bounded buffers, idle cleanup, and multiple sessions per node.
-- Desktop Administration workspace covering processes, services, and terminal actions.
-- Four independent safety gates per action: role permission, explicit confirmation, node
-  local policy, and typed argument validation.
+- Package registry for WinGet identifiers and checksum-pinned HTTPS MSI/EXE packages.
+- Multi-device install, uninstall, and upgrade deployments with confirmation, per-device
+  operations, success/failure counts, cancellation, and restart handling.
+- Agent software execution with silent arguments, bounded installer output, exit-code
+  interpretation, and mandatory checksum verification before execution.
+- Windows Update scan and selective installation via the official Windows Update API, with
+  history, KB/severity/size details, and reboot-required reporting.
+- Desktop Deployment workspace: packages, deployments, per-device results, update scanning,
+  and update installation.
+- Background agent operation worker with persisted result delivery and automatic retry, so
+  long-running installs no longer interrupt heartbeats.
 
 ## Verification
 
 - Release build: **PASS**, zero compiler warnings and zero errors.
-- Automated tests: **87 PASS** across unit, security, Agent, integration, and
+- Automated tests: **102 PASS** across unit, security, Agent, integration, and
   Controller-to-Agent end-to-end suites.
-- New coverage: protection policies, local opt-in denial, process identity mismatch,
-  fixture process start/stop, terminal lifecycle and streaming, incremental output
-  sequences, invalid shell rejection, viewer denial, wake without MAC rejection, wake audit,
-  and wake packet layout.
-- Every administrative action and terminal command produces audit events; the audit chain
-  remains valid.
+- New coverage: deployment completion and failure propagation, cancellation, unsigned MSI
+  rejection, operator permission denial, package argument validation, non-WinGet uninstall
+  rejection, malformed update identifiers, and the complete update scan/install flow.
 
 ## Release artifacts
 
-- Tag: `v0.4.0`
+- Tag: `v0.5.0`
 - Installer: `Veltrix-Control-Setup.exe`
 - Checksum manifest: `SHA256SUMS.txt`
 - Archive: `Veltrix-Control-Windows-x64.zip`
@@ -42,11 +39,8 @@ policies enforced on the node. Phases 1–3 remain intact.
 
 ## Known limitations
 
+- WinGet requires a reachable WinGet installation for the service account.
 - Binaries are not Authenticode-signed because no organization signing certificate was
   supplied; Windows may display an unknown-publisher warning.
-- RealTime priority may be refused by Windows unless the service account holds the
-  privilege.
-- Wake-on-LAN depends on the reported MAC address and broadcast-capable networking.
-- Software deployment, updates, backups, automation, compute scheduling, and game-server
-  adapters remain planned phases.
-
+- Backups, automation, compute scheduling, game-server adapters, and integrations remain
+  planned phases.

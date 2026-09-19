@@ -14,6 +14,8 @@ public sealed partial class OperationExecutor(
     AgentOptions options,
     FileOperations fileOperations,
     AdminOperations adminOperations,
+    SoftwareOperations softwareOperations,
+    WindowsUpdateOperations windowsUpdateOperations,
     ILogger<OperationExecutor> logger)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -32,6 +34,14 @@ public sealed partial class OperationExecutor(
             if (AdminOperations.Handles(operation.Kind))
             {
                 return adminOperations.Execute(operation);
+            }
+            if (SoftwareOperations.Handles(operation.Kind))
+            {
+                return await softwareOperations.ExecuteAsync(operation, cancellationToken);
+            }
+            if (WindowsUpdateOperations.Handles(operation.Kind))
+            {
+                return await windowsUpdateOperations.ExecuteAsync(operation, cancellationToken);
             }
 
             return operation.Kind switch

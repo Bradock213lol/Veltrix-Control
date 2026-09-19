@@ -141,6 +141,7 @@ public sealed partial class VeltrixControlStore
             package_id TEXT NOT NULL,
             version TEXT NULL,
             sha256 TEXT NULL,
+            silent_args TEXT NULL,
             created_by TEXT NOT NULL,
             created_at TEXT NOT NULL
         );
@@ -162,6 +163,7 @@ public sealed partial class VeltrixControlStore
             id TEXT PRIMARY KEY,
             deployment_id TEXT NOT NULL,
             device_id TEXT NOT NULL,
+            operation_id TEXT NULL,
             state TEXT NOT NULL,
             error TEXT NULL,
             started_at TEXT NULL,

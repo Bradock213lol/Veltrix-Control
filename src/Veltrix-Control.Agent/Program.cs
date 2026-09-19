@@ -22,6 +22,9 @@ builder.Services.AddSingleton<WindowsHardwareProbe>();
 builder.Services.AddSingleton<FileOperations>();
 builder.Services.AddSingleton<TerminalSessionManager>();
 builder.Services.AddSingleton<AdminOperations>();
+builder.Services.AddSingleton<SoftwareOperations>();
+builder.Services.AddSingleton<WindowsUpdateOperations>();
+builder.Services.AddSingleton<OperationInbox>();
 builder.Services.AddSingleton<OperationExecutor>();
 builder.Services.AddSingleton(new HttpClient(CreateHandler(options))
 {
@@ -32,6 +35,7 @@ builder.Services.AddSingleton<AgentApiClient>();
 builder.Services.AddSingleton<TransferService>();
 builder.Services.AddHostedService<Worker>();
 builder.Services.AddHostedService<TransferWorker>();
+builder.Services.AddHostedService<OperationWorker>();
 await builder.Build().RunAsync();
 
 static void ValidateOptions(AgentOptions options)

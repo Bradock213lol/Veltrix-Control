@@ -12,7 +12,7 @@ public sealed partial class Worker(
     DeviceIdentityStore identityStore,
     WindowsHardwareProbe hardwareProbe,
     AgentApiClient apiClient,
-    OperationExecutor operationExecutor,
+    OperationInbox OperationInbox,
     ILogger<Worker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -28,9 +28,8 @@ public sealed partial class Worker(
                 var response = await apiClient.HeartbeatAsync(identity, payload, stoppingToken);
                 foreach (var operation in response.Operations)
                 {
-                    LogExecuting(logger, operation.Id, operation.Kind);
-                    var result = await operationExecutor.ExecuteAsync(operation, stoppingToken);
-                    await apiClient.SendOperationResultAsync(identity, result, stoppingToken);
+                    LogQueued(logger, operation.Id, operation.Kind);
+                    await OperationInbox.EnqueueAsync(operation, stoppingToken);
                 }
                 retrySeconds = 2;
                 await Task.Delay(TimeSpan.FromSeconds(response.NextHeartbeatSeconds), stoppingToken);
@@ -66,8 +65,8 @@ public sealed partial class Worker(
         return identity;
     }
 
-    [LoggerMessage(1, LogLevel.Information, "Executing operation {operationId} ({operationKind})")]
-    private static partial void LogExecuting(ILogger logger, Guid operationId, OperationKind operationKind);
+    [LoggerMessage(1, LogLevel.Information, "Queued operation {operationId} ({operationKind})")]
+    private static partial void LogQueued(ILogger logger, Guid operationId, OperationKind operationKind);
 
     [LoggerMessage(2, LogLevel.Warning, "Agent cycle failed; reconnecting in {retrySeconds} seconds")]
     private static partial void LogCycleFailed(ILogger logger, Exception exception, int retrySeconds);

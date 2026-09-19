@@ -12,7 +12,10 @@ namespace VeltrixControl.Infrastructure;
 
 public sealed partial class VeltrixControlStore : IDisposable
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+    };
     private readonly string _databasePath;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
@@ -418,6 +421,7 @@ public sealed partial class VeltrixControlStore : IDisposable
             {
                 throw new InvalidOperationException("Operation does not exist or is not running.");
             }
+            await ApplyOperationToDeploymentAsync(connection, transaction, result.OperationId, result.State, result.Error, result.FinishedAt, cancellationToken);
             await AppendAuditAsync(connection, transaction, $"device:{deviceId:D}", "operation.complete", result.OperationId.ToString("D"), result.State.ToString().ToLowerInvariant(), result.Error, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }

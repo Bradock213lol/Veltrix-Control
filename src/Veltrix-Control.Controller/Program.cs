@@ -140,7 +140,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.4.0" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.5.0" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>
@@ -229,6 +229,7 @@ app.MapPost("/api/agent/operation-result", async (SignedAgentMessage message, Ag
     if (result is null) return Results.Unauthorized();
     if (result.State is OperationState.Queued or OperationState.Running || result.Error?.Length > 2048 || result.ResultJson?.Length > 1_000_000)
         return Results.BadRequest(new { error = "Operation result is invalid." });
+    var operation = await database.GetOperationAsync(result.OperationId, ct);
     try
     {
         await database.CompleteOperationAsync(message.DeviceId, result, ct);
@@ -236,6 +237,18 @@ app.MapPost("/api/agent/operation-result", async (SignedAgentMessage message, Ag
     catch (InvalidOperationException)
     {
         return Results.Conflict(new { error = "Operation is not awaiting a result." });
+    }
+    if (operation?.Kind == OperationKind.ScanWindowsUpdates && result.State == OperationState.Succeeded && result.ResultJson is not null)
+    {
+        try
+        {
+            var scan = System.Text.Json.JsonSerializer.Deserialize<WindowsUpdateScanResult>(result.ResultJson, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+            if (scan is not null) await database.RecordWindowsUpdateScanAsync(message.DeviceId, scan, ct);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // The scan payload is validated before it is stored; malformed data is ignored.
+        }
     }
     await hub.Clients.All.SendAsync("operationUpdated", result.OperationId, ct);
     return Results.NoContent();
@@ -280,6 +293,7 @@ management.MapPost("/devices/{deviceId:guid}/operations", async (Guid deviceId, 
 
 management.MapManagementTransfers();
 management.MapManagementAdmin();
+management.MapManagementSoftware();
 
 app.MapAgentTransfers();
 

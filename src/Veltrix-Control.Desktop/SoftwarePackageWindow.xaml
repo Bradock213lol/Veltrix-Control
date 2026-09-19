@@ -1,0 +1,31 @@
+<Window x:Class="VeltrixControl.Desktop.SoftwarePackageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Register package" Width="560" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+  <StackPanel Margin="20">
+    <TextBlock Text="Register an approved package" FontSize="20" FontWeight="SemiBold"/>
+    <TextBlock Text="WinGet packages are resolved from the official catalog. MSI and EXE packages require an HTTPS URL and a SHA-256 checksum; unverified downloads are never executed." Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,16"/>
+    <Label Content="Display name"/>
+    <TextBox x:Name="NameBox" MaxLength="128" Margin="0,0,0,12"/>
+    <Label Content="Source"/>
+    <ComboBox x:Name="SourceBox" HorizontalAlignment="Left" Width="200" Margin="0,0,0,12" SelectionChanged="Source_Changed">
+      <ComboBoxItem Content="Winget" IsSelected="True"/>
+      <ComboBoxItem Content="Msi"/>
+      <ComboBoxItem Content="Exe"/>
+    </ComboBox>
+    <Label x:Name="PackageIdLabel" Content="WinGet package identifier"/>
+    <TextBox x:Name="PackageIdBox" MaxLength="512" Margin="0,0,0,12"/>
+    <Label Content="Version (optional)"/>
+    <TextBox x:Name="VersionBox" MaxLength="64" Margin="0,0,0,12"/>
+    <Label x:Name="ShaLabel" Content="SHA-256 checksum (required for MSI/EXE)"/>
+    <TextBox x:Name="ShaBox" MaxLength="64" Margin="0,0,0,12" IsEnabled="False"/>
+    <Label Content="Silent arguments (optional)"/>
+    <TextBox x:Name="SilentBox" MaxLength="512" Margin="0,0,0,16"/>
+    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}" MinHeight="22" Margin="0,0,0,8"/>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+      <Button Content="Cancel" IsCancel="True" Margin="0,0,10,0"/>
+      <Button Content="Register" Style="{StaticResource PrimaryButton}" Click="Register_Click"/>
+    </StackPanel>
+  </StackPanel>
+</Window>

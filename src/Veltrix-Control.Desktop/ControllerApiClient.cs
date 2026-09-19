@@ -97,6 +97,38 @@ public sealed class ControllerApiClient : IDisposable
     public async Task WakeDeviceAsync(Guid deviceId, CancellationToken cancellationToken = default) =>
         await SendAsync<object?>(HttpMethod.Post, $"api/devices/{deviceId:D}/wake", null, true, cancellationToken);
 
+    public Task<SoftwarePackageView[]> GetSoftwarePackagesAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<SoftwarePackageView[]>("api/software/packages", cancellationToken);
+
+    public Task<SoftwarePackageView> CreateSoftwarePackageAsync(SoftwarePackageRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<SoftwarePackageView>(HttpMethod.Post, "api/software/packages", request, true, cancellationToken);
+
+    public Task<SoftwareDeploymentView[]> GetSoftwareDeploymentsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<SoftwareDeploymentView[]>("api/software/deployments?limit=100", cancellationToken);
+
+    public Task<SoftwareDeploymentView> GetSoftwareDeploymentAsync(Guid deploymentId, CancellationToken cancellationToken = default) =>
+        GetAsync<SoftwareDeploymentView>($"api/software/deployments/{deploymentId:D}", cancellationToken);
+
+    public Task<SoftwareDeploymentView> CreateSoftwareDeploymentAsync(SoftwareDeploymentRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<SoftwareDeploymentView>(HttpMethod.Post, "api/software/deployments", request, true, cancellationToken);
+
+    public async Task CancelSoftwareDeploymentAsync(Guid deploymentId, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Post, $"api/software/deployments/{deploymentId:D}/cancel", null, true, cancellationToken);
+
+    public async Task<WindowsUpdateScanResult?> GetWindowsUpdateScanAsync(Guid deviceId, CancellationToken cancellationToken = default)
+    {
+        using var response = await _client.GetAsync($"api/devices/{deviceId:D}/updates", cancellationToken);
+        if (response.StatusCode == HttpStatusCode.NoContent) return null;
+        if (!response.IsSuccessStatusCode) throw new ControllerApiException(response.StatusCode, await ReadErrorAsync(response, cancellationToken));
+        return await response.Content.ReadFromJsonAsync<WindowsUpdateScanResult>(_json, cancellationToken);
+    }
+
+    public Task<OperationView> ScanWindowsUpdatesAsync(Guid deviceId, CancellationToken cancellationToken = default) =>
+        SendAsync<OperationView>(HttpMethod.Post, $"api/devices/{deviceId:D}/updates/scan", null, true, cancellationToken);
+
+    public Task<OperationView> InstallWindowsUpdatesAsync(Guid deviceId, string[] updateIds, CancellationToken cancellationToken = default) =>
+        SendAsync<OperationView>(HttpMethod.Post, $"api/devices/{deviceId:D}/updates/install", new WindowsUpdateInstallArgument(updateIds), true, cancellationToken);
+
     public async Task<TransferView> UploadFileAsync(Guid deviceId, string localPath, string remotePath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var info = new FileInfo(localPath);

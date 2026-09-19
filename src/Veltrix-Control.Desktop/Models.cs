@@ -88,3 +88,43 @@ public sealed class ServiceAdminRow(ServiceSnapshot source)
     public string Status => Source.Status;
     public string StartType => Source.StartType;
 }
+
+public sealed class SoftwarePackageRow(SoftwarePackageView source)
+{
+    public SoftwarePackageView Source { get; } = source;
+    public Guid Id => Source.Id;
+    public string Name => Source.Name;
+    public string Source2 => Source.Source;
+    public string PackageId => Source.PackageId;
+    public string Version => string.IsNullOrWhiteSpace(Source.Version) ? "Any" : Source.Version!;
+    public string Verified => string.IsNullOrWhiteSpace(Source.Sha256) ? "WinGet catalog" : "Checksum pinned";
+}
+
+public sealed class DeploymentRow(SoftwareDeploymentView source)
+{
+    public SoftwareDeploymentView Source { get; } = source;
+    public Guid Id => Source.Id;
+    public string Package => Source.PackageName;
+    public string Action => Source.Action;
+    public string State => Source.State;
+    public string Progress => $"{Source.SuccessCount} ok · {Source.FailureCount} failed";
+    public string Requested => Source.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
+}
+
+public sealed class DeploymentTargetRow(SoftwareDeploymentTargetView source)
+{
+    public string Device => string.IsNullOrWhiteSpace(source.DeviceName) ? source.DeviceId.ToString("D") : source.DeviceName;
+    public string State => source.State;
+    public string Detail => source.Error ?? string.Empty;
+}
+
+public sealed class WindowsUpdateRow(WindowsUpdateInfo source)
+{
+    public WindowsUpdateInfo Source { get; } = source;
+    public bool Selected { get; set; }
+    public string Title => Source.Title;
+    public string Kb => Source.KbArticle ?? string.Empty;
+    public string Severity => Source.Severity ?? string.Empty;
+    public string Size => Source.SizeBytes is null ? string.Empty : DeviceRow.FormatBytes(Source.SizeBytes.Value);
+    public string Downloaded => Source.Downloaded ? "Downloaded" : "Pending";
+}

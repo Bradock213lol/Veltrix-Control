@@ -47,6 +47,7 @@
             <Button x:Name="DiagnosticsNav" Content="Diagnostics" Tag="DiagnosticsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
             <Button x:Name="FilesNav" Content="Managed files" Tag="FilesView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
             <Button x:Name="AdminNav" Content="Administration" Tag="AdminView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
+            <Button x:Name="DeploymentNav" Content="Deployment" Tag="DeploymentView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
             <Button x:Name="AuditNav" Content="Audit history" Tag="AuditView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
             <TextBlock Text="APPLICATION" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" Margin="14,22,0,6"/>
             <Button x:Name="SettingsNav" Content="Settings" Tag="SettingsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
@@ -282,6 +283,71 @@
                     <Button Grid.Column="1" Content="Send" Margin="8,0,0,0" Click="TerminalSend_Click"/>
                     <Button Grid.Column="2" Content="Clear" Margin="8,0,0,0" Click="TerminalClear_Click"/>
                   </Grid>
+                </Grid>
+              </TabItem>
+            </TabControl>
+          </Grid>
+
+          <Grid x:Name="DeploymentView" Visibility="Collapsed">
+            <TabControl>
+              <TabItem Header="Software">
+                <Grid Margin="0,12,0,0">
+                  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                  <WrapPanel>
+                    <Button Content="Register package" Click="SoftwareRegister_Click"/>
+                    <Button Content="Deploy selected" Margin="8,0,0,0" Click="SoftwareDeploy_Click"/>
+                    <Button Content="Cancel deployment" Margin="8,0,0,0" Click="SoftwareCancel_Click"/>
+                    <Button Content="Refresh" Margin="8,0,0,0" Click="SoftwareRefresh_Click"/>
+                    <TextBlock x:Name="SoftwareCaption" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                  </WrapPanel>
+                  <Grid Grid.Row="1" Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="1.4*"/></Grid.ColumnDefinitions>
+                    <DataGrid x:Name="PackagesGrid">
+                      <DataGrid.Columns>
+                        <DataGridTextColumn Header="Package" Binding="{Binding Name}" Width="2*"/>
+                        <DataGridTextColumn Header="Source" Binding="{Binding Source2}" Width="*"/>
+                        <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="*"/>
+                        <DataGridTextColumn Header="Verification" Binding="{Binding Verified}" Width="1.4*"/>
+                      </DataGrid.Columns>
+                    </DataGrid>
+                    <DataGrid x:Name="DeploymentsGrid" Grid.Column="1" Margin="10,0,0,0" SelectionChanged="Deployments_SelectionChanged">
+                      <DataGrid.Columns>
+                        <DataGridTextColumn Header="Package" Binding="{Binding Package}" Width="2*"/>
+                        <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="*"/>
+                        <DataGridTextColumn Header="State" Binding="{Binding State}" Width="*"/>
+                        <DataGridTextColumn Header="Results" Binding="{Binding Progress}" Width="1.4*"/>
+                      </DataGrid.Columns>
+                    </DataGrid>
+                    <DataGrid x:Name="DeploymentTargetsGrid" Grid.Column="2" Margin="10,0,0,0">
+                      <DataGrid.Columns>
+                        <DataGridTextColumn Header="Device" Binding="{Binding Device}" Width="1.5*"/>
+                        <DataGridTextColumn Header="State" Binding="{Binding State}" Width="*"/>
+                        <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="2*"/>
+                      </DataGrid.Columns>
+                    </DataGrid>
+                  </Grid>
+                </Grid>
+              </TabItem>
+              <TabItem Header="Windows Update">
+                <Grid Margin="0,12,0,0">
+                  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                  <WrapPanel>
+                    <ComboBox x:Name="UpdateDeviceBox" Width="240" DisplayMemberPath="Name" AutomationProperties.Name="Update device" SelectionChanged="UpdateDevice_Changed"/>
+                    <Button Content="Scan" Margin="10,0,0,0" Click="UpdateScan_Click"/>
+                    <Button Content="Install selected" Margin="8,0,0,0" Click="UpdateInstall_Click"/>
+                    <Button Content="Refresh scan" Margin="8,0,0,0" Click="UpdateRefresh_Click"/>
+                  </WrapPanel>
+                  <TextBlock x:Name="UpdateCaption" Grid.Row="1" Foreground="{DynamicResource MutedTextBrush}" Margin="2,10,0,10" TextWrapping="Wrap" Text="Select a device and scan for available Windows updates."/>
+                  <DataGrid x:Name="UpdatesGrid" Grid.Row="2">
+                    <DataGrid.Columns>
+                      <DataGridCheckBoxColumn Header="Install" Binding="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                      <DataGridTextColumn Header="Update" Binding="{Binding Title}" Width="4*"/>
+                      <DataGridTextColumn Header="KB" Binding="{Binding Kb}" Width="*"/>
+                      <DataGridTextColumn Header="Severity" Binding="{Binding Severity}" Width="*"/>
+                      <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="*"/>
+                      <DataGridTextColumn Header="State" Binding="{Binding Downloaded}" Width="*"/>
+                    </DataGrid.Columns>
+                  </DataGrid>
                 </Grid>
               </TabItem>
             </TabControl>

@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     private List<DeviceSummary> _devices = [];
     private List<AuditEventView> _auditEvents = [];
     private List<FileEntry> _files = [];
+    private List<WindowsUpdateRow> _updates = [];
     private DataTable? _diagnosticTable;
     private string _currentPath = string.Empty;
     private Guid? _terminalSessionId;
@@ -179,13 +180,16 @@ public partial class MainWindow : Window
         var diagnosticsId = (DiagnosticsDeviceBox.SelectedItem as DeviceRow)?.Id;
         var filesId = (FilesDeviceBox.SelectedItem as DeviceRow)?.Id;
         var adminId = (AdminDeviceBox.SelectedItem as DeviceRow)?.Id;
+        var updateId = (UpdateDeviceBox.SelectedItem as DeviceRow)?.Id;
         var onlineRows = rows.Where(row => row.Source.Online).ToList();
         DiagnosticsDeviceBox.ItemsSource = onlineRows;
         FilesDeviceBox.ItemsSource = onlineRows;
         AdminDeviceBox.ItemsSource = onlineRows;
+        UpdateDeviceBox.ItemsSource = onlineRows;
         DiagnosticsDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == diagnosticsId) ?? onlineRows.FirstOrDefault();
         FilesDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == filesId) ?? onlineRows.FirstOrDefault();
         AdminDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == adminId) ?? onlineRows.FirstOrDefault();
+        UpdateDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == updateId) ?? onlineRows.FirstOrDefault();
     }
 
     private void ApplyDeviceFilter()
@@ -485,6 +489,176 @@ public partial class MainWindow : Window
     }
 
     private FileEntry? SelectedFile => (FilesGrid.SelectedItem as FileRow)?.Source;
+
+    private async void SoftwareRefresh_Click(object sender, RoutedEventArgs e) => await LoadSoftwareAsync();
+
+    private async Task LoadSoftwareAsync()
+    {
+        if (_api is null) return;
+        try
+        {
+            var packages = await _api.GetSoftwarePackagesAsync();
+            PackagesGrid.ItemsSource = packages.Select(package => new SoftwarePackageRow(package)).ToList();
+            var deployments = await _api.GetSoftwareDeploymentsAsync();
+            DeploymentsGrid.ItemsSource = deployments.Select(deployment => new DeploymentRow(deployment)).ToList();
+            SoftwareCaption.Text = $"{packages.Length} packages · {deployments.Length} deployments";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SoftwareCaption.Text = exception.Message;
+        }
+    }
+
+    private async void SoftwareRegister_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null) return;
+        var window = new SoftwarePackageWindow { Owner = this };
+        if (window.ShowDialog() != true || window.Result is null) return;
+        try
+        {
+            await _api.CreateSoftwarePackageAsync(window.Result);
+            SetStatus($"Registered {window.Result.Name}", true);
+            await LoadSoftwareAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void SoftwareDeploy_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || PackagesGrid.SelectedItem is not SoftwarePackageRow row) return;
+        var devices = _devices.Where(device => device.Online).Select(device => new DeviceRow(device)).ToList();
+        if (devices.Count == 0)
+        {
+            SetStatus("No online devices are available for deployment.", false, true);
+            return;
+        }
+        var window = new DeploymentWindow(row.Source, devices) { Owner = this };
+        if (window.ShowDialog() != true) return;
+        if (MessageBox.Show(this, $"Deploy {window.SelectedAction} of {row.Name} to {window.SelectedDeviceIds.Length} device(s)?", "Confirm deployment", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            await _api.CreateSoftwareDeploymentAsync(new SoftwareDeploymentRequest(row.Id, window.SelectedAction, window.SelectedDeviceIds, true));
+            SetStatus("Deployment queued", true);
+            await LoadSoftwareAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void SoftwareCancel_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || DeploymentsGrid.SelectedItem is not DeploymentRow row) return;
+        if (MessageBox.Show(this, $"Cancel deployment of {row.Package}?", "Cancel deployment", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            await _api.CancelSoftwareDeploymentAsync(row.Id);
+            SetStatus("Deployment cancelled", true);
+            await LoadSoftwareAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void Deployments_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_api is null || DeploymentsGrid.SelectedItem is not DeploymentRow row) return;
+        try
+        {
+            var deployment = await _api.GetSoftwareDeploymentAsync(row.Id);
+            DeploymentTargetsGrid.ItemsSource = deployment.Targets.Select(target => new DeploymentTargetRow(target)).ToList();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void UpdateDevice_Changed(object sender, SelectionChangedEventArgs e) => await LoadUpdateScanAsync();
+
+    private async void UpdateRefresh_Click(object sender, RoutedEventArgs e) => await LoadUpdateScanAsync();
+
+    private async Task LoadUpdateScanAsync()
+    {
+        if (_api is null || UpdateDeviceBox.SelectedItem is not DeviceRow device)
+        {
+            UpdatesGrid.ItemsSource = null;
+            return;
+        }
+        try
+        {
+            var scan = await _api.GetWindowsUpdateScanAsync(device.Id);
+            if (scan is null)
+            {
+                _updates = [];
+                UpdatesGrid.ItemsSource = null;
+                UpdateCaption.Text = "No scan has been recorded for this device yet.";
+                return;
+            }
+            _updates = scan.Updates.Select(update => new WindowsUpdateRow(update)).ToList();
+            UpdatesGrid.ItemsSource = _updates;
+            UpdateCaption.Text = $"Last scanned {scan.ScannedAt.LocalDateTime:g} · {_updates.Count} available update(s).";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            UpdateCaption.Text = exception.Message;
+        }
+    }
+
+    private async void UpdateScan_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || UpdateDeviceBox.SelectedItem is not DeviceRow device) return;
+        try
+        {
+            UpdateCaption.Text = "Scanning for updates…";
+            var queued = await _api.ScanWindowsUpdatesAsync(device.Id);
+            var completed = await _api.WaitForOperationAsync(queued.Id, TimeSpan.FromMinutes(6));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"The scan ended with {completed.State}.");
+            await LoadUpdateScanAsync();
+            SetStatus("Windows Update scan complete", true);
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException)
+        {
+            UpdateCaption.Text = exception.Message;
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void UpdateInstall_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || UpdateDeviceBox.SelectedItem is not DeviceRow device) return;
+        var selected = _updates.Where(update => update.Selected).Select(update => update.Source.UpdateId).ToArray();
+        if (selected.Length == 0)
+        {
+            SetStatus("Select at least one update to install.", false, true);
+            return;
+        }
+        if (MessageBox.Show(this, $"Install {selected.Length} update(s) on {device.Name}? Windows may require a restart.", "Install updates", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            UpdateCaption.Text = "Installing updates…";
+            var queued = await _api.InstallWindowsUpdatesAsync(device.Id, selected);
+            var completed = await _api.WaitForOperationAsync(queued.Id, TimeSpan.FromMinutes(125));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"The installation ended with {completed.State}.");
+            var result = JsonSerializer.Deserialize<WindowsUpdateInstallResult>(completed.ResultJson ?? "{}", JsonOptions);
+            UpdateCaption.Text = result is null
+                ? "Update installation finished."
+                : $"Installed {result.Installed} of {result.Selected} · {(result.RebootRequired ? "restart required" : "no restart required")}";
+            SetStatus("Windows Update installation complete", true);
+            await LoadUpdateScanAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException or JsonException)
+        {
+            UpdateCaption.Text = exception.Message;
+            SetStatus(exception.Message, false, true);
+        }
+    }
 
     private async void AdminRefresh_Click(object sender, RoutedEventArgs e)
     {
@@ -930,10 +1104,10 @@ public partial class MainWindow : Window
 
     private void NavigateTo(string view)
     {
-        var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AdminView, AuditView, SettingsView };
+        var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AdminView, DeploymentView, AuditView, SettingsView };
         foreach (var item in views) item.Visibility = item.Name == view ? Visibility.Visible : Visibility.Collapsed;
 
-        var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AdminNav, AuditNav, SettingsNav };
+        var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AdminNav, DeploymentNav, AuditNav, SettingsNav };
         foreach (var button in nav)
             button.Background = Equals(button.Tag, view) ? (Brush)FindResource("AccentSoftBrush") : Brushes.Transparent;
 
@@ -943,11 +1117,13 @@ public partial class MainWindow : Window
             "DiagnosticsView" => ("READ-ONLY TOOLS", "Remote diagnostics"),
             "FilesView" => ("MANAGED ROOT", "Remote file browser"),
             "AdminView" => ("CONTROLLED ADMIN", "Processes, services, terminal"),
+            "DeploymentView" => ("SOFTWARE LIFECYCLE", "Packages and Windows Update"),
             "AuditView" => ("ACCOUNTABILITY", "Audit history"),
             "SettingsView" => ("APPLICATION", "Settings"),
             _ => ("FLEET OVERVIEW", "Command center")
         };
         if (view == "AuditView" && _auditEvents.Count == 0) _ = LoadAuditAsync();
+        if (view == "DeploymentView") _ = LoadSoftwareAsync();
         if (view == "DevicesView") DeviceSearchBox.Focus();
     }
 
