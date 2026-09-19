@@ -2,6 +2,29 @@
 
 All notable changes follow semantic versioning.
 
+## [0.10.1] - 2026-09-19
+
+### Fixed
+
+- First-run setup is now detected reliably: the sign-in screen waits for the Controller
+  service to start, switches to a dedicated "Create your control plane" form with password
+  confirmation and guidance when no accounts exist, and automatically offers setup when a
+  sign-in attempt finds no accounts.
+- Login validation now returns specific messages ("Enter your username." / "Enter your
+  password.") instead of a generic failure.
+- Added an account recovery path: `--reset-owner <username>` with `VELTRIX_OWNER_PASSWORD`
+  resets a password from an elevated prompt on the Controller machine without touching any
+  other data, and records an audit event.
+
+### Added
+
+- Getting-started checklist on the Overview tab until the first device is enrolled.
+- Setup/status, login validation, and first-run flow tests.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.10.1.
+
 ## [0.10.0] - 2026-09-19
 
 ### Added

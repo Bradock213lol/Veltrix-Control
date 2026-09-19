@@ -45,8 +45,10 @@ public static partial class InputValidator
 
     public static string? Login(LoginRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || request.Username.Length > 64) return "Login request is invalid.";
-        if (string.IsNullOrEmpty(request.Password) || request.Password.Length > 256) return "Login request is invalid.";
+        if (string.IsNullOrWhiteSpace(request.Username)) return "Enter your username.";
+        if (request.Username.Length > 64) return "The username is too long.";
+        if (string.IsNullOrEmpty(request.Password)) return "Enter your password.";
+        if (request.Password.Length > 256) return "The password is too long.";
         return null;
     }
 

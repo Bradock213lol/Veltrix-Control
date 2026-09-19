@@ -28,6 +28,31 @@ if (args is ["--prepare-combined-role"])
     return;
 }
 
+if (args is ["--reset-owner", var resetUsername])
+{
+    var resetOptions = new ControllerOptions();
+    var resetStore = new VeltrixControlStore(Microsoft.Extensions.Options.Options.Create(new StoreOptions
+    {
+        DatabasePath = Path.Combine(resetOptions.DataDirectory, "controller.db")
+    }));
+    await resetStore.InitializeAsync();
+    var newPassword = Environment.GetEnvironmentVariable("VELTRIX_OWNER_PASSWORD");
+    if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 12)
+    {
+        Console.Error.WriteLine("Set VELTRIX_OWNER_PASSWORD (at least 12 characters) before running --reset-owner.");
+        return;
+    }
+    var resetUser = await resetStore.ValidateUsernameAsync(resetUsername);
+    if (resetUser is null)
+    {
+        Console.Error.WriteLine($"User '{resetUsername}' does not exist. Existing users: {string.Join(", ", await resetStore.GetUsernamesAsync())}");
+        return;
+    }
+    await resetStore.ResetUserPasswordAsync(resetUser.Value.Id, PasswordHasher.Hash(newPassword), "cli-reset");
+    Console.WriteLine($"Password reset for '{resetUser.Value.Username}' ({resetUser.Value.Role}). The new password is active immediately.");
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
@@ -151,7 +176,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.10.0" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.10.1" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>

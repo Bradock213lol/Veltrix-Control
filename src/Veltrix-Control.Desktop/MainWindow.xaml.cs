@@ -67,27 +67,50 @@ public partial class MainWindow : Window
 
     private async Task InitializeConnectionAsync()
     {
-        try
+        SetStatus("Connecting to Controller…");
+        AuthError.Text = string.Empty;
+        _api ??= new ControllerApiClient(AuthControllerUrl.Text);
+        for (var attempt = 1; attempt <= 6; attempt++)
         {
-            SetStatus("Connecting to Controller…");
-            _api ??= new ControllerApiClient(AuthControllerUrl.Text);
-            _api.ChangeController(AuthControllerUrl.Text);
-            var setup = await _api.GetSetupStatusAsync();
-            _setupRequired = setup.Required;
-            AuthTitle.Text = setup.Required ? "Create your control plane" : "Welcome back";
-            AuthSubtitle.Text = setup.Required
-                ? "Create the first Owner account. Use a password with at least 12 characters."
-                : "Sign in to your authorized Windows fleet.";
-            AuthActionButton.Content = setup.Required ? "Initialize Controller" : "Sign in";
-            AuthError.Text = string.Empty;
-            SetStatus("Controller ready", true);
-            UsernameBox.Focus();
+            try
+            {
+                _api.ChangeController(AuthControllerUrl.Text);
+                var setup = await _api.GetSetupStatusAsync();
+                SetAuthMode(setup.Required, setup.Required
+                    ? "No accounts exist on this Controller yet. Create the first Owner account to continue."
+                    : null);
+                SetStatus("Controller ready", true);
+                UsernameBox.Focus();
+                return;
+            }
+            catch (Exception exception) when (IsExpected(exception))
+            {
+                if (attempt == 6)
+                {
+                    AuthError.Text = $"Could not reach the Controller. {exception.Message}";
+                    SetStatus("Controller unavailable", false, true);
+                    return;
+                }
+                SetStatus($"Waiting for the Controller service… ({attempt}/6)");
+                await Task.Delay(TimeSpan.FromSeconds(2));
+            }
         }
-        catch (Exception exception) when (IsExpected(exception))
-        {
-            AuthError.Text = $"Could not reach the Controller. {exception.Message}";
-            SetStatus("Controller unavailable", false, true);
-        }
+    }
+
+    private void SetAuthMode(bool setupRequired, string? message = null)
+    {
+        _setupRequired = setupRequired;
+        AuthTitle.Text = setupRequired ? "Create your control plane" : "Welcome back";
+        AuthSubtitle.Text = setupRequired
+            ? "Create the first Owner account. This account manages every authorized device."
+            : "Sign in to your authorized Windows fleet.";
+        AuthActionButton.Content = setupRequired ? "Create Owner account" : "Sign in";
+        ConfirmPasswordPanel.Visibility = setupRequired ? Visibility.Visible : Visibility.Collapsed;
+        AuthModeHint.Visibility = setupRequired ? Visibility.Visible : Visibility.Collapsed;
+        AuthModeSwitchButton.Content = setupRequired ? "Already created an account? Sign in" : "First time here? Create the first Owner account";
+        PasswordBox.Clear();
+        ConfirmPasswordBox.Clear();
+        if (message is not null) AuthError.Text = message;
     }
 
     private async void AuthAction_Click(object sender, RoutedEventArgs e)
@@ -98,23 +121,108 @@ public partial class MainWindow : Window
         try
         {
             _api.ChangeController(AuthControllerUrl.Text);
-            _user = _setupRequired
-                ? await _api.SetupAsync(UsernameBox.Text.Trim(), PasswordBox.Password)
-                : await _api.LoginAsync(UsernameBox.Text.Trim(), PasswordBox.Password);
+            var username = UsernameBox.Text.Trim();
+            if (_setupRequired)
+            {
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    AuthError.Text = "Enter a username for the Owner account.";
+                    return;
+                }
+                if (PasswordBox.Password.Length < 12)
+                {
+                    AuthError.Text = "The Owner password must be at least 12 characters.";
+                    return;
+                }
+                if (!string.Equals(PasswordBox.Password, ConfirmPasswordBox.Password, StringComparison.Ordinal))
+                {
+                    AuthError.Text = "The passwords do not match.";
+                    return;
+                }
+                _user = await _api.SetupAsync(username, PasswordBox.Password);
+            }
+            else
+            {
+                _user = await _api.LoginAsync(username, PasswordBox.Password);
+            }
             PasswordBox.Clear();
+            ConfirmPasswordBox.Clear();
             _settings.ControllerUrl = _api.BaseAddress.AbsoluteUri;
             _settings.Save();
             await EnterShellAsync();
         }
+        catch (ControllerApiException exception) when (exception.StatusCode == HttpStatusCode.Unauthorized && !_setupRequired)
+        {
+            await TrySwitchToSetupAsync("The username or password is incorrect.");
+        }
+        catch (ControllerApiException exception) when (exception.StatusCode == HttpStatusCode.Conflict && _setupRequired)
+        {
+            await TrySwitchToLoginAsync("Setup was already completed on this Controller. Sign in with an existing account.");
+        }
         catch (Exception exception) when (IsExpected(exception))
         {
-            AuthError.Text = exception is ControllerApiException { StatusCode: HttpStatusCode.Unauthorized }
-                ? "The username or password is incorrect."
-                : exception.Message;
+            AuthError.Text = exception.Message;
         }
         finally
         {
             AuthActionButton.IsEnabled = true;
+        }
+    }
+
+    private async void AuthModeSwitch_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null) return;
+        if (_setupRequired)
+        {
+            SetAuthMode(false, "Sign in with an existing account. If you lost the Owner password, run the Controller with --reset-owner.");
+            return;
+        }
+        try
+        {
+            var status = await _api.GetSetupStatusAsync();
+            if (status.Required)
+            {
+                SetAuthMode(true, "This Controller has no accounts yet. Create the first Owner account.");
+                return;
+            }
+            AuthError.Text = "This Controller already has accounts. Sign in with an existing account, or reset the Owner password with --reset-owner.";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            AuthError.Text = exception.Message;
+        }
+    }
+
+    private async Task TrySwitchToSetupAsync(string fallbackMessage)
+    {
+        if (_api is null) return;
+        try
+        {
+            var status = await _api.GetSetupStatusAsync();
+            if (status.Required)
+            {
+                SetAuthMode(true, "No accounts exist on this Controller yet. Create the first Owner account.");
+                return;
+            }
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            // Fall through to the original message when the status cannot be read.
+        }
+        AuthError.Text = fallbackMessage;
+    }
+
+    private async Task TrySwitchToLoginAsync(string message)
+    {
+        if (_api is null) return;
+        try
+        {
+            var status = await _api.GetSetupStatusAsync();
+            SetAuthMode(!status.Required, message);
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetAuthMode(false, message);
         }
     }
 
@@ -162,6 +270,8 @@ public partial class MainWindow : Window
             CpuMetric.Text = online.Count == 0 ? "0%" : $"{online.Average(device => device.Telemetry?.CpuPercent ?? 0):0}%";
             MemoryMetric.Text = DeviceRow.FormatBytes(online.Sum(device => device.Telemetry?.UsedMemoryBytes ?? 0));
             AttentionMetric.Text = _devices.Count(device => device.HealthScore < 75).ToString(CultureInfo.CurrentCulture);
+            DashboardGettingStarted.Visibility = _devices.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            DashboardDevicesGrid.Visibility = _devices.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
             LastRefreshText.Text = $"Updated {DateTime.Now:t}";
             SetStatus("Connected", true);
         }

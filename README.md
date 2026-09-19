@@ -11,7 +11,7 @@ platform, compute scheduling, backups, alerts, automation, and administration.
 > This project is for systems owned by or explicitly authorized by the administrator.
 > It does not hide its services, bypass Windows security, or silently enroll devices.
 
-## What works in v0.10.0
+## What works in v0.10.1
 
 - First-run Owner setup, secure cookie sessions, four-role permission model
 - Single-use 1–60 minute enrollment codes
@@ -73,11 +73,22 @@ service hosting, and DPAPI key storage live in the Agent. See
    and [`SHA256SUMS.txt`](https://github.com/Bradock213lol/Veltrix-Control/releases/latest/download/SHA256SUMS.txt)
    from the [latest release](https://github.com/Bradock213lol/Veltrix-Control/releases/latest).
 2. Verify the SHA-256 value, run the installer as administrator, and select a role.
-3. For a Controller, launch **Veltrix-Control** from Start or the desktop and create the
-   first Owner account in the app.
-4. Select **Add device** in the app to generate an enrollment code.
+3. For a Controller, launch **Veltrix-Control** from Start or the desktop. The app detects
+   that the Controller has no accounts and shows first-run setup; create the Owner account
+   there (at least 12 characters).
+4. Select **Add device** in the app to generate an enrollment code. The Overview tab shows
+   a getting-started checklist until your first device is online.
 5. On a Managed Node install, enter the Controller HTTPS URL, its displayed/verified
    certificate thumbprint, the one-time code, and the allowed file root.
+
+If the Owner password is ever lost, open an elevated prompt on the Controller machine and
+reset it without deleting any data:
+
+```powershell
+$env:VELTRIX_OWNER_PASSWORD = 'a-new-owner-password'
+& "$env:ProgramFiles\Veltrix-Control\Controller\Veltrix-Control.Controller.exe" --reset-owner owner-username
+Remove-Item Env:\VELTRIX_OWNER_PASSWORD
+```
 
 The Controller service listens on HTTPS port `5443` for nodes and loopback HTTP port
 `5187` for the native app. The launcher offers that local browser endpoint only if the

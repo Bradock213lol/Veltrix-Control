@@ -21,6 +21,30 @@ public sealed partial class VeltrixControlStore
         return users;
     }
 
+    public async Task<(Guid Id, string Username, string Role)?> ValidateUsernameAsync(string username, CancellationToken cancellationToken = default)
+    {
+        await using var connection = OpenConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT id, username, role FROM users WHERE username = $username;";
+        command.Parameters.AddWithValue("$username", username);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+        return (Guid.Parse(reader.GetString(0)), reader.GetString(1), reader.GetString(2));
+    }
+
+    public async Task<IReadOnlyList<string>> GetUsernamesAsync(CancellationToken cancellationToken = default)
+    {
+        var usernames = new List<string>();
+        await using var connection = OpenConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT username FROM users ORDER BY username COLLATE NOCASE;";
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken)) usernames.Add(reader.GetString(0));
+        return usernames;
+    }
+
     public async Task<UserView?> CreateUserAsync(string actor, CreateUserRequest request, string passwordHash, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;

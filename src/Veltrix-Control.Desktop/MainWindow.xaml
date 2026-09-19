@@ -19,12 +19,19 @@
           <TextBox x:Name="UsernameBox" AutomationProperties.Name="Username" MaxLength="64" Margin="0,0,0,14"/>
           <Label Content="Password" Target="{Binding ElementName=PasswordBox}"/>
           <PasswordBox x:Name="PasswordBox" AutomationProperties.Name="Password" MaxLength="256" Margin="0,0,0,8"/>
+          <StackPanel x:Name="ConfirmPasswordPanel" Visibility="Collapsed">
+            <Label Content="Confirm password" Target="{Binding ElementName=ConfirmPasswordBox}"/>
+            <PasswordBox x:Name="ConfirmPasswordBox" AutomationProperties.Name="Confirm password" MaxLength="256" Margin="0,0,0,8"/>
+            <TextBlock Text="At least 12 characters. The Owner account controls every authorized device, so store this password safely." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,8"/>
+          </StackPanel>
+          <TextBlock x:Name="AuthModeHint" Text="This Controller has no accounts yet, so first-run setup is shown." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource CyanBrush}" Margin="0,4,0,8" Visibility="Collapsed"/>
           <TextBlock x:Name="AuthError" Foreground="{DynamicResource DangerBrush}" MinHeight="24" Margin="0,4,0,10"/>
           <StackPanel Orientation="Horizontal">
             <Button x:Name="AuthActionButton" Content="Sign in" Style="{StaticResource PrimaryButton}" Click="AuthAction_Click" IsDefault="True"/>
             <Button Content="Retry connection" Click="RetryConnection_Click"/>
           </StackPanel>
-          <TextBlock Text="Credentials stay in memory and are never stored by the desktop app." FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,20,0,0"/>
+          <Button x:Name="AuthModeSwitchButton" Content="First time here? Create the first Owner account" HorizontalAlignment="Left" Margin="0,12,0,0" Click="AuthModeSwitch_Click"/>
+          <TextBlock Text="Credentials stay in memory and are never stored by the desktop app. If the Owner password is lost, run the Controller with --reset-owner from an elevated prompt on the Controller machine." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,16,0,0"/>
         </StackPanel>
       </Border>
     </Grid>
@@ -106,6 +113,18 @@
                 <DataGridTextColumn Header="Last seen" Binding="{Binding LastSeen}" Width="1.5*"/>
               </DataGrid.Columns>
             </DataGrid>
+            <Border x:Name="DashboardGettingStarted" Grid.Row="2" Style="{StaticResource PanelBorder}" Visibility="Collapsed">
+              <StackPanel MaxWidth="720" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="GETTING STARTED" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource CyanBrush}"/>
+                <TextBlock Text="Connect your first authorized device" FontSize="24" FontWeight="SemiBold" Margin="0,6,0,6"/>
+                <TextBlock Text="No devices are enrolled yet. Enroll a machine you own or explicitly administer, then watch its live telemetry here." TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,18"/>
+                <TextBlock Text="1 · Create a one-time enrollment code." FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <Button Content="Add device" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,0,0,14" Click="AddDevice_Click"/>
+                <TextBlock Text="2 · On the target Windows machine, run Veltrix-Control-Setup.exe and choose the Managed Node role." FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <TextBlock Text="3 · Enter the Controller address and the one-time code during node setup. Verify the certificate fingerprint shown in Settings." TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
+                <TextBlock Text="4 · The node appears here within seconds; every administrative action is recorded in Audit history." TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}"/>
+              </StackPanel>
+            </Border>
           </Grid>
 
           <Grid x:Name="DevicesView" Visibility="Collapsed">
