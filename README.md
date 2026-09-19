@@ -5,14 +5,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Veltrix-Control is a security-first Windows fleet management platform. One installer can
-configure a computer as a **Controller**, **Managed Node**, or both. Version 0.5.0 adds
-approved software deployment and Windows Update lifecycle management on top of controlled
-administration, managed files, verified transfers, and the built-in editor.
+configure a computer as a **Controller**, **Managed Node**, or both. Version 0.6.0 adds verified backups, hosted alerts, and operator-controlled automation on top of
+software deployment, controlled administration, managed files, and verified transfers.
 
 > This project is for systems owned by or explicitly authorized by the administrator.
 > It does not hide its services, bypass Windows security, or silently enroll devices.
 
-## What works in v0.5.0
+## What works in v0.6.0
 
 - First-run Owner setup, secure cookie sessions, four-role permission model
 - Single-use 1–60 minute enrollment codes
@@ -30,6 +29,9 @@ administration, managed files, verified transfers, and the built-in editor.
 - Audited PowerShell/CMD terminal sessions with streaming output and bounded buffers
 - Approved software deployment (WinGet, MSI, EXE) with per-device tracking
 - Windows Update scanning, selective installation, and reboot reporting
+- Verified zip backups with retention, integrity verification, and safe restore
+- Fleet alerts with acknowledgement and automatic resolution
+- Automation rules with triggers, cooldowns, allow-listed actions, and run history
 - Managed-root file management: create, rename, move, copy, delete, search, size, ZIP
 - Chunked, resumable, checksum-verified uploads and downloads with progress and cancellation
 - Text editor with find/replace, atomic saves, pre-save backups, history, and diff view

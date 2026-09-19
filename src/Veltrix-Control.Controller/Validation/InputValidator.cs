@@ -156,6 +156,40 @@ public static partial class InputValidator
                 var terminalStop = Parse<TerminalStopArgument>(argument);
                 if (terminalStop is null || terminalStop.SessionId == Guid.Empty) return "A valid terminal session is required.";
                 return null;
+            case OperationKind.CreateBackup:
+                var backup = Parse<BackupArgument>(argument);
+                if (backup is null || backup.BackupId == Guid.Empty || !ValidPath(backup.SourcePath) || !ValidPath(backup.DestinationPath)) return "A valid backup request is required.";
+                return null;
+            case OperationKind.RestoreBackup:
+                var restoreBackup = Parse<RestoreBackupArgument>(argument);
+                if (restoreBackup is null || !ValidPath(restoreBackup.ArchivePath) || !ValidPath(restoreBackup.DestinationPath)) return "A valid restore request is required.";
+                return null;
+            case OperationKind.VerifyBackup:
+                var verifyBackup = Parse<VerifyBackupArgument>(argument);
+                if (verifyBackup is null || !ValidPath(verifyBackup.ArchivePath)) return "A valid backup archive path is required.";
+                return null;
+            case OperationKind.InstallSoftware:
+                var install = Parse<SoftwareInstallArgument>(argument);
+                if (install is null || string.IsNullOrWhiteSpace(install.PackageId) || install.PackageId.Length > 512) return "A valid software package is required.";
+                if (!Enum.IsDefined(install.Source)) return "The package source is invalid.";
+                if (install.SilentArgs is { Length: > 512 } || install.Version is { Length: > 64 }) return "The package arguments exceed the allowed size.";
+                if (install.Source is SoftwareSource.Msi or SoftwareSource.Exe)
+                {
+                    if (string.IsNullOrWhiteSpace(install.Sha256) || install.Sha256.Length != 64) return "MSI and EXE packages require a SHA-256 checksum.";
+                    if (install.Url is null || !Uri.TryCreate(install.Url, UriKind.Absolute, out var url) || url.Scheme != Uri.UriSchemeHttps) return "MSI and EXE packages require an HTTPS download URL.";
+                }
+                return null;
+            case OperationKind.UninstallSoftware:
+            case OperationKind.UpgradeSoftware:
+                var uninstall = Parse<SoftwareUninstallArgument>(argument);
+                if (uninstall is null || string.IsNullOrWhiteSpace(uninstall.PackageId) || uninstall.PackageId.Length > 512) return "A valid software package is required.";
+                if (!Enum.IsDefined(uninstall.Source)) return "The package source is invalid.";
+                return null;
+            case OperationKind.InstallWindowsUpdate:
+                var updates = Parse<WindowsUpdateInstallArgument>(argument);
+                if (updates?.UpdateIds is null || updates.UpdateIds.Length is 0 or > SoftwareLimits.MaxWindowsUpdatesPerInstall) return "Select between 1 and 100 updates.";
+                if (updates.UpdateIds.Any(id => !Guid.TryParse(id, out _))) return "The update identifiers are invalid.";
+                return null;
             default:
                 return argument is null || argument.Length <= 4096 ? null : "The operation argument exceeds the allowed size.";
         }

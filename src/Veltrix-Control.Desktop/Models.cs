@@ -128,3 +128,49 @@ public sealed class WindowsUpdateRow(WindowsUpdateInfo source)
     public string Size => Source.SizeBytes is null ? string.Empty : DeviceRow.FormatBytes(Source.SizeBytes.Value);
     public string Downloaded => Source.Downloaded ? "Downloaded" : "Pending";
 }
+
+public sealed class BackupRowView(BackupView source)
+{
+    public BackupView Source { get; } = source;
+    public Guid Id => Source.Id;
+    public string Name => Source.Name;
+    public string Source2 => Source.SourcePath;
+    public string State => Source.State;
+    public string Size => Source.SizeBytes == 0 ? "—" : DeviceRow.FormatBytes(Source.SizeBytes);
+    public string Created => Source.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
+    public string Detail => Source.Error ?? Source.ArchivePath;
+}
+
+public sealed class AlertRowView(AlertView source)
+{
+    public AlertView Source { get; } = source;
+    public Guid Id => Source.Id;
+    public string Severity => Source.Severity;
+    public string Code => Source.Code;
+    public string Title => Source.Title;
+    public string Message => Source.Message;
+    public string State => Source.State;
+    public string Created => Source.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
+    public string Acknowledged => Source.AcknowledgedBy ?? string.Empty;
+}
+
+public sealed class AutomationRowView(AutomationView source)
+{
+    public AutomationView Source { get; } = source;
+    public Guid Id => Source.Id;
+    public string Name => Source.Name;
+    public string Enabled => Source.Enabled ? "Enabled" : "Disabled";
+    public string Trigger => Source.TriggerJson;
+    public string Action => Source.ActionJson;
+    public string Runs => Source.RunCount.ToString(CultureInfo.CurrentCulture);
+    public string LastRun => Source.LastRunAt?.LocalDateTime.ToString("g", CultureInfo.CurrentCulture) ?? "Never";
+}
+
+public sealed class AutomationRunRowView(AutomationRunView source)
+{
+    public string Automation => source.AutomationId.ToString("N")[..8];
+    public string Device => source.DeviceId?.ToString("N")[..8] ?? "—";
+    public string State => source.State;
+    public string Detail => source.Detail ?? string.Empty;
+    public string Started => source.StartedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
+}

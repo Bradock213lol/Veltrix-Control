@@ -129,6 +129,39 @@ public sealed class ControllerApiClient : IDisposable
     public Task<OperationView> InstallWindowsUpdatesAsync(Guid deviceId, string[] updateIds, CancellationToken cancellationToken = default) =>
         SendAsync<OperationView>(HttpMethod.Post, $"api/devices/{deviceId:D}/updates/install", new WindowsUpdateInstallArgument(updateIds), true, cancellationToken);
 
+    public Task<BackupView[]> GetBackupsAsync(Guid deviceId, CancellationToken cancellationToken = default) =>
+        GetAsync<BackupView[]>($"api/devices/{deviceId:D}/backups", cancellationToken);
+
+    public Task<JsonElement> CreateBackupAsync(Guid deviceId, BackupRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<JsonElement>(HttpMethod.Post, $"api/devices/{deviceId:D}/backups", request, true, cancellationToken);
+
+    public Task<OperationView> RestoreBackupAsync(Guid backupId, string destinationPath, CancellationToken cancellationToken = default) =>
+        SendAsync<OperationView>(HttpMethod.Post, $"api/backups/{backupId:D}/restore", new RestoreBackupArgument("server-managed", destinationPath), true, cancellationToken);
+
+    public Task<OperationView> VerifyBackupAsync(Guid backupId, CancellationToken cancellationToken = default) =>
+        SendAsync<OperationView>(HttpMethod.Post, $"api/backups/{backupId:D}/verify", null, true, cancellationToken);
+
+    public Task<AlertView[]> GetAlertsAsync(string? state = null, CancellationToken cancellationToken = default) =>
+        GetAsync<AlertView[]>($"api/alerts{(string.IsNullOrWhiteSpace(state) ? string.Empty : $"?state={state}")}", cancellationToken);
+
+    public async Task AcknowledgeAlertAsync(Guid alertId, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Post, $"api/alerts/{alertId:D}/acknowledge", null, true, cancellationToken);
+
+    public Task<AutomationView[]> GetAutomationsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<AutomationView[]>("api/automations", cancellationToken);
+
+    public Task<AutomationView> CreateAutomationAsync(AutomationRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<AutomationView>(HttpMethod.Post, "api/automations", request, true, cancellationToken);
+
+    public async Task SetAutomationEnabledAsync(Guid automationId, bool enabled, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Post, $"api/automations/{automationId:D}/{(enabled ? "enable" : "disable")}", null, true, cancellationToken);
+
+    public async Task DeleteAutomationAsync(Guid automationId, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Delete, $"api/automations/{automationId:D}", null, true, cancellationToken);
+
+    public Task<AutomationRunView[]> GetAutomationRunsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<AutomationRunView[]>("api/automations/runs?limit=100", cancellationToken);
+
     public async Task<TransferView> UploadFileAsync(Guid deviceId, string localPath, string remotePath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var info = new FileInfo(localPath);

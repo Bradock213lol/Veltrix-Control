@@ -181,15 +181,18 @@ public partial class MainWindow : Window
         var filesId = (FilesDeviceBox.SelectedItem as DeviceRow)?.Id;
         var adminId = (AdminDeviceBox.SelectedItem as DeviceRow)?.Id;
         var updateId = (UpdateDeviceBox.SelectedItem as DeviceRow)?.Id;
+        var backupId = (BackupDeviceBox.SelectedItem as DeviceRow)?.Id;
         var onlineRows = rows.Where(row => row.Source.Online).ToList();
         DiagnosticsDeviceBox.ItemsSource = onlineRows;
         FilesDeviceBox.ItemsSource = onlineRows;
         AdminDeviceBox.ItemsSource = onlineRows;
         UpdateDeviceBox.ItemsSource = onlineRows;
+        BackupDeviceBox.ItemsSource = onlineRows;
         DiagnosticsDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == diagnosticsId) ?? onlineRows.FirstOrDefault();
         FilesDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == filesId) ?? onlineRows.FirstOrDefault();
         AdminDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == adminId) ?? onlineRows.FirstOrDefault();
         UpdateDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == updateId) ?? onlineRows.FirstOrDefault();
+        BackupDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == backupId) ?? onlineRows.FirstOrDefault();
     }
 
     private void ApplyDeviceFilter()
@@ -489,6 +492,197 @@ public partial class MainWindow : Window
     }
 
     private FileEntry? SelectedFile => (FilesGrid.SelectedItem as FileRow)?.Source;
+
+    private async void BackupDevice_Changed(object sender, SelectionChangedEventArgs e) => await LoadBackupsAsync();
+
+    private async void BackupRefresh_Click(object sender, RoutedEventArgs e) => await LoadBackupsAsync();
+
+    private async Task LoadBackupsAsync()
+    {
+        if (_api is null || BackupDeviceBox.SelectedItem is not DeviceRow device)
+        {
+            BackupsGrid.ItemsSource = null;
+            return;
+        }
+        try
+        {
+            var backups = await _api.GetBackupsAsync(device.Id);
+            BackupsGrid.ItemsSource = backups.Select(backup => new BackupRowView(backup)).ToList();
+            BackupCaption.Text = $"{backups.Length} backup record(s)";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            BackupCaption.Text = exception.Message;
+        }
+    }
+
+    private async void BackupCreate_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || BackupDeviceBox.SelectedItem is not DeviceRow device) return;
+        if (string.IsNullOrWhiteSpace(BackupNameBox.Text) || string.IsNullOrWhiteSpace(BackupSourceBox.Text) || string.IsNullOrWhiteSpace(BackupDestinationBox.Text))
+        {
+            SetStatus("A name, source path, and destination path are required.", false, true);
+            return;
+        }
+        try
+        {
+            SetStatus("Creating backup…");
+            var response = await _api.CreateBackupAsync(device.Id, new BackupRequest(
+                BackupNameBox.Text.Trim(), BackupSourceBox.Text.Trim(), BackupDestinationBox.Text.Trim(), 30));
+            var operationId = response.GetProperty("operation").GetProperty("id").GetGuid();
+            var completed = await _api.WaitForOperationAsync(operationId, TimeSpan.FromMinutes(30));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"The backup ended with {completed.State}.");
+            SetStatus("Backup completed", true);
+            await LoadBackupsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException or JsonException)
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void BackupVerify_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || BackupsGrid.SelectedItem is not BackupRowView row) return;
+        try
+        {
+            var operation = await _api.VerifyBackupAsync(row.Id);
+            var completed = await _api.WaitForOperationAsync(operation.Id, TimeSpan.FromMinutes(10));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"Verification ended with {completed.State}.");
+            var result = JsonSerializer.Deserialize<VerifyOperationResult>(completed.ResultJson ?? "{}", JsonOptions);
+            SetStatus(result?.Valid == true ? "Backup verified" : "Backup verification failed", result?.Valid == true);
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException or JsonException)
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void BackupRestore_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || BackupsGrid.SelectedItem is not BackupRowView row) return;
+        var destination = TextPromptWindow.Show(this, "Restore backup", "Restore destination relative to the managed root:", "restored");
+        if (string.IsNullOrWhiteSpace(destination)) return;
+        try
+        {
+            var operation = await _api.RestoreBackupAsync(row.Id, destination.Trim());
+            var completed = await _api.WaitForOperationAsync(operation.Id, TimeSpan.FromMinutes(30));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"Restore ended with {completed.State}.");
+            SetStatus("Backup restored", true);
+            await LoadBackupsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException)
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void AlertsRefresh_Click(object sender, RoutedEventArgs e) => await LoadAlertsAsync();
+
+    private async Task LoadAlertsAsync()
+    {
+        if (_api is null) return;
+        try
+        {
+            var state = (AlertStateBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            var alerts = await _api.GetAlertsAsync(state == "All states" ? null : state);
+            AlertsGrid.ItemsSource = alerts.Select(alert => new AlertRowView(alert)).ToList();
+            AlertCaption.Text = $"{alerts.Length} alert(s)";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            AlertCaption.Text = exception.Message;
+        }
+    }
+
+    private async void AlertAcknowledge_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || AlertsGrid.SelectedItem is not AlertRowView row) return;
+        try
+        {
+            await _api.AcknowledgeAlertAsync(row.Id);
+            SetStatus("Alert acknowledged", true);
+            await LoadAlertsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void AutomationRefresh_Click(object sender, RoutedEventArgs e) => await LoadAutomationsAsync();
+
+    private async Task LoadAutomationsAsync()
+    {
+        if (_api is null) return;
+        try
+        {
+            var automations = await _api.GetAutomationsAsync();
+            AutomationsGrid.ItemsSource = automations.Select(automation => new AutomationRowView(automation)).ToList();
+            var runs = await _api.GetAutomationRunsAsync();
+            AutomationRunsGrid.ItemsSource = runs.Select(run => new AutomationRunRowView(run)).ToList();
+            AutomationCaption.Text = $"{automations.Length} rule(s)";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            AutomationCaption.Text = exception.Message;
+        }
+    }
+
+    private async void AutomationCreate_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null) return;
+        var window = new AutomationWindow { Owner = this };
+        if (window.ShowDialog() != true || window.Result is null) return;
+        try
+        {
+            await _api.CreateAutomationAsync(window.Result);
+            SetStatus("Automation created", true);
+            await LoadAutomationsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void AutomationEnable_Click(object sender, RoutedEventArgs e) => await SetAutomationEnabledAsync(true);
+
+    private async void AutomationDisable_Click(object sender, RoutedEventArgs e) => await SetAutomationEnabledAsync(false);
+
+    private async Task SetAutomationEnabledAsync(bool enabled)
+    {
+        if (_api is null || AutomationsGrid.SelectedItem is not AutomationRowView row) return;
+        try
+        {
+            await _api.SetAutomationEnabledAsync(row.Id, enabled);
+            await LoadAutomationsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void AutomationDelete_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || AutomationsGrid.SelectedItem is not AutomationRowView row) return;
+        if (MessageBox.Show(this, $"Delete automation '{row.Name}'?", "Delete automation", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            await _api.DeleteAutomationAsync(row.Id);
+            await LoadAutomationsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private void Automation_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // Run history is grouped globally; selection is retained for enable/disable/delete actions.
+    }
 
     private async void SoftwareRefresh_Click(object sender, RoutedEventArgs e) => await LoadSoftwareAsync();
 
@@ -1104,10 +1298,10 @@ public partial class MainWindow : Window
 
     private void NavigateTo(string view)
     {
-        var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AdminView, DeploymentView, AuditView, SettingsView };
+        var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AdminView, DeploymentView, OperationsView, AuditView, SettingsView };
         foreach (var item in views) item.Visibility = item.Name == view ? Visibility.Visible : Visibility.Collapsed;
 
-        var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AdminNav, DeploymentNav, AuditNav, SettingsNav };
+        var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AdminNav, DeploymentNav, OperationsNav, AuditNav, SettingsNav };
         foreach (var button in nav)
             button.Background = Equals(button.Tag, view) ? (Brush)FindResource("AccentSoftBrush") : Brushes.Transparent;
 
@@ -1118,12 +1312,14 @@ public partial class MainWindow : Window
             "FilesView" => ("MANAGED ROOT", "Remote file browser"),
             "AdminView" => ("CONTROLLED ADMIN", "Processes, services, terminal"),
             "DeploymentView" => ("SOFTWARE LIFECYCLE", "Packages and Windows Update"),
+            "OperationsView" => ("PROTECTION AND AUTOMATION", "Backups, alerts, rules"),
             "AuditView" => ("ACCOUNTABILITY", "Audit history"),
             "SettingsView" => ("APPLICATION", "Settings"),
             _ => ("FLEET OVERVIEW", "Command center")
         };
         if (view == "AuditView" && _auditEvents.Count == 0) _ = LoadAuditAsync();
         if (view == "DeploymentView") _ = LoadSoftwareAsync();
+        if (view == "OperationsView") { _ = LoadBackupsAsync(); _ = LoadAlertsAsync(); _ = LoadAutomationsAsync(); }
         if (view == "DevicesView") DeviceSearchBox.Focus();
     }
 

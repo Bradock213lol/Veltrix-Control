@@ -56,6 +56,7 @@ public sealed class OperationExecutorTests : IDisposable
             new AdminOperations(options, new TerminalSessionManager(NullLogger<TerminalSessionManager>.Instance), NullLogger<AdminOperations>.Instance),
             new SoftwareOperations(options, NullLogger<SoftwareOperations>.Instance),
             new WindowsUpdateOperations(options, NullLogger<WindowsUpdateOperations>.Instance),
+            new BackupOperations(options, NullLogger<BackupOperations>.Instance),
             NullLogger<OperationExecutor>.Instance);
     }
 

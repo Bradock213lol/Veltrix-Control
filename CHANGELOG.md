@@ -2,6 +2,20 @@
 
 All notable changes follow semantic versioning.
 
+## [0.6.0] - 2026-09-19
+
+### Added
+
+- Verified folder/file backups with zip archives, SHA-256 integrity, automatic pre-restore checks, retention-based expiry that queues a safe archive cleanup operation, and restore to a new destination only.
+- Alert engine with offline, CPU, memory, and low-disk detection, deduplication while an alert is open, automatic resolution when conditions clear, acknowledgement, and run history.
+- Automation rules with schedule, alert, device-online, and device-offline triggers; optional device-name conditions; allow-listed actions (create alert, queue restart/shutdown/scan); cooldowns; recursion protection; and complete run history.
+- Desktop Operations workspace with Backups, Alerts, and Automation tabs.
+- End-to-end and Agent coverage for backup round trips, escapes, alert acknowledgement, automation lifecycle and validation, and permission enforcement.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.6.0.
+
 ## [0.5.0] - 2026-09-19
 
 ### Added

@@ -66,6 +66,8 @@ builder.Services.AddSingleton(new ControllerRuntimeInfo(
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddSingleton<VeltrixControlStore>();
 builder.Services.AddScoped<AgentMessageVerifier>();
+builder.Services.AddHostedService<AlertEvaluator>();
+builder.Services.AddHostedService<AutomationEngine>();
 builder.Services.AddSignalR();
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -140,7 +142,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.5.0" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.6.0" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>
@@ -250,6 +252,30 @@ app.MapPost("/api/agent/operation-result", async (SignedAgentMessage message, Ag
             // The scan payload is validated before it is stored; malformed data is ignored.
         }
     }
+    if (operation?.Kind == OperationKind.CreateBackup && operation.Argument is not null)
+    {
+        try
+        {
+            using var argumentDocument = System.Text.Json.JsonDocument.Parse(operation.Argument);
+            if (argumentDocument.RootElement.TryGetProperty("backupId", out var backupIdElement) && backupIdElement.TryGetGuid(out var backupId))
+            {
+                if (result.State == OperationState.Succeeded && result.ResultJson is not null)
+                {
+                    var backupResult = System.Text.Json.JsonSerializer.Deserialize<BackupOperationResult>(result.ResultJson,
+                        new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+                    await database.CompleteBackupAsync(backupId, backupResult is not null, backupResult?.SizeBytes ?? 0, backupResult?.Sha256, result.Error, ct);
+                }
+                else
+                {
+                    await database.CompleteBackupAsync(backupId, false, 0, null, result.Error ?? "The backup did not complete.", ct);
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // A malformed argument is rejected before the operation is queued.
+        }
+    }
     await hub.Clients.All.SendAsync("operationUpdated", result.OperationId, ct);
     return Results.NoContent();
 }).RequireRateLimiting("agent");
@@ -294,6 +320,7 @@ management.MapPost("/devices/{deviceId:guid}/operations", async (Guid deviceId, 
 management.MapManagementTransfers();
 management.MapManagementAdmin();
 management.MapManagementSoftware();
+management.MapManagementMonitoring();
 
 app.MapAgentTransfers();
 

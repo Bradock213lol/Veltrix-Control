@@ -24,6 +24,7 @@ builder.Services.AddSingleton<TerminalSessionManager>();
 builder.Services.AddSingleton<AdminOperations>();
 builder.Services.AddSingleton<SoftwareOperations>();
 builder.Services.AddSingleton<WindowsUpdateOperations>();
+builder.Services.AddSingleton<BackupOperations>();
 builder.Services.AddSingleton<OperationInbox>();
 builder.Services.AddSingleton<OperationExecutor>();
 builder.Services.AddSingleton(new HttpClient(CreateHandler(options))

@@ -1,0 +1,56 @@
+<Window x:Class="VeltrixControl.Desktop.AutomationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New automation" Width="580" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+  <StackPanel Margin="20">
+    <TextBlock Text="Create an automation rule" FontSize="20" FontWeight="SemiBold"/>
+    <TextBlock Text="Rules run on the Controller with a cooldown, record every run, and may only queue allow-listed operations." Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,16"/>
+    <Label Content="Name"/>
+    <TextBox x:Name="NameBox" MaxLength="128" Margin="0,0,0,12"/>
+    <Label Content="Trigger"/>
+    <ComboBox x:Name="TriggerBox" HorizontalAlignment="Left" Width="220" SelectionChanged="Trigger_Changed">
+      <ComboBoxItem Content="Schedule" IsSelected="True"/>
+      <ComboBoxItem Content="AlertRaised"/>
+      <ComboBoxItem Content="DeviceOffline"/>
+      <ComboBoxItem Content="DeviceOnline"/>
+    </ComboBox>
+    <StackPanel x:Name="SchedulePanel" Margin="0,10,0,0">
+      <Label Content="Every (minutes)"/>
+      <TextBox x:Name="MinutesBox" Text="60" Width="120" HorizontalAlignment="Left"/>
+    </StackPanel>
+    <StackPanel x:Name="AlertPanel" Visibility="Collapsed" Margin="0,10,0,0">
+      <Label Content="Alert code (optional)"/>
+      <TextBox x:Name="AlertCodeBox" MaxLength="64"/>
+      <Label Content="Severity (optional)"/>
+      <ComboBox x:Name="SeverityBox" HorizontalAlignment="Left" Width="160" Margin="0,4,0,0">
+        <ComboBoxItem Content="(any)" IsSelected="True"/>
+        <ComboBoxItem Content="Info"/>
+        <ComboBoxItem Content="Warning"/>
+        <ComboBoxItem Content="Critical"/>
+      </ComboBox>
+    </StackPanel>
+    <Label Content="Device name contains (optional)"/>
+    <TextBox x:Name="DeviceFilterBox" MaxLength="128" Margin="0,0,0,12"/>
+    <Label Content="Action"/>
+    <ComboBox x:Name="ActionBox" HorizontalAlignment="Left" Width="220" SelectionChanged="Action_Changed">
+      <ComboBoxItem Content="CreateAlert" IsSelected="True"/>
+      <ComboBoxItem Content="QueueOperation"/>
+    </ComboBox>
+    <StackPanel x:Name="OperationPanel" Visibility="Collapsed" Margin="0,10,0,0">
+      <Label Content="Operation"/>
+      <ComboBox x:Name="OperationBox" HorizontalAlignment="Left" Width="220">
+        <ComboBoxItem Content="ScanWindowsUpdates" IsSelected="True"/>
+        <ComboBoxItem Content="Restart"/>
+        <ComboBoxItem Content="Shutdown"/>
+      </ComboBox>
+    </StackPanel>
+    <Label Content="Cooldown (seconds)"/>
+    <TextBox x:Name="CooldownBox" Text="300" Width="120" HorizontalAlignment="Left" Margin="0,0,0,16"/>
+    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}" MinHeight="22" Margin="0,0,0,8"/>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+      <Button Content="Cancel" IsCancel="True" Margin="0,0,10,0"/>
+      <Button Content="Create" Style="{StaticResource PrimaryButton}" Click="Create_Click"/>
+    </StackPanel>
+  </StackPanel>
+</Window>
