@@ -14,7 +14,8 @@ public sealed record HardwareInventory(
     long TotalMemoryBytes,
     IReadOnlyList<DiskInventory> Disks,
     string AgentVersion,
-    bool IsSimulation = false);
+    bool IsSimulation = false,
+    string? MacAddress = null);
 
 public sealed record TelemetrySnapshot(
     DateTimeOffset CapturedAt,
@@ -89,6 +90,7 @@ public enum OperationKind
     Hibernate,
     TerminalStart,
     TerminalInput,
+    TerminalOutput,
     TerminalStop,
 
     InstallSoftware,

@@ -11,5 +11,8 @@ public sealed class AgentOptions
     public string EnrollmentCodeFile { get; set; } = "enrollment-code.txt";
     public string ManagedRoot { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments);
     public bool AllowPowerActions { get; set; }
+    public bool AllowProcessActions { get; set; }
+    public bool AllowServiceActions { get; set; }
+    public bool AllowTerminal { get; set; }
     public bool AllowInsecureLoopback { get; set; }
 }

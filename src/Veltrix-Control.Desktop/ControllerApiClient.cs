@@ -82,6 +82,21 @@ public sealed class ControllerApiClient : IDisposable
     public async Task CancelTransferAsync(Guid transferId, CancellationToken cancellationToken = default) =>
         await SendAsync<object?>(HttpMethod.Delete, $"api/transfers/{transferId:D}", null, true, cancellationToken);
 
+    public Task<TerminalStartResponse> StartTerminalAsync(Guid deviceId, StartTerminalRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<TerminalStartResponse>(HttpMethod.Post, $"api/devices/{deviceId:D}/terminal", request, true, cancellationToken);
+
+    public Task<TerminalOperationResponse> TerminalInputAsync(Guid sessionId, string data, CancellationToken cancellationToken = default) =>
+        SendAsync<TerminalOperationResponse>(HttpMethod.Post, $"api/terminal/{sessionId:D}/input", new TerminalInputRequest(data), true, cancellationToken);
+
+    public Task<TerminalOperationResponse> TerminalOutputAsync(Guid sessionId, long since, CancellationToken cancellationToken = default) =>
+        SendAsync<TerminalOperationResponse>(HttpMethod.Post, $"api/terminal/{sessionId:D}/output?since={since}", null, true, cancellationToken);
+
+    public Task<TerminalOperationResponse> StopTerminalAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
+        SendAsync<TerminalOperationResponse>(HttpMethod.Post, $"api/terminal/{sessionId:D}/stop", null, true, cancellationToken);
+
+    public async Task WakeDeviceAsync(Guid deviceId, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Post, $"api/devices/{deviceId:D}/wake", null, true, cancellationToken);
+
     public async Task<TransferView> UploadFileAsync(Guid deviceId, string localPath, string remotePath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var info = new FileInfo(localPath);

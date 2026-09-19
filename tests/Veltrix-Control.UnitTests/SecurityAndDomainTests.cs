@@ -67,5 +67,65 @@ public sealed class SecurityAndDomainTests
         Assert.Equal(expected, HealthScorer.Calculate(snapshot, online));
     }
 
+    [Theory]
+    [InlineData(OperationKind.StopProcess, "device.processes")]
+    [InlineData(OperationKind.StartService, "device.services")]
+    [InlineData(OperationKind.TerminalStart, "device.terminal")]
+    [InlineData(OperationKind.ScheduleRestart, "device.power")]
+    [InlineData(OperationKind.TerminalOutput, "device.terminal")]
+    [InlineData(OperationKind.ListDirectory, "device.files")]
+    public void OperationPermissionsAreMapped(OperationKind kind, string permission)
+    {
+        Assert.Equal(permission, RolePermissions.PermissionFor(kind));
+        Assert.False(RolePermissions.HasPermission("Viewer", permission));
+        Assert.True(RolePermissions.HasPermission("Administrator", permission));
+    }
+
+    [Theory]
+    [InlineData("System", true)]
+    [InlineData("csrss", true)]
+    [InlineData("lsass", true)]
+    [InlineData("explorer", false)]
+    [InlineData("notepad", false)]
+    public void ProtectedProcessPolicyIsExplicit(string name, bool expected)
+    {
+        Assert.Equal(expected, AdminLimits.IsProtectedProcess(name));
+    }
+
+    [Theory]
+    [InlineData("RpcSs", true)]
+    [InlineData("WinDefend", true)]
+    [InlineData("Spooler", false)]
+    public void ProtectedServicePolicyIsExplicit(string name, bool expected)
+    {
+        Assert.Equal(expected, AdminLimits.IsProtectedService(name));
+    }
+
+    [Fact]
+    public void WakeOnLanPacketMatchesTheMagicPacketLayout()
+    {
+        var packet = VeltrixControl.Core.Network.WakeOnLan.BuildMagicPacket("00:11:22:AA:BB:CC");
+        Assert.Equal(102, packet.Length);
+        Assert.All(packet.Take(6), value => Assert.Equal(0xFF, value));
+        for (var repeat = 0; repeat < 16; repeat++)
+        {
+            Assert.Equal(0x00, packet[6 + repeat * 6]);
+            Assert.Equal(0x11, packet[6 + repeat * 6 + 1]);
+            Assert.Equal(0x22, packet[6 + repeat * 6 + 2]);
+            Assert.Equal(0xAA, packet[6 + repeat * 6 + 3]);
+            Assert.Equal(0xBB, packet[6 + repeat * 6 + 4]);
+            Assert.Equal(0xCC, packet[6 + repeat * 6 + 5]);
+        }
+    }
+
+    [Theory]
+    [InlineData("00:11:22:33:44")]
+    [InlineData("ZZ:11:22:33:44:55")]
+    [InlineData("")]
+    public void WakeOnLanRejectsInvalidMacAddresses(string mac)
+    {
+        Assert.Throws<ArgumentException>(() => VeltrixControl.Core.Network.WakeOnLan.BuildMagicPacket(mac));
+    }
+
     private sealed record TestPayload(int Value);
 }

@@ -2,6 +2,31 @@
 
 All notable changes follow semantic versioning.
 
+## [0.4.0] - 2026-09-19
+
+### Added
+
+- Remote process control: start an approved executable, stop a process, and change process
+  priority, with identity re-verification and a protected-process policy.
+- Windows service control: start, stop, and change startup type with a protected-service
+  policy and explicit confirmation for stop actions.
+- Scheduled restart and shutdown, logoff, sleep, hibernation, and Wake-on-LAN for nodes
+  that report a MAC address.
+- Audited PowerShell and CMD terminal sessions with pooled agents, bounded buffers,
+  sequence-based streaming, command length limits, multiple sessions per device, and
+  session lifecycle tracking.
+- A dedicated Administration surface in the desktop app: processes, services, and terminal
+  with device selection, confirmations, and clear errors.
+- Unit, Agent, and end-to-end coverage for protection policies, local opt-in denial,
+  terminal lifecycle and streaming, wake behavior, and role enforcement.
+
+### Changed
+
+- Every administrative operation requires its exact permission, explicit confirmation,
+  the node's local policy opt-in, and produces audit events.
+- Home inventories now report the primary MAC address to support Wake-on-LAN.
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.4.0.
+
 ## [0.3.0] - 2026-09-19
 
 ### Added

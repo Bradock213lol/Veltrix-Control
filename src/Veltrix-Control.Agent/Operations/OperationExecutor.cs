@@ -10,7 +10,11 @@ using VeltrixControl.Contracts;
 
 namespace VeltrixControl.Agent.Operations;
 
-public sealed partial class OperationExecutor(AgentOptions options, FileOperations fileOperations, ILogger<OperationExecutor> logger)
+public sealed partial class OperationExecutor(
+    AgentOptions options,
+    FileOperations fileOperations,
+    AdminOperations adminOperations,
+    ILogger<OperationExecutor> logger)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -24,6 +28,10 @@ public sealed partial class OperationExecutor(AgentOptions options, FileOperatio
             if (FileOperations.Handles(operation.Kind))
             {
                 return fileOperations.Execute(operation);
+            }
+            if (AdminOperations.Handles(operation.Kind))
+            {
+                return adminOperations.Execute(operation);
             }
 
             return operation.Kind switch

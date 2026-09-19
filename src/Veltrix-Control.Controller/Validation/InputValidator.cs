@@ -108,6 +108,54 @@ public static partial class InputValidator
                 var readBackup = Parse<ReadFileBackupArgument>(argument);
                 if (readBackup is null || !ValidPath(readBackup.Path) || readBackup.BackupName is null || readBackup.BackupName.Length is < 5 or > 64) return "A valid file path and backup name are required.";
                 return null;
+            case OperationKind.StartProcess:
+                var startProcess = Parse<StartProcessArgument>(argument);
+                if (startProcess is null || string.IsNullOrWhiteSpace(startProcess.FileName) || startProcess.FileName.Length > 1024) return "A valid executable path is required.";
+                if (startProcess.Arguments is { Length: > 2048 } || startProcess.WorkingDirectory is { Length: > 1024 }) return "The process arguments exceed the allowed size.";
+                return null;
+            case OperationKind.StopProcess:
+                var stopProcess = Parse<ProcessTargetArgument>(argument);
+                if (stopProcess is null || stopProcess.ProcessId <= 0 || string.IsNullOrWhiteSpace(stopProcess.ProcessName) || stopProcess.ProcessName.Length > 256) return "A valid process target is required.";
+                return null;
+            case OperationKind.SetProcessPriority:
+                var priority = Parse<ProcessPriorityArgument>(argument);
+                if (priority is null || priority.ProcessId <= 0 || string.IsNullOrWhiteSpace(priority.ProcessName) || priority.ProcessName.Length > 256) return "A valid process target is required.";
+                if (!AdminLimits.ProcessPriorities.Contains(priority.PriorityClass, StringComparer.OrdinalIgnoreCase)) return "The requested priority class is invalid.";
+                return null;
+            case OperationKind.StartService:
+            case OperationKind.StopService:
+                var service = Parse<ServiceTargetArgument>(argument);
+                if (service is null || string.IsNullOrWhiteSpace(service.Name) || service.Name.Length > 256) return "A valid service name is required.";
+                return null;
+            case OperationKind.SetServiceStartType:
+                var startType = Parse<ServiceStartTypeArgument>(argument);
+                if (startType is null || string.IsNullOrWhiteSpace(startType.Name) || startType.Name.Length > 256) return "A valid service name is required.";
+                if (!AdminLimits.ServiceStartTypes.Contains(startType.StartType, StringComparer.OrdinalIgnoreCase)) return "The requested startup type is invalid.";
+                return null;
+            case OperationKind.ScheduleRestart:
+            case OperationKind.ScheduleShutdown:
+                var scheduled = Parse<ScheduledPowerArgument>(argument);
+                if (scheduled is null || scheduled.DelaySeconds is < 0 or > AdminLimits.MaxScheduledPowerSeconds) return "The scheduled delay is outside the allowed range.";
+                return null;
+            case OperationKind.TerminalStart:
+                var terminalStart = Parse<TerminalStartArgument>(argument);
+                if (terminalStart is null || terminalStart.SessionId == Guid.Empty) return "A valid terminal session is required.";
+                if (!Enum.TryParse<TerminalShell>(terminalStart.Shell, ignoreCase: true, out _)) return "The requested shell is invalid.";
+                if (string.IsNullOrWhiteSpace(terminalStart.WorkingDirectory) || terminalStart.WorkingDirectory.Length > 1024 || terminalStart.WorkingDirectory.Contains('\0')) return "A valid working directory is required.";
+                return null;
+            case OperationKind.TerminalInput:
+                var terminalInput = Parse<TerminalInputArgument>(argument);
+                if (terminalInput is null || terminalInput.SessionId == Guid.Empty) return "A valid terminal session is required.";
+                if (string.IsNullOrEmpty(terminalInput.Data) || terminalInput.Data.Length > AdminLimits.MaxCommandLength) return "The command is empty or exceeds the allowed length.";
+                return null;
+            case OperationKind.TerminalOutput:
+                var terminalOutput = Parse<TerminalOutputArgument>(argument);
+                if (terminalOutput is null || terminalOutput.SessionId == Guid.Empty || terminalOutput.SinceSequence < 0) return "A valid terminal output request is required.";
+                return null;
+            case OperationKind.TerminalStop:
+                var terminalStop = Parse<TerminalStopArgument>(argument);
+                if (terminalStop is null || terminalStop.SessionId == Guid.Empty) return "A valid terminal session is required.";
+                return null;
             default:
                 return argument is null || argument.Length <= 4096 ? null : "The operation argument exceeds the allowed size.";
         }

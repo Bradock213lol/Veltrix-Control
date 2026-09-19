@@ -50,7 +50,11 @@ public sealed class OperationExecutorTests : IDisposable
             AllowPowerActions = false,
             DataDirectory = Path.Combine(_managedRoot, ".agent")
         };
-        return new OperationExecutor(options, new FileOperations(options, NullLogger<FileOperations>.Instance), NullLogger<OperationExecutor>.Instance);
+        return new OperationExecutor(
+            options,
+            new FileOperations(options, NullLogger<FileOperations>.Instance),
+            new AdminOperations(options, new TerminalSessionManager(NullLogger<TerminalSessionManager>.Instance), NullLogger<AdminOperations>.Instance),
+            NullLogger<OperationExecutor>.Instance);
     }
 
     public void Dispose()

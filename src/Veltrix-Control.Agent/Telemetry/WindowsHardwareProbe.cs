@@ -20,7 +20,28 @@ public sealed class WindowsHardwareProbe
             Environment.ProcessorCount,
             checked((long)memory.TotalPhys),
             ReadDisks(),
-            typeof(WindowsHardwareProbe).Assembly.GetName().Version?.ToString(3) ?? "0.3.0");
+            typeof(WindowsHardwareProbe).Assembly.GetName().Version?.ToString(3) ?? "0.4.0",
+            MacAddress: ReadPrimaryMac());
+    }
+
+    private static string? ReadPrimaryMac()
+    {
+        try
+        {
+            foreach (var adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (adapter.OperationalStatus != System.Net.NetworkInformation.OperationalStatus.Up) continue;
+                if (adapter.NetworkInterfaceType == System.Net.NetworkInformation.NetworkInterfaceType.Loopback) continue;
+                var bytes = adapter.GetPhysicalAddress().GetAddressBytes();
+                if (bytes.Length != 6) continue;
+                return string.Join(":", bytes.Select(value => value.ToString("X2", System.Globalization.CultureInfo.InvariantCulture)));
+            }
+        }
+        catch (System.Net.NetworkInformation.NetworkInformationException)
+        {
+            // A driver can refuse inspection; Wake-on-LAN is simply unavailable.
+        }
+        return null;
     }
 
     public TelemetrySnapshot ReadTelemetry()

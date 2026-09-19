@@ -25,6 +25,7 @@ public partial class MainWindow : Window
 
     private readonly DesktopSettings _settings = DesktopSettings.Load();
     private readonly DispatcherTimer _refreshTimer = new();
+    private readonly DispatcherTimer _terminalTimer = new();
     private ControllerApiClient? _api;
     private UserIdentity? _user;
     private List<DeviceSummary> _devices = [];
@@ -32,6 +33,9 @@ public partial class MainWindow : Window
     private List<FileEntry> _files = [];
     private DataTable? _diagnosticTable;
     private string _currentPath = string.Empty;
+    private Guid? _terminalSessionId;
+    private long _terminalSequence;
+    private bool _terminalPolling;
     private bool _setupRequired;
     private bool _refreshing;
 
@@ -39,11 +43,14 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _refreshTimer.Tick += async (_, _) => await RefreshFleetAsync();
+        _terminalTimer.Interval = TimeSpan.FromSeconds(1.2);
+        _terminalTimer.Tick += TerminalPollTick;
     }
 
     protected override void OnClosed(EventArgs e)
     {
         _refreshTimer.Stop();
+        _terminalTimer.Stop();
         _api?.Dispose();
         base.OnClosed(e);
     }
@@ -171,11 +178,14 @@ public partial class MainWindow : Window
     {
         var diagnosticsId = (DiagnosticsDeviceBox.SelectedItem as DeviceRow)?.Id;
         var filesId = (FilesDeviceBox.SelectedItem as DeviceRow)?.Id;
+        var adminId = (AdminDeviceBox.SelectedItem as DeviceRow)?.Id;
         var onlineRows = rows.Where(row => row.Source.Online).ToList();
         DiagnosticsDeviceBox.ItemsSource = onlineRows;
         FilesDeviceBox.ItemsSource = onlineRows;
+        AdminDeviceBox.ItemsSource = onlineRows;
         DiagnosticsDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == diagnosticsId) ?? onlineRows.FirstOrDefault();
         FilesDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == filesId) ?? onlineRows.FirstOrDefault();
+        AdminDeviceBox.SelectedItem = onlineRows.FirstOrDefault(row => row.Id == adminId) ?? onlineRows.FirstOrDefault();
     }
 
     private void ApplyDeviceFilter()
@@ -476,6 +486,266 @@ public partial class MainWindow : Window
 
     private FileEntry? SelectedFile => (FilesGrid.SelectedItem as FileRow)?.Source;
 
+    private async void AdminRefresh_Click(object sender, RoutedEventArgs e)
+    {
+        await AdminLoadProcessesAsync();
+        await AdminLoadServicesAsync();
+    }
+
+    private async void AdminLoadProcesses_Click(object sender, RoutedEventArgs e) => await AdminLoadProcessesAsync();
+
+    private async Task AdminLoadProcessesAsync()
+    {
+        if (_api is null || AdminDeviceBox.SelectedItem is not DeviceRow device)
+        {
+            SetStatus("Choose an online device first.", false, true);
+            return;
+        }
+        try
+        {
+            var completed = await RunDiagnosticAsync(device, OperationKind.ListProcesses);
+            if (completed is null) return;
+            var processes = JsonSerializer.Deserialize<ProcessSnapshot[]>(completed.ResultJson ?? "[]", JsonOptions) ?? [];
+            AdminProcessesGrid.ItemsSource = processes.Select(process => new ProcessAdminRow(process)).ToList();
+            ProcessCaption.Text = $"{processes.Length} processes · protected system processes cannot be stopped";
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException or JsonException)
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void AdminLoadServices_Click(object sender, RoutedEventArgs e) => await AdminLoadServicesAsync();
+
+    private async Task AdminLoadServicesAsync()
+    {
+        if (_api is null || AdminDeviceBox.SelectedItem is not DeviceRow device) return;
+        try
+        {
+            var completed = await RunDiagnosticAsync(device, OperationKind.ListServices);
+            if (completed is null) return;
+            var services = JsonSerializer.Deserialize<ServiceSnapshot[]>(completed.ResultJson ?? "[]", JsonOptions) ?? [];
+            AdminServicesGrid.ItemsSource = services.Select(service => new ServiceAdminRow(service)).ToList();
+            SetStatus($"Loaded {services.Length} services", true);
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException or JsonException)
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async Task<OperationView?> RunDiagnosticAsync(DeviceRow device, OperationKind kind, string? argument = null)
+    {
+        if (_api is null) return null;
+        var queued = await _api.CreateOperationAsync(device.Id, kind, argument, true);
+        var completed = await _api.WaitForOperationAsync(queued.Id, TimeSpan.FromSeconds(30));
+        if (completed.State != OperationState.Succeeded)
+            throw new InvalidOperationException(completed.Error ?? $"The node ended the request with {completed.State}.");
+        return completed;
+    }
+
+    private async void AdminStopProcess_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || AdminProcessesGrid.SelectedItem is not ProcessAdminRow row || AdminDeviceBox.SelectedItem is not DeviceRow device) return;
+        if (MessageBox.Show(this, $"Stop {row.Name} (PID {row.Id})?", "Stop process", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        await RunAdminOperationAsync(device, OperationKind.StopProcess, new ProcessTargetArgument(row.Id, row.Name), refreshProcesses: true);
+    }
+
+    private async void AdminPriority_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || AdminProcessesGrid.SelectedItem is not ProcessAdminRow row || AdminDeviceBox.SelectedItem is not DeviceRow device) return;
+        var priority = TextPromptWindow.Show(this, "Set process priority", $"Priority for {row.Name} ({string.Join(", ", AdminLimits.ProcessPriorities)}):", "Normal");
+        if (priority is null) return;
+        if (!AdminLimits.ProcessPriorities.Contains(priority, StringComparer.OrdinalIgnoreCase))
+        {
+            SetStatus("The priority must be one of: " + string.Join(", ", AdminLimits.ProcessPriorities), false, true);
+            return;
+        }
+        await RunAdminOperationAsync(device, OperationKind.SetProcessPriority, new ProcessPriorityArgument(row.Id, row.Name, priority), refreshProcesses: true);
+    }
+
+    private async void AdminStartProcess_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || AdminDeviceBox.SelectedItem is not DeviceRow device) return;
+        var fileName = TextPromptWindow.Show(this, "Start program", "Absolute path to an .exe on the node:");
+        if (string.IsNullOrWhiteSpace(fileName)) return;
+        var arguments = TextPromptWindow.Show(this, "Start program", "Command-line arguments (optional):");
+        await RunAdminOperationAsync(device, OperationKind.StartProcess, new StartProcessArgument(fileName.Trim(), string.IsNullOrWhiteSpace(arguments) ? null : arguments, null), refreshProcesses: true);
+    }
+
+    private async void AdminServiceStart_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || AdminServicesGrid.SelectedItem is not ServiceAdminRow row || AdminDeviceBox.SelectedItem is not DeviceRow device) return;
+        await RunAdminOperationAsync(device, OperationKind.StartService, new ServiceTargetArgument(row.Name), refreshServices: true);
+    }
+
+    private async void AdminServiceStop_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || AdminServicesGrid.SelectedItem is not ServiceAdminRow row || AdminDeviceBox.SelectedItem is not DeviceRow device) return;
+        if (MessageBox.Show(this, $"Stop service '{row.DisplayName}'?", "Stop service", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        await RunAdminOperationAsync(device, OperationKind.StopService, new ServiceTargetArgument(row.Name), refreshServices: true);
+    }
+
+    private async void AdminServiceStartup_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || AdminServicesGrid.SelectedItem is not ServiceAdminRow row || AdminDeviceBox.SelectedItem is not DeviceRow device) return;
+        var startup = TextPromptWindow.Show(this, "Startup type", $"Startup for {row.Name} ({string.Join(", ", AdminLimits.ServiceStartTypes)}):", row.StartType);
+        if (startup is null) return;
+        if (!AdminLimits.ServiceStartTypes.Contains(startup, StringComparer.OrdinalIgnoreCase))
+        {
+            SetStatus("The startup type must be one of: " + string.Join(", ", AdminLimits.ServiceStartTypes), false, true);
+            return;
+        }
+        await RunAdminOperationAsync(device, OperationKind.SetServiceStartType, new ServiceStartTypeArgument(row.Name, startup), refreshServices: true);
+    }
+
+    private async Task RunAdminOperationAsync(DeviceRow device, OperationKind kind, object argument, bool refreshProcesses = false, bool refreshServices = false)
+    {
+        if (_api is null) return;
+        try
+        {
+            SetStatus($"{kind}…");
+            var queued = await _api.CreateOperationAsync(device.Id, kind, JsonSerializer.Serialize(argument, JsonOptions), true);
+            var completed = await _api.WaitForOperationAsync(queued.Id, TimeSpan.FromSeconds(60));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"The node ended the request with {completed.State}.");
+            SetStatus($"{kind} complete", true);
+            if (refreshProcesses) await AdminLoadProcessesAsync();
+            if (refreshServices) await AdminLoadServicesAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException)
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void TerminalStart_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || AdminDeviceBox.SelectedItem is not DeviceRow device) return;
+        if (_terminalSessionId is not null)
+        {
+            SetStatus("Stop the current terminal session first.", false, true);
+            return;
+        }
+        var shell = (TerminalShellBox.SelectedItem as ComboBoxItem)?.Content?.ToString() == "CommandPrompt"
+            ? TerminalShell.CommandPrompt
+            : TerminalShell.PowerShell;
+        try
+        {
+            TerminalCaption.Text = "Starting session…";
+            var response = await _api.StartTerminalAsync(device.Id, new StartTerminalRequest(shell, TerminalWorkingDirectory.Text.Trim()));
+            var completed = await _api.WaitForOperationAsync(response.Operation.Id, TimeSpan.FromSeconds(30));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"The session ended with {completed.State}.");
+            var output = JsonSerializer.Deserialize<TerminalOutputResult>(completed.ResultJson ?? "{}", JsonOptions);
+            _terminalSessionId = response.Session.Id;
+            _terminalSequence = output?.Sequence ?? 0;
+            TerminalOutputBox.Text = output?.Output ?? string.Empty;
+            TerminalCaption.Text = $"{shell} session active on {device.Name}";
+            _terminalTimer.Start();
+            TerminalInputBox.Focus();
+            SetStatus("Terminal session started", true);
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException or JsonException)
+        {
+            TerminalCaption.Text = exception.Message;
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private void TerminalSend_Click(object sender, RoutedEventArgs e) => _ = SendTerminalCommandAsync();
+
+    private void TerminalInput_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            _ = SendTerminalCommandAsync();
+        }
+    }
+
+    private async Task SendTerminalCommandAsync()
+    {
+        if (_api is null || _terminalSessionId is null) return;
+        var command = TerminalInputBox.Text;
+        if (string.IsNullOrWhiteSpace(command)) return;
+        TerminalInputBox.Clear();
+        try
+        {
+            var response = await _api.TerminalInputAsync(_terminalSessionId.Value, command + "\r\n");
+            var completed = await _api.WaitForOperationAsync(response.Operation.Id, TimeSpan.FromSeconds(30));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"The command ended with {completed.State}.");
+            await PollTerminalAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException)
+        {
+            TerminalCaption.Text = exception.Message;
+        }
+    }
+
+    private async void TerminalStop_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || _terminalSessionId is null) return;
+        try
+        {
+            var response = await _api.StopTerminalAsync(_terminalSessionId.Value);
+            await _api.WaitForOperationAsync(response.Operation.Id, TimeSpan.FromSeconds(20));
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+        finally
+        {
+            _terminalTimer.Stop();
+            _terminalSessionId = null;
+            TerminalCaption.Text = "Session stopped";
+        }
+    }
+
+    private void TerminalClear_Click(object sender, RoutedEventArgs e) => TerminalOutputBox.Clear();
+
+    private async void TerminalPollTick(object? sender, EventArgs e)
+    {
+        if (_terminalPolling) return;
+        _terminalPolling = true;
+        try
+        {
+            await PollTerminalAsync();
+        }
+        finally
+        {
+            _terminalPolling = false;
+        }
+    }
+
+    private async Task PollTerminalAsync()
+    {
+        if (_api is null || _terminalSessionId is null) return;
+        try
+        {
+            var response = await _api.TerminalOutputAsync(_terminalSessionId.Value, _terminalSequence);
+            var completed = await _api.WaitForOperationAsync(response.Operation.Id, TimeSpan.FromSeconds(20));
+            if (completed.State != OperationState.Succeeded) return;
+            var output = JsonSerializer.Deserialize<TerminalOutputResult>(completed.ResultJson ?? "{}", JsonOptions);
+            if (output is null) return;
+            if (output.Output.Length > 0)
+            {
+                TerminalOutputBox.AppendText(output.Output);
+                TerminalOutputBox.ScrollToEnd();
+            }
+            _terminalSequence = output.Sequence;
+            if (output.Exited)
+            {
+                _terminalTimer.Stop();
+                _terminalSessionId = null;
+                TerminalCaption.Text = $"Shell exited with code {output.ExitCode}";
+            }
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            TerminalCaption.Text = exception.Message;
+        }
+    }
+
     private static string Combine(string folder, string name) =>
         string.IsNullOrWhiteSpace(folder) ? name.Trim() : $"{folder.TrimEnd('/', '\\')}\\{name.Trim()}";
 
@@ -660,10 +930,10 @@ public partial class MainWindow : Window
 
     private void NavigateTo(string view)
     {
-        var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AuditView, SettingsView };
+        var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AdminView, AuditView, SettingsView };
         foreach (var item in views) item.Visibility = item.Name == view ? Visibility.Visible : Visibility.Collapsed;
 
-        var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AuditNav, SettingsNav };
+        var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AdminNav, AuditNav, SettingsNav };
         foreach (var button in nav)
             button.Background = Equals(button.Tag, view) ? (Brush)FindResource("AccentSoftBrush") : Brushes.Transparent;
 
@@ -672,6 +942,7 @@ public partial class MainWindow : Window
             "DevicesView" => ("DEVICE DIRECTORY", "Managed computers"),
             "DiagnosticsView" => ("READ-ONLY TOOLS", "Remote diagnostics"),
             "FilesView" => ("MANAGED ROOT", "Remote file browser"),
+            "AdminView" => ("CONTROLLED ADMIN", "Processes, services, terminal"),
             "AuditView" => ("ACCOUNTABILITY", "Audit history"),
             "SettingsView" => ("APPLICATION", "Settings"),
             _ => ("FLEET OVERVIEW", "Command center")

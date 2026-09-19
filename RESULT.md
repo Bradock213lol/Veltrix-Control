@@ -1,42 +1,40 @@
-# Veltrix-Control v0.3.0 result report
+# Veltrix-Control v0.4.0 result report
 
 ## Status
 
-Phase 3 is implemented: authorized operators can maintain files inside the configured
-managed root, transfer large files with progress and verification, and edit text or
-configuration files with automatic backups and restore. Phase 1 and Phase 2 workflows
-remain intact.
+Phase 4 is implemented: authorized administrators can control processes, Windows services,
+power state, and audited terminal sessions on explicitly enrolled nodes, with protection
+policies enforced on the node. Phases 1–3 remain intact.
 
 ## Delivered workflows
 
-- Create folder, create file, rename, move, copy, and delete with explicit confirmation
-  for destructive actions and `device.files` authorization.
-- Wildcard search, bounded folder sizing, ZIP creation, and ZIP extraction.
-- Chunked upload and download between the desktop app and managed nodes with progress,
-  cancellation, sequential-offset enforcement, and SHA-256 verification before a transfer
-  can complete.
-- Text/code editor with line numbers, find/replace, atomic saves, automatic pre-save
-  backups, bounded per-file history, restore, and a line-level comparison view.
-- Hardened path policy enforced on the node: managed-root protection, absolute/UNC/device
-  path rejection, alternate data stream rejection, null-byte rejection, reparse-point
-  escape detection, and archive zip-slip validation.
-- Per-operation argument validation and a centralized permission taxonomy for current and
-  future operations.
+- Process management: start approved executables, stop processes, and change priority with
+  identity re-verification and a protected-process policy.
+- Windows service management: start, stop, and startup-type changes with a protected-service
+  policy and confirmation for stop operations.
+- Scheduled restart/shutdown, logoff, sleep, hibernation, and Wake-on-LAN for nodes that
+  report a MAC address.
+- Audited PowerShell and CMD terminal sessions with streaming output, sequence-based
+  draining, bounded buffers, idle cleanup, and multiple sessions per node.
+- Desktop Administration workspace covering processes, services, and terminal actions.
+- Four independent safety gates per action: role permission, explicit confirmation, node
+  local policy, and typed argument validation.
 
 ## Verification
 
 - Release build: **PASS**, zero compiler warnings and zero errors.
-- Automated tests: **56 PASS** across unit, security, Agent, integration, and
+- Automated tests: **87 PASS** across unit, security, Agent, integration, and
   Controller-to-Agent end-to-end suites.
-- New coverage: file-engine round trips, stale-write conflict detection, backup/restore,
-  archive round trip, zip-slip rejection, traversal rejection for mutations, binary-file
-  rejection, transfer chunk sequencing, checksum rejection, permission enforcement, and
-  reparse/stream path rejection.
-- Transfers report success only after size and checksum verification on the receiving side.
+- New coverage: protection policies, local opt-in denial, process identity mismatch,
+  fixture process start/stop, terminal lifecycle and streaming, incremental output
+  sequences, invalid shell rejection, viewer denial, wake without MAC rejection, wake audit,
+  and wake packet layout.
+- Every administrative action and terminal command produces audit events; the audit chain
+  remains valid.
 
 ## Release artifacts
 
-- Tag: `v0.3.0`
+- Tag: `v0.4.0`
 - Installer: `Veltrix-Control-Setup.exe`
 - Checksum manifest: `SHA256SUMS.txt`
 - Archive: `Veltrix-Control-Windows-x64.zip`
@@ -46,7 +44,9 @@ remain intact.
 
 - Binaries are not Authenticode-signed because no organization signing certificate was
   supplied; Windows may display an unknown-publisher warning.
-- Transfers resume from the last sequential offset rather than arbitrary byte ranges.
-- The editor targets text and configuration files up to 2 MB and rejects binary content.
-- Process/service mutation, terminal sessions, software deployment, updates, backups,
-  automation, compute scheduling, and game-server adapters remain planned phases.
+- RealTime priority may be refused by Windows unless the service account holds the
+  privilege.
+- Wake-on-LAN depends on the reported MAC address and broadcast-capable networking.
+- Software deployment, updates, backups, automation, compute scheduling, and game-server
+  adapters remain planned phases.
+

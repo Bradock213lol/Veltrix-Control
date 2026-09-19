@@ -69,3 +69,22 @@ public sealed class TransferRow(TransferView source)
         : $"{DeviceRow.FormatBytes(Source.BytesTransferred)} / {DeviceRow.FormatBytes(Source.TotalBytes)}";
     public string Detail => string.IsNullOrWhiteSpace(Source.Error) ? Source.RequestedBy : Source.Error!;
 }
+
+public sealed class ProcessAdminRow(ProcessSnapshot source)
+{
+    public ProcessSnapshot Source { get; } = source;
+    public int Id => Source.Id;
+    public string Name => Source.Name;
+    public string Memory => DeviceRow.FormatBytes(Source.WorkingSetBytes);
+    public string CpuTime => TimeSpan.FromSeconds(Source.TotalProcessorSeconds).ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture);
+    public int Threads => Source.ThreadCount;
+}
+
+public sealed class ServiceAdminRow(ServiceSnapshot source)
+{
+    public ServiceSnapshot Source { get; } = source;
+    public string Name => Source.Name;
+    public string DisplayName => Source.DisplayName;
+    public string Status => Source.Status;
+    public string StartType => Source.StartType;
+}

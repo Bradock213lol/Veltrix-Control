@@ -59,7 +59,7 @@ public static class RolePermissions
             OperationKind.RestoreFileBackup or OperationKind.ReadFileBackup => DeviceFiles,
         OperationKind.ListProcesses or OperationKind.StartProcess or OperationKind.StopProcess or OperationKind.SetProcessPriority => DeviceProcesses,
         OperationKind.ListServices or OperationKind.StartService or OperationKind.StopService or OperationKind.SetServiceStartType => DeviceServices,
-        OperationKind.TerminalStart or OperationKind.TerminalInput or OperationKind.TerminalStop => DeviceTerminal,
+        OperationKind.TerminalStart or OperationKind.TerminalInput or OperationKind.TerminalOutput or OperationKind.TerminalStop => DeviceTerminal,
         OperationKind.ListSoftware or OperationKind.InstallSoftware or OperationKind.UninstallSoftware or OperationKind.UpgradeSoftware => DeviceSoftware,
         OperationKind.ScanWindowsUpdates or OperationKind.InstallWindowsUpdate => DeviceUpdates,
         OperationKind.CreateBackup or OperationKind.RestoreBackup or OperationKind.VerifyBackup => DeviceBackup,

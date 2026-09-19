@@ -140,7 +140,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.3.0" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.4.0" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>
@@ -279,6 +279,7 @@ management.MapPost("/devices/{deviceId:guid}/operations", async (Guid deviceId, 
 });
 
 management.MapManagementTransfers();
+management.MapManagementAdmin();
 
 app.MapAgentTransfers();
 

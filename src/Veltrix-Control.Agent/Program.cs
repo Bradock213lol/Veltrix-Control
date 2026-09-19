@@ -20,6 +20,8 @@ builder.Services.AddSingleton(options);
 builder.Services.AddSingleton<DeviceIdentityStore>();
 builder.Services.AddSingleton<WindowsHardwareProbe>();
 builder.Services.AddSingleton<FileOperations>();
+builder.Services.AddSingleton<TerminalSessionManager>();
+builder.Services.AddSingleton<AdminOperations>();
 builder.Services.AddSingleton<OperationExecutor>();
 builder.Services.AddSingleton(new HttpClient(CreateHandler(options))
 {
