@@ -8,6 +8,7 @@ public sealed class ControllerOptions
 
     public int HeartbeatSeconds { get; set; } = 5;
     public int OfflineAfterSeconds { get; set; } = 20;
+    public int RetentionDays { get; set; } = 30;
     public bool EnableHttpsListener { get; set; } = true;
     public int HttpsPort { get; set; } = 5443;
     public bool EnableLocalHttpListener { get; set; } = true;

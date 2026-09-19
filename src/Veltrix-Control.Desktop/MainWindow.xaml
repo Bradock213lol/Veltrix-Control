@@ -585,6 +585,26 @@
                   <Button Content="Copy fingerprint" HorizontalAlignment="Left" Margin="0,12,0,0" Click="CopyFingerprint_Click"/>
                 </StackPanel>
               </Border>
+              <Border Style="{StaticResource PanelBorder}" Margin="0,16,0,0">
+                <StackPanel>
+                  <TextBlock Text="User accounts" FontSize="21" FontWeight="SemiBold"/>
+                  <TextBlock Text="Manage Controller accounts and roles. The last Owner account cannot be demoted or deleted." Foreground="{DynamicResource MutedTextBrush}" Margin="0,4,0,14"/>
+                  <WrapPanel Margin="0,0,0,10">
+                    <Button Content="Add user" Click="UserAdd_Click"/>
+                    <Button Content="Change role" Margin="8,0,0,0" Click="UserRole_Click"/>
+                    <Button Content="Reset password" Margin="8,0,0,0" Click="UserPassword_Click"/>
+                    <Button Content="Delete" Margin="8,0,0,0" Click="UserDelete_Click"/>
+                    <Button Content="Refresh" Margin="8,0,0,0" Click="UserRefresh_Click"/>
+                  </WrapPanel>
+                  <DataGrid x:Name="UsersGrid" MinHeight="140" MaxHeight="260">
+                    <DataGrid.Columns>
+                      <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="2*"/>
+                      <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="*"/>
+                      <DataGridTextColumn Header="Created" Binding="{Binding Created}" Width="1.5*"/>
+                    </DataGrid.Columns>
+                  </DataGrid>
+                </StackPanel>
+              </Border>
             </StackPanel>
           </ScrollViewer>
         </Grid>

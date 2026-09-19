@@ -72,6 +72,7 @@ builder.Services.AddHostedService<AutomationEngine>();
 builder.Services.AddHostedService<ComputeScheduler>();
 builder.Services.AddSingleton<GameServerCoordinator>();
 builder.Services.AddHostedService<GameServerMonitor>();
+builder.Services.AddHostedService<RetentionService>();
 // Integration credential protection uses a local AES-GCM key stored beside the database.
 builder.Services.AddSingleton<IntegrationCredentialProtector>();
 builder.Services.AddSingleton<IIntegrationAdapter, PterodactylAdapter>();
@@ -150,7 +151,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.9.0" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.10.0" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, CancellationToken ct) =>
@@ -370,6 +371,7 @@ management.MapManagementMonitoring();
 management.MapManagementCompute();
 management.MapManagementGameServers();
 management.MapManagementIntegrations();
+management.MapManagementUsers();
 
 app.MapAgentTransfers();
 

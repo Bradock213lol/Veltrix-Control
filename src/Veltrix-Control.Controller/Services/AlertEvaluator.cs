@@ -39,6 +39,18 @@ public sealed partial class AlertEvaluator(VeltrixControlStore store, ILogger<Al
             }
             await store.AutoResolveAlertAsync(device.Id, "device.offline", cancellationToken);
 
+            var currentVersion = typeof(AlertEvaluator).Assembly.GetName().Version?.ToString(3);
+            if (!device.Inventory.IsSimulation && currentVersion is not null &&
+                !string.Equals(device.Inventory.AgentVersion, currentVersion, StringComparison.OrdinalIgnoreCase))
+            {
+                await store.RaiseAlertAsync(device.Id, "Info", "agent.outdated", "Agent update available",
+                    $"{device.Name} reports agent {device.Inventory.AgentVersion}; Controller is {currentVersion}.", null, cancellationToken);
+            }
+            else
+            {
+                await store.AutoResolveAlertAsync(device.Id, "agent.outdated", cancellationToken);
+            }
+
             var telemetry = device.Telemetry;
             if (telemetry is null) continue;
 

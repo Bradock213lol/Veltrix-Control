@@ -1,46 +1,55 @@
-# Veltrix-Control v0.9.0 result report
+# Veltrix-Control v0.10.0 result report
 
 ## Status
 
-Phase 9 is implemented: existing Pterodactyl and Docker environments can be observed and
-controlled through optional, isolated integrations. Phases 1-8 remain intact.
+Phase 10 is **partially implemented**. The production-hardening work that could be
+completed and verified in this environment is done: complete user administration,
+automatic retention, an agent-version policy alert, and administrator system diagnostics.
+The remaining Phase 10 items are listed honestly under known limitations; they are not
+claimed as implemented. Phases 1-9 are complete and verified.
 
 ## Delivered workflows
 
-- Pterodactyl Panel integration: health check, node and server listing, and confirmed
-  power actions through the official application API.
-- Docker integration: engine health, containers, images, volumes, container lifecycle
-  actions, and bounded container logs over npipe or HTTPS endpoints.
-- AES-GCM credential protection with a Controller-local key; credentials are never exposed
-  in API responses and are deleted with the integration.
-- A separate `Veltrix-Control.Integrations` module so integration outages cannot degrade
-  core workflows.
-- Desktop Integrations workspace with creation, health, resources, actions, logs, and
-  deletion.
+- User administration: list, create, change roles, reset passwords, and delete accounts.
+  The last Owner account cannot be demoted or deleted, and every change is audited.
+- Automatic retention: finished operations, compute jobs, automation runs, terminal
+  history, update scans, game server events, resolved alerts, and metrics are purged on a
+  configurable schedule. Audit events are never deleted because deletion would break the
+  tamper-evident hash chain.
+- Agent-version policy: nodes reporting a version different from the Controller raise an
+  informational alert that resolves automatically after an upgrade.
+- System diagnostics: version, uptime, device counts, open alerts, queued operations, and
+  retention settings for administrators.
+- Desktop user management in Settings and the existing hardened surfaces for every
+  earlier phase.
 
 ## Verification
 
 - Release build: **PASS**, zero compiler warnings and zero errors.
-- Automated tests: **134 PASS** across unit, security, Agent, integration, and
+- Automated tests: **138 PASS** across unit, security, Agent, integration, and
   Controller-to-Agent end-to-end suites.
-- New coverage: credential round trip and tamper rejection, key reuse, redaction in
-  responses, health reporting for unavailable endpoints, endpoint and kind validation,
-  permission denial, and confirmation requirements.
+- The installer pipeline builds, smoke-installs, repairs, verifies the payload, and
+  publishes through GitHub Actions from main.
 
 ## Release artifacts
 
-- Tag: `v0.9.0`
+- Tag: `v0.10.0`
 - Installer: `Veltrix-Control-Setup.exe`
 - Checksum manifest: `SHA256SUMS.txt`
 - Archive: `Veltrix-Control-Windows-x64.zip`
 - Version file and changelog are included in the release payload.
 
-## Known limitations
+## Known limitations (Phase 10 remainder)
 
-- Pterodactyl console logs require the client API and websocket access; the application
-  API does not expose them, and the integration says so explicitly.
-- Docker remote endpoints require npipe or HTTPS; plaintext TCP is limited to loopback.
+- **PostgreSQL deployment option is not implemented.** The platform remains SQLite-only
+  for small single-Controller deployments.
+- **Signed self-update and staged rollout are not implemented.** Agent updates are manual
+  installer upgrades today.
+- **Enterprise identity integration and complete session policies are not implemented.**
+  Local accounts and cookie sessions remain the authentication model.
+- **High availability, disaster recovery, and 1,000-node capacity qualification are not
+  implemented or measured.** Published scale guidance is a design target, not a verified
+  result.
+- **Load/soak testing has not been performed** in this environment.
 - Binaries are not Authenticode-signed because no organization signing certificate was
   supplied; Windows may display an unknown-publisher warning.
-- Production hardening (PostgreSQL option, signed self-update, enterprise identity) is
-  the remaining milestone.

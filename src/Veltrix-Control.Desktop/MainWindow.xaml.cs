@@ -963,6 +963,100 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void UserRefresh_Click(object sender, RoutedEventArgs e) => await LoadUsersAsync();
+
+    private async Task LoadUsersAsync()
+    {
+        if (_api is null || !HasAdminPermission()) return;
+        try
+        {
+            var users = await _api.GetUsersAsync();
+            UsersGrid.ItemsSource = users.Select(user => new UserRowView(user)).ToList();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void UserAdd_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || !HasAdminPermission()) return;
+        var username = TextPromptWindow.Show(this, "Add user", "Username:");
+        if (string.IsNullOrWhiteSpace(username)) return;
+        var password = TextPromptWindow.Show(this, "Add user", "Password (at least 12 characters):");
+        if (string.IsNullOrWhiteSpace(password)) return;
+        var role = TextPromptWindow.Show(this, "Add user", $"Role ({string.Join(", ", UserRoles.All)}):", "Viewer");
+        if (role is null) return;
+        if (!UserRoles.IsKnown(role))
+        {
+            SetStatus("The role must be one of: " + string.Join(", ", UserRoles.All), false, true);
+            return;
+        }
+        try
+        {
+            await _api.CreateUserAsync(new CreateUserRequest(username.Trim(), password, role));
+            SetStatus("User created", true);
+            await LoadUsersAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void UserRole_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || UsersGrid.SelectedItem is not UserRowView row) return;
+        var role = TextPromptWindow.Show(this, "Change role", $"New role for {row.Username}:", row.Role);
+        if (role is null) return;
+        if (!UserRoles.IsKnown(role))
+        {
+            SetStatus("The role must be one of: " + string.Join(", ", UserRoles.All), false, true);
+            return;
+        }
+        try
+        {
+            await _api.UpdateUserRoleAsync(row.Id, role);
+            await LoadUsersAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void UserPassword_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || UsersGrid.SelectedItem is not UserRowView row) return;
+        var password = TextPromptWindow.Show(this, "Reset password", $"New password for {row.Username}:");
+        if (string.IsNullOrWhiteSpace(password)) return;
+        try
+        {
+            await _api.ResetUserPasswordAsync(row.Id, password);
+            SetStatus("Password reset", true);
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void UserDelete_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || UsersGrid.SelectedItem is not UserRowView row) return;
+        if (MessageBox.Show(this, $"Delete user '{row.Username}'?", "Delete user", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            await _api.DeleteUserAsync(row.Id);
+            await LoadUsersAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
     private async void SoftwareRefresh_Click(object sender, RoutedEventArgs e) => await LoadSoftwareAsync();
 
     private async Task LoadSoftwareAsync()
@@ -1601,6 +1695,7 @@ public partial class MainWindow : Window
         if (view == "DeploymentView") _ = LoadSoftwareAsync();
         if (view == "OperationsView") { _ = LoadBackupsAsync(); _ = LoadAlertsAsync(); _ = LoadAutomationsAsync(); _ = LoadComputeJobsAsync(); _ = LoadGameServersAsync(); }
         if (view == "IntegrationsView") _ = LoadIntegrationsAsync();
+        if (view == "SettingsView") _ = LoadUsersAsync();
         if (view == "DevicesView") DeviceSearchBox.Focus();
     }
 

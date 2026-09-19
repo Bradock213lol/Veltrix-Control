@@ -213,3 +213,11 @@ public sealed class IntegrationRowView(IntegrationView source)
     public string LastChecked => Source.LastCheckedAt?.LocalDateTime.ToString("g", CultureInfo.CurrentCulture) ?? "Never";
     public string Detail => Source.HealthDetail ?? (Source.HasCredential ? "Credential stored" : "No credential");
 }
+
+public sealed class UserRowView(UserView source)
+{
+    public Guid Id => source.Id;
+    public string Username => source.Username;
+    public string Role => source.Role;
+    public string Created => source.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
+}

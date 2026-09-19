@@ -222,6 +222,21 @@ public sealed class ControllerApiClient : IDisposable
     public Task<JsonElement> GetIntegrationLogsAsync(Guid integrationId, string resourceId, CancellationToken cancellationToken = default) =>
         GetAsync<JsonElement>($"api/integrations/{integrationId:D}/logs?resourceId={Uri.EscapeDataString(resourceId)}", cancellationToken);
 
+    public Task<UserView[]> GetUsersAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<UserView[]>("api/users", cancellationToken);
+
+    public Task<UserView> CreateUserAsync(CreateUserRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<UserView>(HttpMethod.Post, "api/users", request, true, cancellationToken);
+
+    public async Task UpdateUserRoleAsync(Guid userId, string role, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Put, $"api/users/{userId:D}/role", new UpdateUserRoleRequest(role), true, cancellationToken);
+
+    public async Task ResetUserPasswordAsync(Guid userId, string password, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Post, $"api/users/{userId:D}/password", new ResetPasswordRequest(password), true, cancellationToken);
+
+    public async Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Delete, $"api/users/{userId:D}", null, true, cancellationToken);
+
     public async Task<TransferView> UploadFileAsync(Guid deviceId, string localPath, string remotePath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var info = new FileInfo(localPath);

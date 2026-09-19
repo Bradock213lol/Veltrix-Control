@@ -2,6 +2,24 @@
 
 All notable changes follow semantic versioning.
 
+## [0.10.0] - 2026-09-19
+
+### Added
+
+- Complete user administration: list, create, role changes, password reset, and deletion with last-Owner protection and audit events.
+- Automatic retention of terminal history, finished operations, compute jobs, automation runs, update scans, game server events, resolved alerts, and metrics.
+- Agent-version policy alert when a node reports a version different from the Controller.
+- Administrator system diagnostics endpoint with version, uptime, device counts, open alerts, queued operations, and retention settings.
+- End-to-end coverage for user administration, last-Owner protection, invalid input, permission denial, and system diagnostics.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.10.0.
+
+### Known remaining work
+
+- PostgreSQL deployment option, signed self-update and staged rollout, enterprise identity integration, high availability, and load/soak qualification are not yet implemented and are tracked in `PHASES.md`.
+
 ## [0.9.0] - 2026-09-19
 
 ### Added
