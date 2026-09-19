@@ -39,6 +39,37 @@ public sealed class AgentApiClient(HttpClient httpClient)
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task<AgentPendingTransfer[]> GetPendingTransfersAsync(DeviceIdentity identity, CancellationToken cancellationToken)
+    {
+        var message = Sign(identity, new TransferPendingRequest());
+        using var response = await httpClient.PostAsJsonAsync("api/agent/transfers/pending", message, JsonOptions, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<AgentPendingTransfer[]>(JsonOptions, cancellationToken) ?? [];
+    }
+
+    public async Task PushTransferChunkAsync(DeviceIdentity identity, TransferChunkPush chunk, CancellationToken cancellationToken)
+    {
+        var message = Sign(identity, chunk);
+        using var response = await httpClient.PostAsJsonAsync("api/agent/transfers/push", message, JsonOptions, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<TransferChunkResponse> PullTransferChunkAsync(DeviceIdentity identity, TransferChunkPull request, CancellationToken cancellationToken)
+    {
+        var message = Sign(identity, request);
+        using var response = await httpClient.PostAsJsonAsync("api/agent/transfers/pull", message, JsonOptions, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<TransferChunkResponse>(JsonOptions, cancellationToken)
+            ?? throw new InvalidOperationException("Controller returned an empty transfer response.");
+    }
+
+    public async Task FailTransferAsync(DeviceIdentity identity, Guid transferId, string error, CancellationToken cancellationToken)
+    {
+        var message = Sign(identity, new TransferFailRequest(transferId, error.Length > 1024 ? error[..1024] : error));
+        using var response = await httpClient.PostAsJsonAsync("api/agent/transfers/fail", message, JsonOptions, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
     private static SignedAgentMessage Sign<T>(DeviceIdentity identity, T payload)
     {
         using var key = ECDsa.Create();

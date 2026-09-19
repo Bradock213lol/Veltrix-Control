@@ -5,14 +5,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Veltrix-Control is a security-first Windows fleet management platform. One installer can
-configure a computer as a **Controller**, **Managed Node**, or both. Version 0.2.0 adds a
-native Windows control center as the primary interface and read-only fleet diagnostics;
-the browser surface is retained only as a recovery fallback when the app cannot start.
+configure a computer as a **Controller**, **Managed Node**, or both. Version 0.3.0 adds
+write-capable managed file operations, chunked verified transfers, and a built-in file
+editor with history, on top of the native Windows control center introduced in 0.2.0.
 
 > This project is for systems owned by or explicitly authorized by the administrator.
 > It does not hide its services, bypass Windows security, or silently enroll devices.
 
-## What works in v0.2.0
+## What works in v0.3.0
 
 - First-run Owner setup, secure cookie sessions, four-role permission model
 - Single-use 1–60 minute enrollment codes
@@ -23,9 +23,11 @@ the browser surface is retained only as a recovery fallback when the app cannot 
 - Fleet metrics, manual/automatic refresh, status feedback, search, filters, and sorting
 - Device profiles with OS, CPU, memory, uptime, agent, heartbeat, IDs, and disk capacity
 - Read-only remote process, Windows service, installed-software, and network inventories
-- Searchable diagnostic results for online nodes
 - Confirmed restart/shutdown queue with a separate local node policy switch
-- Read-only remote file navigation confined to the node's configured root
+- Managed-root file management: create, rename, move, copy, delete, search, size, ZIP
+- Chunked, resumable, checksum-verified uploads and downloads with progress and cancellation
+- Text editor with find/replace, atomic saves, pre-save backups, history, and diff view
+- Hardened path policy: traversal, UNC/device paths, ADS, reparse points, and zip-slip
 - Searchable hash-chained audit history, integrity verification, and CSV export
 - In-app enrollment code creation, expiry display, copy, rotation, and revocation
 - Saved Controller address, secure remote-HTTPS validation, and refresh preferences

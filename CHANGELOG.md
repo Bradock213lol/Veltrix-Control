@@ -2,6 +2,32 @@
 
 All notable changes follow semantic versioning.
 
+## [0.3.0] - 2026-09-19
+
+### Added
+
+- Write-capable managed file operations: create folder, create file, rename, move, copy,
+  delete, wildcard search, folder sizing, ZIP creation, and ZIP extraction.
+- Chunked, resumable file transfers between the desktop app and managed nodes, with
+  progress, cancellation, sequential-offset enforcement, size limits, and SHA-256
+  verification before a transfer is reported complete.
+- Built-in text/code editor with line numbers, find/replace, atomic saves, automatic
+  pre-save backups, bounded per-file history, restore, and a line-level comparison view.
+- Hardened path policy: managed-root protection, UNC/device path rejection, alternate
+  data stream rejection, null-byte rejection, reparse-point escape detection, and
+  archive entry (zip-slip) validation.
+- Typed permission taxonomy (`device.processes`, `device.services`, `device.terminal`,
+  `device.software`, `device.updates`, `device.backup`, `device.compute`, `game.manage`,
+  `docker.manage`, `integration.manage`) in preparation for later phases.
+- Agent test coverage for the file engine and security test coverage for path escapes,
+  archive escapes, and transfer authorization.
+
+### Changed
+
+- Operation arguments are validated per operation kind before an operation is queued.
+- The permission mapping for operations is centralized in `RolePermissions.PermissionFor`.
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.3.0.
+
 ## [0.2.0] - 2026-09-13
 
 ### Added

@@ -42,11 +42,16 @@ public sealed class OperationExecutorTests : IDisposable
         Assert.DoesNotContain("\"RelativePath\"", result.ResultJson, StringComparison.Ordinal);
     }
 
-    private OperationExecutor CreateExecutor() => new(new AgentOptions
+    private OperationExecutor CreateExecutor()
     {
-        ManagedRoot = _managedRoot,
-        AllowPowerActions = false
-    }, NullLogger<OperationExecutor>.Instance);
+        var options = new AgentOptions
+        {
+            ManagedRoot = _managedRoot,
+            AllowPowerActions = false,
+            DataDirectory = Path.Combine(_managedRoot, ".agent")
+        };
+        return new OperationExecutor(options, new FileOperations(options, NullLogger<FileOperations>.Instance), NullLogger<OperationExecutor>.Instance);
+    }
 
     public void Dispose()
     {

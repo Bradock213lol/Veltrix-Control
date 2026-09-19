@@ -144,17 +144,35 @@
           </Grid>
 
           <Grid x:Name="FilesView" Visibility="Collapsed">
-            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14">
-              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="260"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                <ComboBox x:Name="FilesDeviceBox" DisplayMemberPath="Name" AutomationProperties.Name="File browser device"/>
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,10">
+              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="220"/></Grid.ColumnDefinitions>
+                <ComboBox x:Name="FilesDeviceBox" DisplayMemberPath="Name" AutomationProperties.Name="File browser device" SelectionChanged="FilesDevice_Changed"/>
                 <Button Grid.Column="1" Content="Up" Margin="12,0,8,0" Click="FilesUp_Click"/>
-                <Button Grid.Column="2" Content="Load folder" Click="FilesRefresh_Click"/>
-                <TextBox x:Name="CurrentPathBox" Grid.Column="3" Margin="12,0,0,0" IsReadOnly="True" AutomationProperties.Name="Current managed path"/>
+                <Button Grid.Column="2" Content="Refresh" Click="FilesRefresh_Click"/>
+                <TextBox x:Name="CurrentPathBox" Grid.Column="3" Margin="12,0,12,0" IsReadOnly="True" AutomationProperties.Name="Current managed path"/>
+                <TextBox x:Name="FilesSearchBox" Grid.Column="4" AutomationProperties.Name="Filter files" TextChanged="FilesSearch_Changed" ToolTip="Filter the current folder"/>
               </Grid>
             </Border>
-            <TextBlock Grid.Row="1" Text="Read-only access is enforced again on the managed node. Double-click a folder to open it." Foreground="{DynamicResource MutedTextBrush}" Margin="2,0,0,12"/>
-            <DataGrid x:Name="FilesGrid" Grid.Row="2" MouseDoubleClick="FilesGrid_DoubleClick">
+            <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,10">
+              <WrapPanel>
+                <Button Content="New folder" Margin="0,0,8,0" Click="FilesNewFolder_Click"/>
+                <Button Content="New file" Margin="0,0,8,0" Click="FilesNewFile_Click"/>
+                <Button Content="Rename" Margin="0,0,8,0" Click="FilesRename_Click"/>
+                <Button Content="Copy to…" Margin="0,0,8,0" Click="FilesCopy_Click"/>
+                <Button Content="Move to…" Margin="0,0,8,0" Click="FilesMove_Click"/>
+                <Button Content="Delete" Margin="0,0,8,0" Click="FilesDelete_Click"/>
+                <Button Content="Upload" Margin="0,0,8,0" Click="FilesUpload_Click"/>
+                <Button Content="Download" Margin="0,0,8,0" Click="FilesDownload_Click"/>
+                <Button Content="Edit" Margin="0,0,8,0" Click="FilesEdit_Click"/>
+                <Button Content="History" Margin="0,0,8,0" Click="FilesHistory_Click"/>
+                <Button Content="Folder size" Margin="0,0,8,0" Click="FilesSize_Click"/>
+                <Button Content="Zip" Margin="0,0,8,0" Click="FilesZip_Click"/>
+                <Button Content="Extract" Click="FilesExtract_Click"/>
+              </WrapPanel>
+            </Border>
+            <TextBlock Grid.Row="2" Text="Paths are re-validated on the managed node. Double-click a folder to open it or a text file to edit it." Foreground="{DynamicResource MutedTextBrush}" Margin="2,0,0,10"/>
+            <DataGrid x:Name="FilesGrid" Grid.Row="3" MouseDoubleClick="FilesGrid_DoubleClick">
               <DataGrid.Columns>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="3*"/>
                 <DataGridTextColumn Header="Type" Binding="{Binding Kind}" Width="*"/>
@@ -162,6 +180,37 @@
                 <DataGridTextColumn Header="Modified" Binding="{Binding Modified}" Width="1.5*"/>
               </DataGrid.Columns>
             </DataGrid>
+            <Border Grid.Row="4" Style="{StaticResource PanelBorder}" Margin="0,10,0,0">
+              <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <Grid>
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="TRANSFERS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource CyanBrush}" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TransferCaption" Text="No recent transfers" Foreground="{DynamicResource MutedTextBrush}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Reload" Click="FilesReloadTransfers_Click"/>
+                    <Button Content="Cancel" Margin="8,0,0,0" Click="FilesCancelTransfer_Click"/>
+                  </StackPanel>
+                </Grid>
+                <DataGrid x:Name="TransfersGrid" Grid.Row="1" MinHeight="120" MaxHeight="200" Margin="0,10,0,0">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Path" Binding="{Binding Name}" Width="3*"/>
+                    <DataGridTextColumn Header="Direction" Binding="{Binding Direction}" Width="*"/>
+                    <DataGridTemplateColumn Header="Progress" Width="2*">
+                      <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                          <ProgressBar Height="14" Minimum="0" Maximum="100" Value="{Binding Progress, Mode=OneWay}" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                      </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Transferred" Binding="{Binding Transferred}" Width="1.5*"/>
+                    <DataGridTextColumn Header="State" Binding="{Binding State}" Width="*"/>
+                    <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="2*"/>
+                  </DataGrid.Columns>
+                </DataGrid>
+              </Grid>
+            </Border>
           </Grid>
 
           <Grid x:Name="AuditView" Visibility="Collapsed">

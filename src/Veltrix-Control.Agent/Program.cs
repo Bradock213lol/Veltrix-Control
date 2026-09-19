@@ -2,6 +2,7 @@ using VeltrixControl.Agent;
 using VeltrixControl.Agent.Operations;
 using VeltrixControl.Agent.Security;
 using VeltrixControl.Agent.Telemetry;
+using VeltrixControl.Agent.Transfers;
 using VeltrixControl.Agent.Transport;
 
 var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
@@ -18,6 +19,7 @@ ValidateOptions(options);
 builder.Services.AddSingleton(options);
 builder.Services.AddSingleton<DeviceIdentityStore>();
 builder.Services.AddSingleton<WindowsHardwareProbe>();
+builder.Services.AddSingleton<FileOperations>();
 builder.Services.AddSingleton<OperationExecutor>();
 builder.Services.AddSingleton(new HttpClient(CreateHandler(options))
 {
@@ -25,7 +27,9 @@ builder.Services.AddSingleton(new HttpClient(CreateHandler(options))
     Timeout = TimeSpan.FromSeconds(30)
 });
 builder.Services.AddSingleton<AgentApiClient>();
+builder.Services.AddSingleton<TransferService>();
 builder.Services.AddHostedService<Worker>();
+builder.Services.AddHostedService<TransferWorker>();
 await builder.Build().RunAsync();
 
 static void ValidateOptions(AgentOptions options)

@@ -55,3 +55,17 @@ public sealed class AuditRow(AuditEventView source)
     public string Outcome => Source.Outcome;
     public string Details => Source.Metadata ?? string.Empty;
 }
+
+public sealed class TransferRow(TransferView source)
+{
+    public TransferView Source { get; } = source;
+    public Guid Id => Source.Id;
+    public string Name => Source.Path;
+    public string Direction => Source.Direction == TransferDirection.Upload ? "Upload" : "Download";
+    public string State => Source.State.ToString();
+    public double Progress => Source.TotalBytes == 0 ? 0 : Math.Clamp(Source.BytesTransferred * 100d / Source.TotalBytes, 0, 100);
+    public string Transferred => Source.TotalBytes == 0
+        ? DeviceRow.FormatBytes(Source.BytesTransferred)
+        : $"{DeviceRow.FormatBytes(Source.BytesTransferred)} / {DeviceRow.FormatBytes(Source.TotalBytes)}";
+    public string Detail => string.IsNullOrWhiteSpace(Source.Error) ? Source.RequestedBy : Source.Error!;
+}

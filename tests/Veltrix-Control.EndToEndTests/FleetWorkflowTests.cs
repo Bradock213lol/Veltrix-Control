@@ -79,7 +79,7 @@ public sealed class FleetWorkflowTests
 
 public sealed class EndToEndFactory : WebApplicationFactory<Program>
 {
-    private readonly string _dataDirectory = Path.Combine(Path.GetTempPath(), "Veltrix-Control.E2E", Guid.NewGuid().ToString("N"));
+    public string DataDirectory { get; } = Path.Combine(Path.GetTempPath(), "Veltrix-Control.E2E", Guid.NewGuid().ToString("N"));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -87,7 +87,7 @@ public sealed class EndToEndFactory : WebApplicationFactory<Program>
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
             new Dictionary<string, string?>
             {
-                ["Controller:DataDirectory"] = _dataDirectory,
+                ["Controller:DataDirectory"] = DataDirectory,
                 ["Controller:EnableHttpsListener"] = "false",
                 ["Controller:EnableLocalHttpListener"] = "false"
             }));
@@ -99,7 +99,7 @@ public sealed class EndToEndFactory : WebApplicationFactory<Program>
         if (disposing)
         {
             Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-            if (Directory.Exists(_dataDirectory)) Directory.Delete(_dataDirectory, true);
+            if (Directory.Exists(DataDirectory)) Directory.Delete(DataDirectory, true);
         }
     }
 }

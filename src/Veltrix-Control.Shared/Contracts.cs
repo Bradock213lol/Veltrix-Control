@@ -58,7 +58,56 @@ public enum OperationKind
     ListProcesses,
     ListServices,
     ListSoftware,
-    ListNetworkAdapters
+    ListNetworkAdapters,
+
+    CreateDirectory,
+    CreateFile,
+    RenameFile,
+    MoveFile,
+    CopyFile,
+    DeleteFile,
+    SearchFiles,
+    DirectorySize,
+    CreateArchive,
+    ExtractArchive,
+    ReadTextFile,
+    WriteTextFile,
+    ListFileBackups,
+    RestoreFileBackup,
+    ReadFileBackup,
+
+    StartProcess,
+    StopProcess,
+    SetProcessPriority,
+    StartService,
+    StopService,
+    SetServiceStartType,
+    ScheduleRestart,
+    ScheduleShutdown,
+    Logoff,
+    Sleep,
+    Hibernate,
+    TerminalStart,
+    TerminalInput,
+    TerminalStop,
+
+    InstallSoftware,
+    UninstallSoftware,
+    UpgradeSoftware,
+    ScanWindowsUpdates,
+    InstallWindowsUpdate,
+
+    CreateBackup,
+    RestoreBackup,
+    VerifyBackup,
+
+    RunComputeJob,
+    CancelComputeJob,
+
+    GameServerProvision,
+    GameServerStart,
+    GameServerStop,
+    GameServerUpdate
 }
 
 public enum OperationState

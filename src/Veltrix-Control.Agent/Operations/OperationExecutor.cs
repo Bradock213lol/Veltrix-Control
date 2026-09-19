@@ -10,7 +10,7 @@ using VeltrixControl.Contracts;
 
 namespace VeltrixControl.Agent.Operations;
 
-public sealed partial class OperationExecutor(AgentOptions options, ILogger<OperationExecutor> logger)
+public sealed partial class OperationExecutor(AgentOptions options, FileOperations fileOperations, ILogger<OperationExecutor> logger)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -21,6 +21,11 @@ public sealed partial class OperationExecutor(AgentOptions options, ILogger<Oper
     {
         try
         {
+            if (FileOperations.Handles(operation.Kind))
+            {
+                return fileOperations.Execute(operation);
+            }
+
             return operation.Kind switch
             {
                 OperationKind.ListDirectory => ListDirectory(operation),
@@ -43,7 +48,7 @@ public sealed partial class OperationExecutor(AgentOptions options, ILogger<Oper
 
     private OperationResultPayload ListDirectory(OperationAssignment operation)
     {
-        var path = PathGuard.ResolveWithinRoot(options.ManagedRoot, operation.Argument);
+        var path = PathGuard.ResolveWithinRoot(options.ManagedRoot, operation.Argument, allowRoot: true);
         if (!Directory.Exists(path)) return Failed(operation.Id, "Directory does not exist.");
         var root = Path.GetFullPath(options.ManagedRoot);
         var entries = new DirectoryInfo(path).EnumerateFileSystemInfos()

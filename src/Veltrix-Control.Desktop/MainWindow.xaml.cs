@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private UserIdentity? _user;
     private List<DeviceSummary> _devices = [];
     private List<AuditEventView> _auditEvents = [];
+    private List<FileEntry> _files = [];
     private DataTable? _diagnosticTable;
     private string _currentPath = string.Empty;
     private bool _setupRequired;
@@ -247,6 +248,13 @@ public partial class MainWindow : Window
 
     private async void FilesRefresh_Click(object sender, RoutedEventArgs e) => await LoadFilesAsync();
 
+    private async void FilesDevice_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        _currentPath = string.Empty;
+        await LoadFilesAsync();
+        await RefreshTransfersAsync();
+    }
+
     private async void FilesUp_Click(object sender, RoutedEventArgs e)
     {
         _currentPath = Path.GetDirectoryName(_currentPath) ?? string.Empty;
@@ -255,8 +263,14 @@ public partial class MainWindow : Window
 
     private async void FilesGrid_DoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (FilesGrid.SelectedItem is not FileRow { Source.IsDirectory: true } folder) return;
-        _currentPath = folder.Source.RelativePath;
+        if (FilesGrid.SelectedItem is not FileRow row || _api is null || FilesDeviceBox.SelectedItem is not DeviceRow device) return;
+        if (row.Source.IsDirectory)
+        {
+            _currentPath = row.Source.RelativePath;
+            await LoadFilesAsync();
+            return;
+        }
+        new FileEditorWindow(_api, device.Id, row.Source.RelativePath, row.Source.Name) { Owner = this }.ShowDialog();
         await LoadFilesAsync();
     }
 
@@ -275,15 +289,227 @@ public partial class MainWindow : Window
             var completed = await _api.WaitForOperationAsync(queued.Id, TimeSpan.FromSeconds(25));
             if (completed.State != OperationState.Succeeded)
                 throw new InvalidOperationException(completed.Error ?? $"File request ended with {completed.State}.");
-            var files = JsonSerializer.Deserialize<FileEntry[]>(completed.ResultJson ?? "[]", JsonOptions) ?? [];
-            FilesGrid.ItemsSource = files.OrderByDescending(file => file.IsDirectory).ThenBy(file => file.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(file => new FileRow(file)).ToList();
+            _files = [.. JsonSerializer.Deserialize<FileEntry[]>(completed.ResultJson ?? "[]", JsonOptions) ?? []];
+            ApplyFileFilter();
             CurrentPathBox.Text = string.IsNullOrWhiteSpace(_currentPath) ? "Managed root" : _currentPath;
-            SetStatus($"Loaded {files.Length} entries", true);
+            SetStatus($"Loaded {_files.Count} entries", true);
         }
         catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException or JsonException)
         {
             SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private void FilesSearch_Changed(object sender, TextChangedEventArgs e) => ApplyFileFilter();
+
+    private void ApplyFileFilter()
+    {
+        if (FilesGrid is null) return;
+        var query = FilesSearchBox.Text.Trim();
+        var filtered = string.IsNullOrWhiteSpace(query)
+            ? _files
+            : _files.Where(file => file.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+        FilesGrid.ItemsSource = filtered
+            .OrderByDescending(file => file.IsDirectory)
+            .ThenBy(file => file.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(file => new FileRow(file))
+            .ToList();
+    }
+
+    private async Task RefreshTransfersAsync()
+    {
+        if (_api is null || FilesDeviceBox.SelectedItem is not DeviceRow device) return;
+        try
+        {
+            var transfers = await _api.GetTransfersAsync(device.Id, activeOnly: false);
+            var rows = transfers.Select(transfer => new TransferRow(transfer)).ToList();
+            TransfersGrid.ItemsSource = rows;
+            var active = transfers.Count(transfer => transfer.State is TransferState.Pending or TransferState.Active);
+            TransferCaption.Text = transfers.Length == 0
+                ? "No recent transfers"
+                : $"{transfers.Length} recent · {active} active";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            TransferCaption.Text = exception.Message;
+        }
+    }
+
+    private async void FilesReloadTransfers_Click(object sender, RoutedEventArgs e) => await RefreshTransfersAsync();
+
+    private async void FilesCancelTransfer_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || TransfersGrid.SelectedItem is not TransferRow row) return;
+        if (row.Source.State is not (TransferState.Pending or TransferState.Active))
+        {
+            SetStatus("Only pending or active transfers can be cancelled.", false, true);
+            return;
+        }
+        await _api.CancelTransferAsync(row.Id);
+        await RefreshTransfersAsync();
+        SetStatus($"Cancelled {row.Name}", true);
+    }
+
+    private async void FilesNewFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var name = TextPromptWindow.Show(this, "New folder", "Folder name inside the current path:");
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await RunFileOperationAsync(OperationKind.CreateDirectory, Combine(_currentPath, name));
+    }
+
+    private async void FilesNewFile_Click(object sender, RoutedEventArgs e)
+    {
+        var name = TextPromptWindow.Show(this, "New file", "File name inside the current path:");
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await RunFileOperationAsync(OperationKind.CreateFile, Combine(_currentPath, name));
+    }
+
+    private async void FilesRename_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedFile is not { } file) return;
+        var name = TextPromptWindow.Show(this, "Rename", "New name:", file.Name);
+        if (string.IsNullOrWhiteSpace(name) || name == file.Name) return;
+        await RunFileOperationAsync(OperationKind.RenameFile, new TwoPathArgument(file.RelativePath, Combine(ParentPath(file), name)));
+    }
+
+    private async void FilesMove_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedFile is not { } file) return;
+        var destination = TextPromptWindow.Show(this, "Move", "Destination relative path:", Combine(_currentPath, file.Name));
+        if (string.IsNullOrWhiteSpace(destination)) return;
+        await RunFileOperationAsync(OperationKind.MoveFile, new TwoPathArgument(file.RelativePath, destination));
+    }
+
+    private async void FilesCopy_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedFile is not { } file) return;
+        var destination = TextPromptWindow.Show(this, "Copy", "Destination relative path:", Combine(_currentPath, file.Name + ".copy"));
+        if (string.IsNullOrWhiteSpace(destination)) return;
+        await RunFileOperationAsync(OperationKind.CopyFile, new TwoPathArgument(file.RelativePath, destination));
+    }
+
+    private async void FilesDelete_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedFile is not { } file) return;
+        if (MessageBox.Show(this, $"Delete {file.Name}? This cannot be undone.", "Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        await RunFileOperationAsync(OperationKind.DeleteFile, file.RelativePath);
+    }
+
+    private async void FilesSize_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedFile is not { IsDirectory: true } folder) return;
+        var result = await RunFileOperationResultAsync(OperationKind.DirectorySize, folder.RelativePath, refresh: false);
+        if (result is null) return;
+        var size = JsonSerializer.Deserialize<DirectorySizeResult>(result.ResultJson ?? "{}", JsonOptions);
+        MessageBox.Show(this, $"{folder.Name}\n{DeviceRow.FormatBytes(size?.TotalBytes ?? 0)}\n{size?.FileCount ?? 0} files · {size?.DirectoryCount ?? 0} folders", "Folder size", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private async void FilesZip_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedFile is not { } file) return;
+        var archiveName = TextPromptWindow.Show(this, "Create archive", "Archive name:", file.Name.TrimEnd('/') + ".zip");
+        if (string.IsNullOrWhiteSpace(archiveName)) return;
+        await RunFileOperationAsync(OperationKind.CreateArchive, new TwoPathArgument(file.RelativePath, Combine(_currentPath, archiveName)));
+    }
+
+    private async void FilesExtract_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedFile is not { IsDirectory: false } file || !file.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) return;
+        var destination = TextPromptWindow.Show(this, "Extract archive", "Destination folder:", Combine(_currentPath, Path.GetFileNameWithoutExtension(file.Name)));
+        if (string.IsNullOrWhiteSpace(destination)) return;
+        await RunFileOperationAsync(OperationKind.ExtractArchive, new TwoPathArgument(file.RelativePath, destination));
+    }
+
+    private async void FilesUpload_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || FilesDeviceBox.SelectedItem is not DeviceRow device) return;
+        var dialog = new OpenFileDialog { Title = "Upload to managed node", Filter = "All files (*.*)|*.*" };
+        if (dialog.ShowDialog(this) != true) return;
+        var progress = new Progress<double>(value => SetStatus($"Uploading {Path.GetFileName(dialog.FileName)} · {value:P0}"));
+        try
+        {
+            var remotePath = Combine(_currentPath, Path.GetFileName(dialog.FileName));
+            var transfer = await _api.UploadFileAsync(device.Id, dialog.FileName, remotePath, progress, CancellationToken.None);
+            SetStatus($"Upload {transfer.State}: {remotePath}", transfer.State == TransferState.Completed);
+            await RefreshTransfersAsync();
+            await LoadFilesAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void FilesDownload_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || SelectedFile is not { IsDirectory: false } file || FilesDeviceBox.SelectedItem is not DeviceRow device) return;
+        var dialog = new SaveFileDialog { Title = "Download from managed node", FileName = file.Name, Filter = "All files (*.*)|*.*" };
+        if (dialog.ShowDialog(this) != true) return;
+        var progress = new Progress<double>(value => SetStatus($"Downloading {file.Name} · {value:P0}"));
+        try
+        {
+            var request = new TransferRequest(TransferDirection.Download, file.RelativePath, 0, null);
+            var transfer = await _api.CreateTransferAsync(device.Id, request);
+            await _api.DownloadFileAsync(transfer, dialog.FileName, progress, CancellationToken.None);
+            SetStatus($"Downloaded {file.Name}", true);
+            await RefreshTransfersAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void FilesEdit_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || SelectedFile is not { IsDirectory: false } file || FilesDeviceBox.SelectedItem is not DeviceRow device) return;
+        new FileEditorWindow(_api, device.Id, file.RelativePath, file.Name) { Owner = this }.ShowDialog();
+        await LoadFilesAsync();
+    }
+
+    private async void FilesHistory_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || SelectedFile is not { IsDirectory: false } file || FilesDeviceBox.SelectedItem is not DeviceRow device) return;
+        new FileEditorWindow(_api, device.Id, file.RelativePath, file.Name, showHistory: true) { Owner = this }.ShowDialog();
+        await LoadFilesAsync();
+    }
+
+    private FileEntry? SelectedFile => (FilesGrid.SelectedItem as FileRow)?.Source;
+
+    private static string Combine(string folder, string name) =>
+        string.IsNullOrWhiteSpace(folder) ? name.Trim() : $"{folder.TrimEnd('/', '\\')}\\{name.Trim()}";
+
+    private static string ParentPath(FileEntry file)
+    {
+        var index = file.RelativePath.LastIndexOfAny(['\\', '/']);
+        return index < 0 ? string.Empty : file.RelativePath[..index];
+    }
+
+    private async Task RunFileOperationAsync(OperationKind kind, string argument, bool refresh = true) =>
+        await RunFileOperationAsync(kind, (object)argument, refresh);
+
+    private async Task RunFileOperationAsync(OperationKind kind, object argument, bool refresh = true)
+    {
+        _ = await RunFileOperationResultAsync(kind, argument, refresh);
+    }
+
+    private async Task<OperationView?> RunFileOperationResultAsync(OperationKind kind, object argument, bool refresh = true)
+    {
+        if (_api is null || FilesDeviceBox.SelectedItem is not DeviceRow device) return null;
+        try
+        {
+            SetStatus($"{kind}…");
+            var queued = await _api.CreateOperationAsync(device.Id, kind, JsonSerializer.Serialize(argument, JsonOptions), true);
+            var completed = await _api.WaitForOperationAsync(queued.Id, TimeSpan.FromSeconds(60));
+            if (completed.State != OperationState.Succeeded) throw new InvalidOperationException(completed.Error ?? $"The node ended the request with {completed.State}.");
+            SetStatus($"{kind} complete", true);
+            if (refresh) await LoadFilesAsync();
+            return completed;
+        }
+        catch (Exception exception) when (IsExpected(exception) || exception is InvalidOperationException)
+        {
+            SetStatus(exception.Message, false, true);
+            return null;
         }
     }
 

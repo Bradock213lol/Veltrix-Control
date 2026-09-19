@@ -1,63 +1,42 @@
-# Veltrix-Control v0.2.0 result report
+# Veltrix-Control v0.3.0 result report
 
 ## Status
 
-Phase 2 is implemented as an app-first, independently installable release candidate.
-The native Windows control center is the primary administration surface. The existing
-web surface is retained as a recovery fallback and is offered automatically only when
-the desktop app is missing or closes during startup.
-
-Publication is tag-gated: the `v0.2.0` release is created only from `main` after the
-Windows workflow rebuilds, retests, installs, repairs, verifies, and inspects the payload.
+Phase 3 is implemented: authorized operators can maintain files inside the configured
+managed root, transfer large files with progress and verification, and edit text or
+configuration files with automatic backups and restore. Phase 1 and Phase 2 workflows
+remain intact.
 
 ## Delivered workflows
 
-- First-run Owner setup, sign-in/sign-out, saved Controller address, HTTPS validation,
-  connection state, manual refresh, automatic refresh, and refresh intervals.
-- Fleet cards for online nodes, CPU, memory, and attention; device search, status filter,
-  column sorting, device profiles, copyable IDs, inventory, disks, health, and uptime.
-- Read-only remote inventories for processes, services, installed software, and network
-  adapters; bounded collection and searchable result tables.
-- Managed-root navigation, folder traversal, reload and parent navigation.
-- Enrollment-code lifetime selection, creation, automatic copy, replacement, and revoke.
-- Guarded restart/shutdown queue, role checks, explicit confirmation, simulator protection,
-  and the Agent's separate disabled-by-default local power policy.
-- Audit load, search, hash-chain verification, and CSV export.
-- System light/dark theme, semantic design tokens, resizable windows, keyboard shortcuts,
-  accessible control names, busy/error status, and destructive-action warnings.
-- Native launcher and Controller-role shortcuts; browser fallback prompt on app startup
-  failure; no website is launched during the normal path.
-
-## Architecture and packaging
-
-- Native WPF desktop and launcher, ASP.NET Core Controller Windows Service, Windows Agent
-  Service, SQLite persistence, shared contracts, and safe node simulator.
-- One self-contained Windows x64 Inno Setup executable for Controller, Managed Node, or
-  combined installation; stable installer identity supports repair and in-place upgrades.
-- Typed diagnostic contracts and a dedicated `device.diagnostics` role permission.
-- No arbitrary remote shell and no arbitrary operation name or executable path.
+- Create folder, create file, rename, move, copy, and delete with explicit confirmation
+  for destructive actions and `device.files` authorization.
+- Wildcard search, bounded folder sizing, ZIP creation, and ZIP extraction.
+- Chunked upload and download between the desktop app and managed nodes with progress,
+  cancellation, sequential-offset enforcement, and SHA-256 verification before a transfer
+  can complete.
+- Text/code editor with line numbers, find/replace, atomic saves, automatic pre-save
+  backups, bounded per-file history, restore, and a line-level comparison view.
+- Hardened path policy enforced on the node: managed-root protection, absolute/UNC/device
+  path rejection, alternate data stream rejection, null-byte rejection, reparse-point
+  escape detection, and archive zip-slip validation.
+- Per-operation argument validation and a centralized permission taxonomy for current and
+  future operations.
 
 ## Verification
 
 - Release build: **PASS**, zero compiler warnings and zero errors.
-- Automated tests: **32 PASS** across Agent diagnostics, unit, security, integration, and
+- Automated tests: **56 PASS** across unit, security, Agent, integration, and
   Controller-to-Agent end-to-end suites.
-- New Agent collector tests execute process, service, software, network, and managed-root
-  results and verify JSON compatibility.
-- Dependency vulnerability scan and JavaScript syntax check: **PASS**.
-- Self-contained PE validation: **PASS** for Controller, Agent, Simulator, Desktop, and
-  Launcher.
-- Installer compile and PE validation: **PASS**; desktop and launcher presence/PE checks
-  are part of the isolated installer lifecycle test.
-- Desktop startup smoke: **PASS**; the self-contained app remained live after connecting
-  to the local Controller endpoint.
-- Local installer lifecycle execution was intentionally skipped because this workstation
-  already contains persistent `%ProgramData%\Veltrix-Control` data. The test refuses to
-  overwrite an existing installation; the release workflow runs it on a clean runner.
+- New coverage: file-engine round trips, stale-write conflict detection, backup/restore,
+  archive round trip, zip-slip rejection, traversal rejection for mutations, binary-file
+  rejection, transfer chunk sequencing, checksum rejection, permission enforcement, and
+  reparse/stream path rejection.
+- Transfers report success only after size and checksum verification on the receiving side.
 
 ## Release artifacts
 
-- Tag: `v0.2.0`
+- Tag: `v0.3.0`
 - Installer: `Veltrix-Control-Setup.exe`
 - Checksum manifest: `SHA256SUMS.txt`
 - Archive: `Veltrix-Control-Windows-x64.zip`
@@ -67,9 +46,7 @@ Windows workflow rebuilds, retests, installs, repairs, verifies, and inspects th
 
 - Binaries are not Authenticode-signed because no organization signing certificate was
   supplied; Windows may display an unknown-publisher warning.
-- The Controller uses a generated certificate for Agent transport. Administrators must
-  verify its SHA-256 fingerprint out of band during enrollment.
-- SQLite targets a small single-Controller deployment, not high availability.
-- Advanced sensor history, write-capable file transfers/editor, process/service mutation,
-  software deployment, updates, backups, automation, compute, and game-server adapters
-  remain planned phases and are not represented as complete.
+- Transfers resume from the last sequential offset rather than arbitrary byte ranges.
+- The editor targets text and configuration files up to 2 MB and rejects binary content.
+- Process/service mutation, terminal sessions, software deployment, updates, backups,
+  automation, compute scheduling, and game-server adapters remain planned phases.

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using VeltrixControl.Contracts;
@@ -68,6 +69,106 @@ public sealed class ControllerApiClient : IDisposable
 
     public Task<OperationView> GetOperationAsync(Guid operationId, CancellationToken cancellationToken = default) =>
         GetAsync<OperationView>($"api/operations/{operationId:D}", cancellationToken);
+
+    public Task<TransferView> CreateTransferAsync(Guid deviceId, TransferRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<TransferView>(HttpMethod.Post, $"api/devices/{deviceId:D}/transfers", request, true, cancellationToken);
+
+    public Task<TransferView> GetTransferAsync(Guid transferId, CancellationToken cancellationToken = default) =>
+        GetAsync<TransferView>($"api/transfers/{transferId:D}", cancellationToken);
+
+    public Task<TransferView[]> GetTransfersAsync(Guid deviceId, bool activeOnly, CancellationToken cancellationToken = default) =>
+        GetAsync<TransferView[]>($"api/devices/{deviceId:D}/transfers?active={(activeOnly ? "true" : "false")}&limit=100", cancellationToken);
+
+    public async Task CancelTransferAsync(Guid transferId, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Delete, $"api/transfers/{transferId:D}", null, true, cancellationToken);
+
+    public async Task<TransferView> UploadFileAsync(Guid deviceId, string localPath, string remotePath, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        var info = new FileInfo(localPath);
+        var sha = ComputeSha256(localPath);
+        var transfer = await CreateTransferAsync(deviceId, new TransferRequest(TransferDirection.Upload, remotePath, info.Length, sha), cancellationToken);
+        await using var stream = new FileStream(localPath, FileMode.Open, FileAccess.Read, FileShare.Read, 512 * 1024, useAsync: true);
+        var buffer = new byte[512 * 1024];
+        long offset = 0;
+        while (offset < info.Length)
+        {
+            var read = await stream.ReadAsync(buffer.AsMemory(0, (int)Math.Min(buffer.Length, info.Length - offset)), cancellationToken);
+            if (read <= 0) break;
+            using var request = new HttpRequestMessage(HttpMethod.Put, $"api/transfers/{transfer.Id:D}/chunks?offset={offset}")
+            {
+                Content = new ByteArrayContent(buffer, 0, read)
+            };
+            request.Headers.Add("X-Veltrix-Control-Request", "ui");
+            using var response = await _client.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorAsync(response, cancellationToken);
+                throw new ControllerApiException(response.StatusCode, message);
+            }
+            offset += read;
+            progress?.Report(info.Length == 0 ? 1 : (double)offset / info.Length);
+        }
+        return await GetTransferAsync(transfer.Id, cancellationToken);
+    }
+
+    public async Task DownloadFileAsync(TransferView transfer, string localPath, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        var current = transfer;
+        while (current.State is TransferState.Pending)
+        {
+            await Task.Delay(750, cancellationToken);
+            current = await GetTransferAsync(transfer.Id, cancellationToken);
+        }
+
+        var temporary = localPath + ".veltrix-download";
+        await using (var stream = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None, 512 * 1024, useAsync: true))
+        {
+            long offset = 0;
+            while (offset < current.TotalBytes || (current.State == TransferState.Completed && current.TotalBytes == 0))
+            {
+                var chunk = await GetBytesAsync($"api/transfers/{transfer.Id:D}/chunks?offset={offset}&count={512 * 1024}", cancellationToken);
+                if (chunk.Length == 0) break;
+                await stream.WriteAsync(chunk, cancellationToken);
+                offset += chunk.Length;
+                progress?.Report(current.TotalBytes == 0 ? 1 : (double)offset / current.TotalBytes);
+            }
+            await stream.FlushAsync(cancellationToken);
+        }
+
+        current = await GetTransferAsync(transfer.Id, cancellationToken);
+        if (current.State != TransferState.Completed && current.State != TransferState.Active)
+            throw new ControllerApiException(HttpStatusCode.Conflict, current.Error ?? $"Transfer ended with {current.State}.");
+        File.Move(temporary, localPath, true);
+    }
+
+    private async Task<byte[]> GetBytesAsync(string path, CancellationToken cancellationToken)
+    {
+        using var response = await _client.GetAsync(path, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new ControllerApiException(response.StatusCode, await ReadErrorAsync(response, cancellationToken));
+        }
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+    }
+
+    private static string ComputeSha256(string path)
+    {
+        using var stream = File.OpenRead(path);
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream));
+    }
+
+    private async Task<string> ReadErrorAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var error = await response.Content.ReadFromJsonAsync<ErrorEnvelope>(_json, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(error?.Error)) return error.Error;
+        }
+        catch (JsonException)
+        {
+        }
+        return $"Controller returned {(int)response.StatusCode} {response.ReasonPhrase}.";
+    }
 
     public async Task<OperationView> WaitForOperationAsync(Guid operationId, TimeSpan timeout, CancellationToken cancellationToken = default)
     {

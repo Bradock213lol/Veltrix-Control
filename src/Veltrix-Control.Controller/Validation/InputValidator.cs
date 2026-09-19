@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using VeltrixControl.Contracts;
 
@@ -5,13 +6,18 @@ namespace VeltrixControl.Controller.Validation;
 
 public static partial class InputValidator
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     [GeneratedRegex("^[a-zA-Z0-9._-]{3,64}$", RegexOptions.CultureInvariant)]
     private static partial Regex UsernamePattern();
+
+    [GeneratedRegex("^[0-9a-fA-F]{64}$", RegexOptions.CultureInvariant)]
+    private static partial Regex Sha256Pattern();
 
     public static string? Setup(SetupRequest request)
     {
         if (request.Username is null || request.Password is null) return "Username and password are required.";
-        if (!UsernamePattern().IsMatch(request.Username)) return "Username must be 3–64 characters and use letters, numbers, dots, dashes, or underscores.";
+        if (!UsernamePattern().IsMatch(request.Username)) return "Username must be 3-64 characters and use letters, numbers, dots, dashes, or underscores.";
         if (request.Password.Length < 12 || request.Password.Length > 256) return "Password must be between 12 and 256 characters.";
         return null;
     }
@@ -42,6 +48,88 @@ public static partial class InputValidator
         if (string.IsNullOrWhiteSpace(request.Username) || request.Username.Length > 64) return "Login request is invalid.";
         if (string.IsNullOrEmpty(request.Password) || request.Password.Length > 256) return "Login request is invalid.";
         return null;
+    }
+
+    public static string? Transfer(TransferRequest request)
+    {
+        if (request.Path is null) return "A file path is required.";
+        if (!ValidPath(request.Path)) return "The transfer path is invalid.";
+        if (request.TotalBytes is < 0 or > FileOperationLimits.MaxTransferBytes) return "The transfer size is outside the allowed range.";
+        if (request.Sha256 is not null && !Sha256Pattern().IsMatch(request.Sha256)) return "The transfer checksum is invalid.";
+        if (request.Direction == TransferDirection.Download && request.TotalBytes != 0) return "Download size is determined by the managed node.";
+        return null;
+    }
+
+    public static string? OperationArgument(OperationKind kind, string? argument)
+    {
+        switch (kind)
+        {
+            case OperationKind.Restart:
+            case OperationKind.Shutdown:
+            case OperationKind.Logoff:
+            case OperationKind.Sleep:
+            case OperationKind.Hibernate:
+                return string.IsNullOrEmpty(argument) ? null : "This operation does not accept an argument.";
+            case OperationKind.ListDirectory:
+            case OperationKind.DirectorySize:
+            case OperationKind.ListFileBackups:
+                return ValidOptionalPath(argument) ? null : "A valid file path is required.";
+            case OperationKind.CreateDirectory:
+            case OperationKind.CreateFile:
+            case OperationKind.DeleteFile:
+            case OperationKind.ReadTextFile:
+                if (!ValidPath(argument)) return "A valid file path is required.";
+                return null;
+            case OperationKind.RenameFile:
+            case OperationKind.MoveFile:
+            case OperationKind.CopyFile:
+            case OperationKind.CreateArchive:
+            case OperationKind.ExtractArchive:
+                var pair = Parse<TwoPathArgument>(argument);
+                if (pair is null || !ValidPath(pair.Path) || !ValidPath(pair.Destination)) return "A valid source and destination are required.";
+                return null;
+            case OperationKind.SearchFiles:
+                var search = Parse<SearchArgument>(argument);
+                if (search is null || !ValidOptionalPath(search.Path)) return "A valid search path is required.";
+                if (string.IsNullOrWhiteSpace(search.Query) || search.Query.Length > 128) return "The search query must be between 1 and 128 characters.";
+                if (search.Query.Contains(':') || search.Query.Contains('\\') || search.Query.Contains('/')) return "The search query contains invalid characters.";
+                return null;
+            case OperationKind.WriteTextFile:
+                var write = Parse<WriteTextFileArgument>(argument);
+                if (write is null || !ValidPath(write.Path)) return "A valid file path is required.";
+                if (write.Content is null || write.Content.Length > FileOperationLimits.MaxEditorContentLength) return "The editor content exceeds the allowed size.";
+                if (write.ExpectedHash is not null && !Sha256Pattern().IsMatch(write.ExpectedHash)) return "The expected file hash is invalid.";
+                return null;
+            case OperationKind.RestoreFileBackup:
+                var restore = Parse<RestoreFileBackupArgument>(argument);
+                if (restore is null || !ValidPath(restore.Path) || restore.BackupName is null || restore.BackupName.Length is < 5 or > 64) return "A valid file path and backup name are required.";
+                return null;
+            case OperationKind.ReadFileBackup:
+                var readBackup = Parse<ReadFileBackupArgument>(argument);
+                if (readBackup is null || !ValidPath(readBackup.Path) || readBackup.BackupName is null || readBackup.BackupName.Length is < 5 or > 64) return "A valid file path and backup name are required.";
+                return null;
+            default:
+                return argument is null || argument.Length <= 4096 ? null : "The operation argument exceeds the allowed size.";
+        }
+    }
+
+    private static bool ValidOptionalPath(string? path) =>
+        string.IsNullOrEmpty(path) || ValidPath(path);
+
+    private static bool ValidPath(string? path) =>
+        !string.IsNullOrWhiteSpace(path) && path.Length <= FileOperationLimits.MaxPathLength && !path.Contains('\0') && !path.Contains(':');
+
+    private static T? Parse<T>(string? argument) where T : class
+    {
+        if (string.IsNullOrWhiteSpace(argument) || argument.Length > 300_000) return null;
+        try
+        {
+            return JsonSerializer.Deserialize<T>(argument, JsonOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static bool ValidInventory(HardwareInventory inventory) =>
