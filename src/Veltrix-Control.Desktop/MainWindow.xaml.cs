@@ -58,6 +58,7 @@ public partial class MainWindow : Window
 
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
+        VersionText.Text = $"v{typeof(MainWindow).Assembly.GetName().Version?.ToString(3)}";
         AuthControllerUrl.Text = _settings.ControllerUrl;
         SettingsControllerUrl.Text = _settings.ControllerUrl;
         AutoRefreshCheck.IsChecked = _settings.AutoRefresh;
@@ -1786,7 +1787,18 @@ public partial class MainWindow : Window
 
         var nav = new[] { DashboardNav, DevicesNav, DiagnosticsNav, FilesNav, AdminNav, DeploymentNav, OperationsNav, IntegrationsNav, AuditNav, SettingsNav };
         foreach (var button in nav)
-            button.Background = Equals(button.Tag, view) ? (Brush)FindResource("AccentSoftBrush") : Brushes.Transparent;
+        {
+            if (Equals(button.Tag, view))
+            {
+                button.SetCurrentValue(Control.BackgroundProperty, FindResource("AccentSoftBrush"));
+                button.SetCurrentValue(Control.ForegroundProperty, FindResource("TextBrush"));
+            }
+            else
+            {
+                button.ClearValue(Control.BackgroundProperty);
+                button.ClearValue(Control.ForegroundProperty);
+            }
+        }
 
         (ViewEyebrow.Text, ViewTitle.Text) = view switch
         {

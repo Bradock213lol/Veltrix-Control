@@ -20,7 +20,7 @@ public sealed class WindowsHardwareProbe
             Environment.ProcessorCount,
             checked((long)memory.TotalPhys),
             ReadDisks(),
-            typeof(WindowsHardwareProbe).Assembly.GetName().Version?.ToString(3) ?? "0.10.2",
+            typeof(WindowsHardwareProbe).Assembly.GetName().Version?.ToString(3) ?? "0.10.3",
             MacAddress: ReadPrimaryMac());
     }
 

@@ -2,6 +2,29 @@
 
 All notable changes follow semantic versioning.
 
+## [0.10.3] - 2026-09-19
+
+### Changed
+
+- Complete desktop retheme with original control templates replacing default WPF chrome
+  that clashed with the product theme: buttons (hover/pressed/disabled states), text and
+  password fields (hover and focus rings), combo boxes with themed drop-downs, checkboxes,
+  tabs with underline selection, data grids (headers, row hover, selection), slim
+  scrollbars, list boxes, progress bars, tooltips, and focus visuals.
+- Native window title bars now match the active light or dark theme on Windows 10/11.
+- Sidebar navigation now uses icons with active-state highlighting; secondary actions use
+  a link style; the product version is shown in the sidebar.
+- Consistent typography, spacing, and muted-label hierarchy across every screen.
+
+### Fixed
+
+- The Windows Update "Install" column is now editable; the grid's read-only mode had
+  blocked selecting updates.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.10.3.
+
 ## [0.10.2] - 2026-09-19
 
 ### Added

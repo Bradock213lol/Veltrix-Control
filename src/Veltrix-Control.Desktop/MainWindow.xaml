@@ -30,7 +30,7 @@
             <Button x:Name="AuthActionButton" Content="Sign in" Style="{StaticResource PrimaryButton}" Click="AuthAction_Click" IsDefault="True"/>
             <Button Content="Retry connection" Click="RetryConnection_Click"/>
           </StackPanel>
-          <Button x:Name="AuthModeSwitchButton" Content="First time here? Create the first Owner account" HorizontalAlignment="Left" Margin="0,12,0,0" Click="AuthModeSwitch_Click"/>
+          <Button x:Name="AuthModeSwitchButton" Content="First time here? Create the first Owner account" Style="{StaticResource LinkButton}" Margin="0,14,0,0" Click="AuthModeSwitch_Click"/>
           <TextBlock Text="Credentials stay in memory and are never stored by the desktop app. If the Owner password is lost, run the Controller with --reset-owner from an elevated prompt on the Controller machine." TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,16,0,0"/>
         </StackPanel>
       </Border>
@@ -49,17 +49,37 @@
           </StackPanel>
           <StackPanel Grid.Row="1">
             <TextBlock Text="WORKSPACE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" Margin="14,0,0,6"/>
-            <Button x:Name="DashboardNav" Content="Overview" Tag="DashboardView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
-            <Button x:Name="DevicesNav" Content="Devices" Tag="DevicesView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
-            <Button x:Name="DiagnosticsNav" Content="Diagnostics" Tag="DiagnosticsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
-            <Button x:Name="FilesNav" Content="Managed files" Tag="FilesView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
-            <Button x:Name="AdminNav" Content="Administration" Tag="AdminView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
-            <Button x:Name="DeploymentNav" Content="Deployment" Tag="DeploymentView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
-            <Button x:Name="OperationsNav" Content="Operations" Tag="OperationsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
-            <Button x:Name="IntegrationsNav" Content="Integrations" Tag="IntegrationsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
-            <Button x:Name="AuditNav" Content="Audit history" Tag="AuditView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
+            <Button x:Name="DashboardNav" Tag="DashboardView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE80F;"/><TextBlock Style="{StaticResource NavLabel}" Text="Overview"/></StackPanel>
+            </Button>
+            <Button x:Name="DevicesNav" Tag="DevicesView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE7F4;"/><TextBlock Style="{StaticResource NavLabel}" Text="Devices"/></StackPanel>
+            </Button>
+            <Button x:Name="DiagnosticsNav" Tag="DiagnosticsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE9D9;"/><TextBlock Style="{StaticResource NavLabel}" Text="Diagnostics"/></StackPanel>
+            </Button>
+            <Button x:Name="FilesNav" Tag="FilesView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE8B7;"/><TextBlock Style="{StaticResource NavLabel}" Text="Managed files"/></StackPanel>
+            </Button>
+            <Button x:Name="AdminNav" Tag="AdminView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE7EF;"/><TextBlock Style="{StaticResource NavLabel}" Text="Administration"/></StackPanel>
+            </Button>
+            <Button x:Name="DeploymentNav" Tag="DeploymentView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE896;"/><TextBlock Style="{StaticResource NavLabel}" Text="Deployment"/></StackPanel>
+            </Button>
+            <Button x:Name="OperationsNav" Tag="OperationsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE8F1;"/><TextBlock Style="{StaticResource NavLabel}" Text="Operations"/></StackPanel>
+            </Button>
+            <Button x:Name="IntegrationsNav" Tag="IntegrationsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE71B;"/><TextBlock Style="{StaticResource NavLabel}" Text="Integrations"/></StackPanel>
+            </Button>
+            <Button x:Name="AuditNav" Tag="AuditView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE7C3;"/><TextBlock Style="{StaticResource NavLabel}" Text="Audit history"/></StackPanel>
+            </Button>
             <TextBlock Text="APPLICATION" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" Margin="14,22,0,6"/>
-            <Button x:Name="SettingsNav" Content="Settings" Tag="SettingsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click"/>
+            <Button x:Name="SettingsNav" Tag="SettingsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE713;"/><TextBlock Style="{StaticResource NavLabel}" Text="Settings"/></StackPanel>
+            </Button>
           </StackPanel>
           <StackPanel Grid.Row="2">
             <Border Background="{DynamicResource SurfaceMutedBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
@@ -69,6 +89,7 @@
               </StackPanel>
             </Border>
             <Button Content="Sign out" Style="{StaticResource NavigationButton}" Click="Logout_Click"/>
+            <TextBlock x:Name="VersionText" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" Margin="4,10,0,0"/>
           </StackPanel>
         </Grid>
       </Border>
@@ -359,14 +380,14 @@
                     <Button Content="Refresh scan" Margin="8,0,0,0" Click="UpdateRefresh_Click"/>
                   </WrapPanel>
                   <TextBlock x:Name="UpdateCaption" Grid.Row="1" Foreground="{DynamicResource MutedTextBrush}" Margin="2,10,0,10" TextWrapping="Wrap" Text="Select a device and scan for available Windows updates."/>
-                  <DataGrid x:Name="UpdatesGrid" Grid.Row="2">
+                  <DataGrid x:Name="UpdatesGrid" Grid.Row="2" IsReadOnly="False">
                     <DataGrid.Columns>
                       <DataGridCheckBoxColumn Header="Install" Binding="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
-                      <DataGridTextColumn Header="Update" Binding="{Binding Title}" Width="4*"/>
-                      <DataGridTextColumn Header="KB" Binding="{Binding Kb}" Width="*"/>
-                      <DataGridTextColumn Header="Severity" Binding="{Binding Severity}" Width="*"/>
-                      <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="*"/>
-                      <DataGridTextColumn Header="State" Binding="{Binding Downloaded}" Width="*"/>
+                      <DataGridTextColumn Header="Update" Binding="{Binding Title}" Width="4*" IsReadOnly="True"/>
+                      <DataGridTextColumn Header="KB" Binding="{Binding Kb}" Width="*" IsReadOnly="True"/>
+                      <DataGridTextColumn Header="Severity" Binding="{Binding Severity}" Width="*" IsReadOnly="True"/>
+                      <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="*" IsReadOnly="True"/>
+                      <DataGridTextColumn Header="State" Binding="{Binding Downloaded}" Width="*" IsReadOnly="True"/>
                     </DataGrid.Columns>
                   </DataGrid>
                 </Grid>
