@@ -2,6 +2,29 @@
 
 All notable changes follow semantic versioning.
 
+## [0.10.5] - 2026-09-19
+
+### Added
+
+- Repository documentation: a rewritten README with a feature-status table, a keyboard
+  shortcut reference, and an explicit not-implemented section, plus `docs/roadmap.md`
+  with a complete implemented / not-implemented gap analysis.
+- In-app **Settings → Keyboard shortcuts** card documenting every accelerator.
+- `Ctrl+1 … Ctrl+9` navigate the nine workspace sections; `Ctrl+R` refreshes; the file
+  editor gained `Ctrl+S` save and `Ctrl+F` find/replace.
+
+### Changed
+
+- Visual layer refined in an instrument-console direction: aurora background glow, violet
+  gradient accent and primary buttons, gradient brand mark, 12 px panel radius, and thin
+  utilization bars under the Overview metrics so values and proportions read together.
+- The browser fallback is now documented as a recovery surface frozen at the v0.2 feature
+  set, not a parallel UI.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.10.5.
+
 ## [0.10.4] - 2026-09-19
 
 ### Changed

@@ -3,51 +3,112 @@
 [![Windows CI](https://github.com/Bradock213lol/Veltrix-Control/actions/workflows/windows-ci.yml/badge.svg?branch=main)](https://github.com/Bradock213lol/Veltrix-Control/actions/workflows/windows-ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/Bradock213lol/Veltrix-Control)](https://github.com/Bradock213lol/Veltrix-Control/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20%7C%20Server-0078D4.svg)](#)
 
-Veltrix-Control is a security-first Windows fleet management platform. One installer can
-configure a computer as a **Controller**, **Managed Node**, or both. Version 0.9.0 adds optional Pterodactyl and Docker integrations on top of the game server
-platform, compute scheduling, backups, alerts, automation, and administration.
+**Security-first Windows fleet management for company networks.** One installer configures a
+computer as a **Controller**, a **Managed Node**, or both. From the native Windows desktop
+app you enroll authorized machines, watch live telemetry, administer processes, services,
+power, and terminals, deploy software and updates, protect data with verified backups, run
+compute and game-server workloads — every action permission-checked, confirmed, and audited.
 
-> This project is for systems owned by or explicitly authorized by the administrator.
-> It does not hide its services, bypass Windows security, or silently enroll devices.
+> Built for computers you own or are explicitly authorized to administer. The platform never
+> hides itself, never bypasses Windows security, and never enrolls a device silently.
 
-## What works in v0.10.4
+```text
+Controller (ASP.NET Core service) ── TLS + ECDSA-signed messages ── Managed Nodes (Windows services)
+        │                                                                    │
+        ├── SQLite database + hash-chained audit trail                        ├── telemetry, files, admin,
+        ├── SignalR + REST for the native desktop app                         │   software, updates, backups
+        └── Scheduler, alert engine, automation engine                        └── game servers, compute jobs
+```
 
-- First-run Owner setup, secure cookie sessions, four-role permission model
-- Single-use 1–60 minute enrollment codes
-- Per-device ECDSA P-256 identity; the Controller stores only public keys
-- Signed, time-bounded, replay-resistant heartbeats and operation results
-- Windows hardware inventory plus live CPU, RAM, disk, and uptime telemetry
-- Native resizable Windows app with system light/dark theme and keyboard shortcuts
-- Fleet metrics, manual/automatic refresh, status feedback, search, filters, and sorting
-- Device profiles with OS, CPU, memory, uptime, agent, heartbeat, IDs, and disk capacity
-- Read-only remote process, Windows service, installed-software, and network inventories
-- Confirmed restart/shutdown queue with a separate local node policy switch
-- Remote process control with protected-process policy and identity verification
-- Windows service control with protected-service policy and startup-type changes
-- Scheduled restart/shutdown, logoff, sleep, hibernation, and Wake-on-LAN
-- Audited PowerShell/CMD terminal sessions with streaming output and bounded buffers
-- Approved software deployment (WinGet, MSI, EXE) with per-device tracking
-- Windows Update scanning, selective installation, and reboot reporting
-- Verified zip backups with retention, integrity verification, and safe restore
-- Fleet alerts with acknowledgement and automatic resolution
-- Automation rules with triggers, cooldowns, allow-listed actions, and run history
-- Resource-aware compute job scheduler with per-node workload policies
-- Game server platform with a Minecraft Java adapter, console, crash recovery, and updates
-- Optional Pterodactyl and Docker integrations with encrypted credentials
-- Managed-root file management: create, rename, move, copy, delete, search, size, ZIP
-- Chunked, resumable, checksum-verified uploads and downloads with progress and cancellation
-- Text editor with find/replace, atomic saves, pre-save backups, history, and diff view
-- Hardened path policy: traversal, UNC/device paths, ADS, reparse points, and zip-slip
-- Searchable hash-chained audit history, integrity verification, and CSV export
-- In-app enrollment code creation, expiry display, copy, rotation, and revocation
-- Saved Controller address, secure remote-HTTPS validation, and refresh preferences
-- Clearly labelled multi-node simulator for safe development
-- One role-selecting Inno Setup EXE with native launcher, repair/upgrade/uninstall support,
-  and an automatic browser-fallback prompt only when the app fails to start
-- Unit, Agent diagnostic, integration, security, end-to-end, and installer test suites
+## Contents
 
-![Veltrix-Control native control center preview](docs/images/dashboard-placeholder.svg)
+- [Feature status](#feature-status)
+- [Screens](#screens)
+- [Keyboard shortcuts](#keyboard-shortcuts)
+- [Install](#install)
+- [Architecture](#architecture)
+- [Security model](#security-model)
+- [Development](#development)
+- [Roadmap and not-yet-implemented](#roadmap-and-not-yet-implemented)
+- [License](#license)
+
+## Feature status
+
+| Area | What works today |
+| --- | --- |
+| Enrollment and identity | First-run Owner setup, four roles, single-use 1–60 min codes, per-device ECDSA P-256 identity, replay-resistant signed transport |
+| Monitoring | Windows inventory, CPU / memory / disk / uptime telemetry, health scoring, live Overview and Devices views, search and filters |
+| Device administration | Processes (start, stop, priority), services (start, stop, startup type), scheduled power, Wake-on-LAN, audited PowerShell/CMD terminals |
+| Files | Managed-root browser, create/rename/move/copy/delete, search, folder sizing, ZIP, verified resumable transfers, editor with history and diff |
+| Software and updates | Approved WinGet / MSI / EXE deployments with per-device results, Windows Update scan, selective install, reboot reporting |
+| Protection | Verified zip backups with retention and safe restore, alert engine with acknowledgement, automation rules with allow-listed actions |
+| Compute | Priority job queue, per-node Idle/Server/Compute/Gaming/Maintenance policies with reserved CPU, memory, and disk |
+| Game servers | Minecraft Java provisioning, lifecycle, live console, automatic crash restart with crash-loop protection |
+| Integrations | Optional Pterodactyl and Docker adapters with AES-GCM encrypted credentials |
+| Administration | User accounts and roles, retention, agent-version policy, system diagnostics, hash-chained audit log with CSV export |
+
+Full verified status per release is in [RESULT.md](RESULT.md); the honest gap list is in
+[docs/roadmap.md](docs/roadmap.md).
+
+## Screens
+
+![Veltrix-Control native control center](docs/images/dashboard-placeholder.svg)
+
+Screenshots are regenerated each release from a local simulator fleet. The desktop app is
+the primary surface; a browser page is offered only as a recovery fallback when the app
+cannot start.
+
+## Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `F5` or `Ctrl+R` | Refresh fleet data |
+| `Ctrl+F` | Focus the device search box |
+| `Ctrl+E` | Create an enrollment code |
+| `Ctrl+1` … `Ctrl+9` | Jump to Overview, Devices, Diagnostics, Managed files, Administration, Deployment, Operations, Integrations, Audit |
+| `Ctrl+,` | Open Settings |
+| `Esc` | Cancel or close the current dialog |
+| `Ctrl+S` (editor) | Save the open file |
+| `Ctrl+F` (editor) | Find and replace |
+| `Enter` | Confirm the default action, send a terminal command, or run a search |
+
+The same list is available inside the app under **Settings → Keyboard shortcuts**, and every
+shortcut also has a visible button or menu control.
+
+## Install
+
+1. Download [`Veltrix-Control-Setup.exe`](https://github.com/Bradock213lol/Veltrix-Control/releases/latest/download/Veltrix-Control-Setup.exe)
+   and [`SHA256SUMS.txt`](https://github.com/Bradock213lol/Veltrix-Control/releases/latest/download/SHA256SUMS.txt)
+   from the [latest release](https://github.com/Bradock213lol/Veltrix-Control/releases/latest).
+2. Verify the SHA-256 value, run the installer as administrator, and pick a role.
+3. On a Controller, launch **Veltrix-Control**. The app detects that no accounts exist and
+   opens first-run setup; create the Owner account there.
+4. Select **Add device** to create an enrollment code. The Overview tab keeps a
+   getting-started checklist until the first device is online.
+5. On a Managed Node install, enter the Controller HTTPS URL, its verified certificate
+   fingerprint, the one-time code, and the managed file root.
+
+**Lost Owner password?** After setup the Controller also creates a recovery Administrator
+account (`admin` / `admin!` by default — change or delete it in **Settings → User accounts**
+once Owner access is restored). On the Controller machine you can also reset a password
+without touching any data:
+
+```powershell
+$env:VELTRIX_OWNER_PASSWORD = 'a-new-owner-password'
+& "$env:ProgramFiles\Veltrix-Control\Controller\Veltrix-Control.Controller.exe" --reset-owner owner-username
+Remove-Item Env:\VELTRIX_OWNER_PASSWORD
+```
+
+**Uninstall** through Windows Settings removes everything the product created: services,
+firewall rule, program files, the database with user accounts, certificates, node
+identities, transfers, and desktop settings. Silent uninstalls used by upgrades and repair
+preserve state.
+
+The Controller listens on HTTPS `5443` for nodes and loopback HTTP `5187` for the app. Read
+the [installer guide](docs/installer.md) before a multi-computer rollout.
 
 ## Architecture
 
@@ -62,96 +123,53 @@ flowchart LR
     S[Node Simulator] -->|same protocol| C
 ```
 
-The domain and wire contracts do not depend on Windows. Windows-specific telemetry,
-service hosting, and DPAPI key storage live in the Agent. See
-[architecture](docs/architecture.md), [security](docs/security.md), and
-[protocol](docs/protocol.md) for the boundaries and threat model.
+Domain and wire contracts are platform-neutral; Windows telemetry, service hosting, and
+DPAPI key storage live in the Agent. See [architecture](docs/architecture.md),
+[security](docs/security.md), and [protocol](docs/protocol.md).
 
-## Install
+## Security model
 
-1. Download [`Veltrix-Control-Setup.exe`](https://github.com/Bradock213lol/Veltrix-Control/releases/latest/download/Veltrix-Control-Setup.exe)
-   and [`SHA256SUMS.txt`](https://github.com/Bradock213lol/Veltrix-Control/releases/latest/download/SHA256SUMS.txt)
-   from the [latest release](https://github.com/Bradock213lol/Veltrix-Control/releases/latest).
-2. Verify the SHA-256 value, run the installer as administrator, and select a role.
-3. For a Controller, launch **Veltrix-Control** from Start or the desktop. The app detects
-   that the Controller has no accounts and shows first-run setup; create the Owner account
-   there (at least 12 characters).
-4. Select **Add device** in the app to generate an enrollment code. The Overview tab shows
-   a getting-started checklist until your first device is online.
-5. On a Managed Node install, enter the Controller HTTPS URL, its displayed/verified
-   certificate thumbprint, the one-time code, and the allowed file root.
+Enrollment is explicit, temporary, and single-use. Each node generates its identity key
+locally and protects it with Windows DPAPI; the Controller stores only public keys.
+Controller-to-node traffic is TLS with a pinned certificate fingerprint, and every message
+is time-bounded and replay-resistant. Administrative operations use a closed operation
+enum, per-action permissions, typed validation on both ends, explicit confirmation,
+operation IDs, and a node-local policy switch for high-impact actions. Terminals are
+audited; protected processes and services cannot be stopped or disabled remotely. The audit
+log is hash-chained and tamper-evident.
 
-If the Owner password is ever lost, the platform also creates a recovery Administrator
-account after first-run setup (`admin` / `admin!` by default). Sign in with it, open
-**Settings → User accounts**, and change its password or delete the account once Owner
-access is restored. A local recovery command is also available:
-
-```powershell
-$env:VELTRIX_OWNER_PASSWORD = 'a-new-owner-password'
-& "$env:ProgramFiles\Veltrix-Control\Controller\Veltrix-Control.Controller.exe" --reset-owner owner-username
-Remove-Item Env:\VELTRIX_OWNER_PASSWORD
-```
-
-Uninstalling through Windows Settings removes everything the product created: services,
-firewall rule, program files, the database with user accounts, certificates, node
-identities, transfers, and desktop settings. Silent uninstalls (used by upgrades and
-repair) preserve data so fleet state survives.
-
-The Controller service listens on HTTPS port `5443` for nodes and loopback HTTP port
-`5187` for the native app. The launcher offers that local browser endpoint only if the
-app is missing or closes during startup. Read the [installer guide](docs/installer.md)
-before a multi-computer deployment.
+Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 ## Development
 
-Requirements: Windows 10/11 or Windows Server, .NET SDK 10.0.401+, and Inno Setup 6
-for packaging.
+Requirements: Windows 10/11 or Windows Server, .NET SDK 10.0.401+, and Inno Setup 6 for
+packaging.
 
 ```powershell
-./scripts/start-development.ps1
+./scripts/start-development.ps1     # build, test, and run the local Controller + desktop app
+./scripts/build.ps1                 # full verification and release packaging
 ```
 
-Complete verification and release packaging:
-
-```powershell
-./scripts/build.ps1
-```
-
-For simulator use, create a code in the UI, then run:
+Simulator fleet:
 
 ```powershell
 dotnet run --project src/Veltrix-Control.Simulator -- --token YOUR-CODE --name Simulated-PC-01
 ```
 
-More detail is in [development](docs/development.md) and the phased release plan is
-in [PHASES.md](PHASES.md).
+More detail in [development](docs/development.md).
 
-## Security model
+## Roadmap and not-yet-implemented
 
-Enrollment is explicit, temporary, and single-use. Each node generates its identity
-key locally; the real Agent protects its private key with Windows DPAPI. Remote
-commands use a closed operation enum, permission checks, confirmations, operation
-IDs, and local node policy. No arbitrary terminal exists in v0.2. Power actions
-are disabled on every real node until an administrator opts in locally.
+Delivered: v0.1 secure foundation · v0.2 native control center · v0.3 files and transfers ·
+v0.4 controlled administration · v0.5 software and updates · v0.6 backups, alerts,
+automation · v0.7 compute scheduling · v0.8 game servers · v0.9 integrations ·
+v0.10 administration, retention, recovery, and UI polish.
 
-Report suspected vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
-
-## Roadmap
-
-- **v0.2:** native control center and first read-only Windows diagnostics — delivered.
-- **v0.3:** expanded observability, safe file operations, resumable transfers, and editor.
-- **v0.4:** controlled processes, services, power scheduling, and audited terminal.
-- **v0.5:** approved software deployment and Windows Update lifecycle.
-- **v0.6:** verified backups, alerts, and loop-safe automation.
-- **v0.7:** resource policies and distributed compute scheduling.
-- **v0.8:** adapter-based game-server management, starting with Minecraft Java.
-- **v0.9:** optional Pterodactyl and Docker integrations.
-- **v1.0:** signed staged updates, PostgreSQL, enterprise identity, scale, and
-  production/security hardening.
-
-Each milestone is an independently installable, upgrade-tested release. The complete
-acceptance gates are in [PHASES.md](PHASES.md), and current verified status is maintained
-in [RESULT.md](RESULT.md).
+**Not implemented yet** (tracked in [docs/roadmap.md](docs/roadmap.md)): PostgreSQL
+deployment option, Authenticode signing, signed self-update with staged rollout, enterprise
+identity, high availability, 1,000-node load qualification, GPU inventory/scheduling,
+external alert notifications, device groups/tags/favorites, hardware sensors (temperature,
+SMART, battery), and localization. Nothing above is claimed as working.
 
 ## License
 

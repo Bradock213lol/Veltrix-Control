@@ -37,6 +37,22 @@ public partial class FileEditorWindow : Window
 
     private async void Window_Loaded(object sender, RoutedEventArgs e) => await LoadAsync();
 
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (System.Windows.Input.Keyboard.Modifiers != System.Windows.Input.ModifierKeys.Control) return;
+        if (e.Key == System.Windows.Input.Key.S)
+        {
+            e.Handled = true;
+            Save_Click(this, new RoutedEventArgs());
+        }
+        else if (e.Key == System.Windows.Input.Key.F)
+        {
+            e.Handled = true;
+            if (FindPanel.Visibility != Visibility.Visible) ToggleFind_Click(this, new RoutedEventArgs());
+            FindBox.Focus();
+        }
+    }
+
     private async Task LoadAsync()
     {
         try

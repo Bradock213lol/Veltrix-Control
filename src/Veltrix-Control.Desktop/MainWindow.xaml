@@ -8,6 +8,30 @@
     <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
   </Window.Resources>
   <Grid>
+    <Grid.Background>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0.6,1">
+        <GradientStop Color="#0A0D17" Offset="0" />
+        <GradientStop Color="#0F1424" Offset="1" />
+      </LinearGradientBrush>
+    </Grid.Background>
+    <Grid IsHitTestVisible="False" ClipToBounds="True">
+      <Ellipse Width="900" Height="560" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-280,-340,0,0" Opacity="0.40">
+        <Ellipse.Fill>
+          <RadialGradientBrush>
+            <GradientStop Color="#5A3FBF" Offset="0" />
+            <GradientStop Color="#005A3FBF" Offset="1" />
+          </RadialGradientBrush>
+        </Ellipse.Fill>
+      </Ellipse>
+      <Ellipse Width="780" Height="520" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-260,-300" Opacity="0.30">
+        <Ellipse.Fill>
+          <RadialGradientBrush>
+            <GradientStop Color="#2E6FBF" Offset="0" />
+            <GradientStop Color="#002E6FBF" Offset="1" />
+          </RadialGradientBrush>
+        </Ellipse.Fill>
+      </Ellipse>
+    </Grid>
     <Grid x:Name="LoginGrid">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="500"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
       <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -46,10 +70,14 @@
       <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
         <Grid Margin="18">
           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-          <StackPanel Margin="4,8,4,26">
-            <Border Width="48" Height="7" Background="{DynamicResource AccentBrush}" CornerRadius="4" HorizontalAlignment="Left" Margin="0,0,0,12"/>
-            <TextBlock Text="Veltrix-Control" FontSize="20" FontWeight="Bold"/>
-            <TextBlock Text="WINDOWS FLEET DESK" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}"/>
+          <StackPanel Orientation="Horizontal" Margin="4,8,4,26">
+            <Border Width="40" Height="40" CornerRadius="12" Background="{StaticResource AccentGradientBrush}">
+              <TextBlock Text="V" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="Veltrix-Control" FontSize="18" FontWeight="Bold"/>
+              <TextBlock Text="WINDOWS FLEET DESK" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource SubtleTextBrush}"/>
+            </StackPanel>
           </StackPanel>
           <StackPanel Grid.Row="1">
             <TextBlock Text="WORKSPACE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" Margin="14,0,0,6"/>
@@ -124,6 +152,7 @@
                 <StackPanel>
                   <TextBlock Style="{StaticResource MetricLabelText}" Text="DEVICES ONLINE"/>
                   <TextBlock x:Name="OnlineMetric" Style="{StaticResource MetricValueText}" Text="0" Margin="0,6,0,2"/>
+                  <ProgressBar x:Name="OnlineBar" Height="6" Maximum="100" Value="0" Foreground="{DynamicResource SuccessBrush}" Margin="0,0,0,10"/>
                   <TextBlock x:Name="OnlineCaption" Style="{StaticResource CaptionText}" Text="No devices"/>
                 </StackPanel>
               </Border>
@@ -131,6 +160,7 @@
                 <StackPanel>
                   <TextBlock Style="{StaticResource MetricLabelText}" Text="AVERAGE CPU"/>
                   <TextBlock x:Name="CpuMetric" Style="{StaticResource MetricValueText}" Text="0%" Margin="0,6,0,2"/>
+                  <ProgressBar x:Name="CpuBar" Height="6" Maximum="100" Value="0" Margin="0,0,0,10"/>
                   <TextBlock x:Name="CpuCaption" Style="{StaticResource CaptionText}" Text="Across online nodes"/>
                 </StackPanel>
               </Border>
@@ -138,6 +168,7 @@
                 <StackPanel>
                   <TextBlock Style="{StaticResource MetricLabelText}" Text="MEMORY USED / TOTAL"/>
                   <TextBlock x:Name="MemoryMetric" Style="{StaticResource MetricValueText}" Text="0 / 0 GB" Margin="0,6,0,2"/>
+                  <ProgressBar x:Name="MemoryBar" Height="6" Maximum="100" Value="0" Foreground="{DynamicResource CyanBrush}" Margin="0,0,0,10"/>
                   <TextBlock x:Name="MemoryCaption" Style="{StaticResource CaptionText}" Text="No telemetry"/>
                 </StackPanel>
               </Border>
@@ -145,6 +176,7 @@
                 <StackPanel>
                   <TextBlock Style="{StaticResource MetricLabelText}" Text="NEEDS ATTENTION"/>
                   <TextBlock x:Name="AttentionMetric" Style="{StaticResource MetricValueText}" Text="0" Margin="0,6,0,2" Foreground="{DynamicResource WarningBrush}"/>
+                  <ProgressBar x:Name="AttentionBar" Height="6" Maximum="100" Value="0" Foreground="{DynamicResource WarningBrush}" Margin="0,0,0,10"/>
                   <TextBlock x:Name="AttentionCaption" Style="{StaticResource CaptionText}" Text="Health below 75"/>
                 </StackPanel>
               </Border>
@@ -690,6 +722,35 @@
                   </DataGrid>
                 </StackPanel>
               </Border>
+              <Border Style="{StaticResource PanelBorder}" Margin="0,16,0,0">
+                <StackPanel>
+                  <TextBlock Text="Keyboard shortcuts" FontSize="21" FontWeight="SemiBold"/>
+                  <TextBlock Text="Every action also has a visible control; these accelerators speed up frequent work." Foreground="{DynamicResource MutedTextBrush}" Margin="0,4,0,14"/>
+                  <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="210"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" FontWeight="SemiBold" Text="F5 or Ctrl+R" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Foreground="{DynamicResource MutedTextBrush}" Text="Refresh fleet data" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" FontWeight="SemiBold" Text="Ctrl+F" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Foreground="{DynamicResource MutedTextBrush}" Text="Focus the device search box" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" FontWeight="SemiBold" Text="Ctrl+E" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Foreground="{DynamicResource MutedTextBrush}" Text="Create an enrollment code" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="3" Grid.Column="0" FontWeight="SemiBold" Text="Ctrl+1 … Ctrl+9" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Foreground="{DynamicResource MutedTextBrush}" Text="Jump to Overview, Devices, Diagnostics, Files, Administration, Deployment, Operations, Integrations, Audit" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" FontWeight="SemiBold" Text="Ctrl+," Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1" Foreground="{DynamicResource MutedTextBrush}" Text="Open Settings" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="5" Grid.Column="0" FontWeight="SemiBold" Text="Esc" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="5" Grid.Column="1" Foreground="{DynamicResource MutedTextBrush}" Text="Cancel or close the current dialog" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="6" Grid.Column="0" FontWeight="SemiBold" Text="Ctrl+S / Ctrl+F (editor)" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="6" Grid.Column="1" Foreground="{DynamicResource MutedTextBrush}" Text="Save the open file / open find and replace" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="7" Grid.Column="0" FontWeight="SemiBold" Text="Enter" Margin="0,0,0,6"/>
+                    <TextBlock Grid.Row="7" Grid.Column="1" Foreground="{DynamicResource MutedTextBrush}" Text="Confirm the default action, send a terminal command, or run a search" Margin="0,0,0,6"/>
+                  </Grid>
+                </StackPanel>
+              </Border>
             </StackPanel>
           </ScrollViewer>
         </Grid>
@@ -697,7 +758,7 @@
         <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="28,10">
           <Grid>
             <StackPanel Orientation="Horizontal"><Ellipse x:Name="ConnectionDot" Width="9" Height="9" Fill="{DynamicResource WarningBrush}" Margin="0,0,8,0"/><TextBlock x:Name="StatusText" Text="Connecting…" Foreground="{DynamicResource MutedTextBrush}"/></StackPanel>
-            <TextBlock Text="F5 Refresh   Ctrl+F Search   Ctrl+E Enroll   Ctrl+, Settings" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Right"/>
+            <TextBlock Text="F5 / Ctrl+R Refresh   Ctrl+F Search   Ctrl+E Enroll   Ctrl+1–9 Sections   Ctrl+, Settings" FontSize="12" Foreground="{DynamicResource SubtleTextBrush}" HorizontalAlignment="Right"/>
           </Grid>
         </Border>
       </Grid>

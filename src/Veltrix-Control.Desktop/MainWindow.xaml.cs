@@ -284,6 +284,11 @@ public partial class MainWindow : Window
             AttentionMetric.Text = attention.ToString(CultureInfo.CurrentCulture);
             AttentionCaption.Text = attention == 0 ? "All monitored nodes healthy" : $"of {_devices.Count} node{(_devices.Count == 1 ? string.Empty : "s")} below 75";
 
+            OnlineBar.Value = _devices.Count == 0 ? 0 : online.Count * 100d / _devices.Count;
+            CpuBar.Value = online.Count == 0 ? 0 : online.Average(device => device.Telemetry?.CpuPercent ?? 0);
+            MemoryBar.Value = totalMemory == 0 ? 0 : usedMemory * 100d / totalMemory;
+            AttentionBar.Value = _devices.Count == 0 ? 0 : attention * 100d / _devices.Count;
+
             DashboardGettingStarted.Visibility = _devices.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             DashboardDevicesGrid.Visibility = _devices.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
             LastRefreshText.Text = $"Updated {DateTime.Now:t}";
@@ -1865,6 +1870,35 @@ public partial class MainWindow : Window
             NavigateTo("SettingsView");
             e.Handled = true;
         }
+        else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.R)
+        {
+            await RefreshFleetAsync();
+            e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is >= Key.D1 and <= Key.D9)
+        {
+            NavigateByIndex(e.Key - Key.D1);
+            e.Handled = true;
+        }
+    }
+
+    private void NavigateByIndex(int index)
+    {
+        var entries = new (Button Button, string View)[]
+        {
+            (DashboardNav, "DashboardView"),
+            (DevicesNav, "DevicesView"),
+            (DiagnosticsNav, "DiagnosticsView"),
+            (FilesNav, "FilesView"),
+            (AdminNav, "AdminView"),
+            (DeploymentNav, "DeploymentView"),
+            (OperationsNav, "OperationsView"),
+            (IntegrationsNav, "IntegrationsView"),
+            (AuditNav, "AuditView")
+        };
+        if (index < 0 || index >= entries.Length) return;
+        if (!entries[index].Button.IsEnabled) return;
+        NavigateTo(entries[index].View);
     }
 
     private async Task RunBusyAsync(Button? button, Func<Task> action)
