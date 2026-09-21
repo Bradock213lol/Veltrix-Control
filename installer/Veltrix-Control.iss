@@ -1,5 +1,5 @@
 #define MyAppName "Veltrix-Control"
-#define MyAppVersion "0.10.5"
+#define MyAppVersion "0.10.6"
 #define MyAppPublisher "Veltrix-Control"
 #define MyAppExeName "Veltrix-Control.Controller.exe"
 
@@ -78,13 +78,70 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
 [Code]
+const
+  CarbonWindow = $100E0C;
+  CarbonSurface = $171512;
+  CarbonCard = $201D19;
+  CarbonBorder = $312E28;
+  CarbonText = $EFF1ED;
+  CarbonMuted = $9D9F95;
+  CarbonAccent = $BDE58D;
+
 var
   RolePage: TWizardPage;
   RoleController: TNewRadioButton;
   RoleAgent: TNewRadioButton;
   RoleBoth: TNewRadioButton;
+  RoleCards: array[0..2] of TPanel;
+  RoleAccents: array[0..2] of TPanel;
+  RoleRadios: array[0..2] of TNewRadioButton;
   NodePage: TInputQueryWizardPage;
   RoleParameter: String;
+
+procedure UpdateRoleAccents;
+var
+  Index: Integer;
+begin
+  for Index := 0 to 2 do
+  begin
+    if RoleRadios[Index] = nil then Continue;
+    if RoleRadios[Index].Checked then
+      RoleAccents[Index].Color := CarbonAccent
+    else
+      RoleAccents[Index].Color := CarbonBorder;
+  end;
+end;
+
+procedure RoleCardClick(Sender: TObject);
+begin
+  UpdateRoleAccents;
+end;
+
+procedure ApplyCarbonTheme;
+begin
+  WizardForm.Color := CarbonWindow;
+  WizardForm.Font.Name := 'Segoe UI';
+  WizardForm.Font.Color := CarbonText;
+  WizardForm.MainPanel.Color := CarbonSurface;
+  WizardForm.WelcomePage.Color := CarbonSurface;
+  WizardForm.InnerPage.Color := CarbonSurface;
+  WizardForm.InstallingPage.Color := CarbonSurface;
+  WizardForm.FinishedPage.Color := CarbonSurface;
+  WizardForm.Bevel.Visible := False;
+  WizardForm.Bevel1.Visible := False;
+  WizardForm.WelcomeLabel1.Font.Color := CarbonText;
+  WizardForm.WelcomeLabel2.Font.Color := CarbonMuted;
+  WizardForm.PageNameLabel.Font.Color := CarbonAccent;
+  WizardForm.PageNameLabel.Font.Style := [fsBold];
+  WizardForm.PageDescriptionLabel.Font.Color := CarbonMuted;
+  WizardForm.FinishedHeadingLabel.Font.Color := CarbonText;
+  WizardForm.FinishedLabel.Font.Color := CarbonMuted;
+  WizardForm.StatusLabel.Font.Color := CarbonMuted;
+  WizardForm.NextButton.Font.Color := CarbonAccent;
+  WizardForm.NextButton.Font.Style := [fsBold];
+  WizardForm.BackButton.Font.Color := CarbonMuted;
+  WizardForm.CancelButton.Font.Color := CarbonMuted;
+end;
 
 function InstallController: Boolean;
 begin
@@ -106,48 +163,76 @@ begin
   Result := (PageID = NodePage.ID) and not InstallAgent;
 end;
 
-procedure AddRoleOption(Page: TWizardPage; var Control: TNewRadioButton; Top: Integer; Title, Detail: String);
+procedure AddRoleOption(Page: TWizardPage; var Control: TNewRadioButton; Index, Top: Integer; Title, Detail: String);
 var
+  Card, Accent: TPanel;
   Description: TNewStaticText;
 begin
+  Card := TPanel.Create(Page);
+  Card.Parent := Page.Surface;
+  Card.Left := ScaleX(8);
+  Card.Top := ScaleY(Top);
+  Card.Width := Page.SurfaceWidth - ScaleX(16);
+  Card.Height := ScaleY(72);
+  Card.BevelOuter := bvNone;
+  Card.Color := CarbonCard;
+  Card.ParentBackground := False;
+  Card.OnClick := @RoleCardClick;
+  RoleCards[Index] := Card;
+
+  Accent := TPanel.Create(Page);
+  Accent.Parent := Card;
+  Accent.Left := 0;
+  Accent.Top := 0;
+  Accent.Width := ScaleX(3);
+  Accent.Height := Card.Height;
+  Accent.BevelOuter := bvNone;
+  Accent.Color := CarbonBorder;
+  RoleAccents[Index] := Accent;
+
   Control := TNewRadioButton.Create(Page);
-  Control.Parent := Page.Surface;
-  Control.Left := ScaleX(12);
-  Control.Top := ScaleY(Top);
-  Control.Width := Page.SurfaceWidth - ScaleX(24);
-  Control.Height := ScaleY(26);
+  Control.Parent := Card;
+  Control.Left := ScaleX(18);
+  Control.Top := ScaleY(12);
+  Control.Width := Card.Width - ScaleX(30);
+  Control.Height := ScaleY(22);
   Control.Caption := Title;
   Control.Font.Size := 11;
   Control.Font.Style := [fsBold];
+  Control.Font.Color := CarbonText;
+  Control.OnClick := @RoleCardClick;
+  RoleRadios[Index] := Control;
 
   Description := TNewStaticText.Create(Page);
-  Description.Parent := Page.Surface;
-  Description.Left := ScaleX(37);
-  Description.Top := ScaleY(Top + 26);
-  Description.Width := Page.SurfaceWidth - ScaleX(55);
-  Description.Height := ScaleY(34);
+  Description.Parent := Card;
+  Description.Left := ScaleX(40);
+  Description.Top := ScaleY(38);
+  Description.Width := Card.Width - ScaleX(58);
+  Description.Height := ScaleY(30);
   Description.AutoSize := False;
   Description.WordWrap := True;
   Description.Caption := Detail;
-  Description.Font.Color := clGray;
+  Description.Font.Color := CarbonMuted;
 end;
 
 procedure InitializeWizard;
 begin
+  ApplyCarbonTheme;
   WizardForm.Caption := 'Veltrix-Control Secure Setup';
   WizardForm.WelcomeLabel1.Caption := 'Welcome to Veltrix-Control';
   WizardForm.WelcomeLabel2.Caption := 'One secure installer for your Controller and explicitly authorized Windows nodes.';
 
   RolePage := CreateCustomPage(wpWelcome, 'Choose this computer''s role', 'Install only the components this device needs.');
-  AddRoleOption(RolePage, RoleController, 12, 'Controller', 'Manage enrolled devices in the native desktop app. Includes a browser fallback and node simulator.');
-  AddRoleOption(RolePage, RoleAgent, 90, 'Managed Node', 'Connect this computer to an existing Controller using a single-use enrollment code.');
-  AddRoleOption(RolePage, RoleBoth, 168, 'Controller + Managed Node', 'Manage the fleet and enroll this computer as a managed node.');
+  AddRoleOption(RolePage, RoleController, 0, 12, 'Controller', 'Manage your devices in the native desktop app. Includes a browser fallback and node simulator.');
+  AddRoleOption(RolePage, RoleAgent, 1, 100, 'Managed Node', 'Connect this computer to an existing Controller with a single-use enrollment code.');
+  AddRoleOption(RolePage, RoleBoth, 2, 188, 'Controller + Managed Node', 'Manage your fleet and enroll this computer as a local managed node.');
   RoleParameter := Lowercase(ExpandConstant('{param:ROLE|controller}'));
   RoleController.Checked := RoleParameter = 'controller';
   RoleAgent.Checked := RoleParameter = 'agent';
   RoleBoth.Checked := RoleParameter = 'both';
   if not (RoleController.Checked or RoleAgent.Checked or RoleBoth.Checked) then
     RoleController.Checked := True;
+  UpdateRoleAccents;
 
   NodePage := CreateInputQueryPage(RolePage.ID, 'Connect this managed node', 'Enter the secure enrollment details from your Controller.', 'Verify the certificate fingerprint out of band before continuing.');
   NodePage.Add('Controller URL:', False);
@@ -163,6 +248,8 @@ end;
 
 procedure CurPageChanged(CurPageID: Integer);
 begin
+  if CurPageID = RolePage.ID then
+    UpdateRoleAccents;
   if CurPageID = NodePage.ID then
   begin
     if RoleBoth.Checked then

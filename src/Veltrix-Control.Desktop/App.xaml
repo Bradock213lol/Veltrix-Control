@@ -3,27 +3,24 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
   <Application.Resources>
-    <SolidColorBrush x:Key="WindowBrush" Color="#0B0E18" />
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#141828" />
-    <SolidColorBrush x:Key="SurfaceMutedBrush" Color="#1D2337" />
-    <SolidColorBrush x:Key="ElevatedBrush" Color="#1A2032" />
-    <SolidColorBrush x:Key="HoverBrush" Color="#202844" />
-    <SolidColorBrush x:Key="TextBrush" Color="#F2F5FF" />
-    <SolidColorBrush x:Key="MutedTextBrush" Color="#A6AFC9" />
-    <SolidColorBrush x:Key="SubtleTextBrush" Color="#7E88A6" />
-    <SolidColorBrush x:Key="BorderBrush" Color="#2A3450" />
-    <SolidColorBrush x:Key="ControlHoverBorderBrush" Color="#3D4A6B" />
-    <SolidColorBrush x:Key="AccentBrush" Color="#7C5CFF" />
-    <SolidColorBrush x:Key="AccentSoftBrush" Color="#2A2450" />
-    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
-      <GradientStop Color="#8B5CFF" Offset="0" />
-      <GradientStop Color="#5B8CFF" Offset="1" />
-    </LinearGradientBrush>
-    <SolidColorBrush x:Key="CyanBrush" Color="#4ED2FF" />
-    <SolidColorBrush x:Key="SuccessBrush" Color="#4CD7A1" />
-    <SolidColorBrush x:Key="WarningBrush" Color="#FFC857" />
-    <SolidColorBrush x:Key="DangerBrush" Color="#FF7081" />
-    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33405F" />
+    <SolidColorBrush x:Key="WindowBrush" Color="#0C0E10" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#121517" />
+    <SolidColorBrush x:Key="SurfaceMutedBrush" Color="#191D20" />
+    <SolidColorBrush x:Key="ElevatedBrush" Color="#191D20" />
+    <SolidColorBrush x:Key="HoverBrush" Color="#202629" />
+    <SolidColorBrush x:Key="TextBrush" Color="#EDF1EF" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#959F9D" />
+    <SolidColorBrush x:Key="SubtleTextBrush" Color="#818E87" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#282E31" />
+    <SolidColorBrush x:Key="ControlHoverBorderBrush" Color="#3D484C" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#8DE5BD" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#192E25" />
+    <SolidColorBrush x:Key="AccentGradientBrush" Color="#8DE5BD" />
+    <SolidColorBrush x:Key="CyanBrush" Color="#8DE5BD" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#8DE5BD" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#DFB66E" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#F28D8D" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#3D484C" />
     <SolidColorBrush x:Key="OverlayBrush" Color="#FFFFFF" />
 
     <Style x:Key="FocusVisual" TargetType="Control">
@@ -72,9 +69,9 @@
         <Setter.Value>
           <ControlTemplate TargetType="Button">
             <Grid>
-              <Border CornerRadius="8" Background="{TemplateBinding Background}"
+              <Border CornerRadius="6" Background="{TemplateBinding Background}"
                       BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" />
-              <Border x:Name="Overlay" CornerRadius="8" Background="{DynamicResource OverlayBrush}" Opacity="0" />
+              <Border x:Name="Overlay" CornerRadius="6" Background="{DynamicResource OverlayBrush}" Opacity="0" />
               <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"
                                 RecognizesAccessKey="True" />
             </Grid>
@@ -95,10 +92,15 @@
     </Style>
 
     <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-      <Setter Property="Background" Value="{StaticResource AccentGradientBrush}" />
-      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Foreground" Value="#10221A" />
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Effect">
+        <Setter.Value>
+          <DropShadowEffect BlurRadius="16" ShadowDepth="0" Opacity="0.26" Color="#8DE5BD" />
+        </Setter.Value>
+      </Setter>
     </Style>
 
     <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
@@ -143,7 +145,7 @@
     </Style>
 
     <ControlTemplate x:Key="FieldFrame" TargetType="Control">
-      <Border x:Name="Frame" CornerRadius="8" Background="{TemplateBinding Background}"
+      <Border x:Name="Frame" CornerRadius="6" Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
         <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
       </Border>
@@ -226,7 +228,7 @@
                             ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}">
                 <ToggleButton.Template>
                   <ControlTemplate TargetType="ToggleButton">
-                    <Border x:Name="Frame" CornerRadius="8" Background="{TemplateBinding Background}"
+                    <Border x:Name="Frame" CornerRadius="6" Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
                       <Grid>
                         <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" HorizontalAlignment="Left"
@@ -249,7 +251,7 @@
                      AllowsTransparency="True" Focusable="False" PopupAnimation="Fade"
                      MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
                 <Border Background="{DynamicResource ElevatedBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1" CornerRadius="8" Margin="0,4,0,0" Padding="2,4">
+                        BorderThickness="1" CornerRadius="6" Margin="0,4,0,0" Padding="2,4">
                   <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <ItemsPresenter />
                   </ScrollViewer>
@@ -533,7 +535,7 @@
       <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="CornerRadius" Value="10" />
       <Setter Property="Padding" Value="20" />
     </Style>
 

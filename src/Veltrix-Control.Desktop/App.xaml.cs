@@ -3,14 +3,11 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
-using Microsoft.Win32;
 
 namespace VeltrixControl.Desktop;
 
 public partial class App : Application
 {
-    private static bool _usesLightTheme;
-
     protected override void OnStartup(StartupEventArgs e)
     {
         DispatcherUnhandledException += (_, eventArgs) =>
@@ -40,7 +37,8 @@ public partial class App : Application
         {
             var handle = new WindowInteropHelper(window).Handle;
             if (handle == IntPtr.Zero) return;
-            var dark = _usesLightTheme ? 0 : 1;
+            // The Carbon interface is a graphite console in both Windows appearances.
+            var dark = 1;
             if (DwmSetWindowAttribute(handle, 20, ref dark, sizeof(int)) != 0)
             {
                 _ = DwmSetWindowAttribute(handle, 19, ref dark, sizeof(int));
@@ -70,36 +68,11 @@ public partial class App : Application
         return false;
     }
 
-    private void ApplySystemTheme()
+    private static void ApplySystemTheme()
     {
-        var themeValue = Registry.GetValue(
-            @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
-            "AppsUseLightTheme",
-            0);
-        _usesLightTheme = themeValue is int setting && setting == 1;
-
-        if (!_usesLightTheme) return;
-        SetColor("WindowBrush", "#F4F6FB");
-        SetColor("SurfaceBrush", "#FFFFFF");
-        SetColor("SurfaceMutedBrush", "#EDF0F7");
-        SetColor("ElevatedBrush", "#FFFFFF");
-        SetColor("HoverBrush", "#E4E9F5");
-        SetColor("TextBrush", "#171A29");
-        SetColor("MutedTextBrush", "#596178");
-        SetColor("SubtleTextBrush", "#68718A");
-        SetColor("BorderBrush", "#D4D9E6");
-        SetColor("ControlHoverBorderBrush", "#A9B4CC");
-        SetColor("AccentBrush", "#4054D9");
-        SetColor("AccentSoftBrush", "#E4E8FF");
-        SetColor("CyanBrush", "#007B9E");
-        SetColor("SuccessBrush", "#087A55");
-        SetColor("WarningBrush", "#8C5A00");
-        SetColor("DangerBrush", "#B4233C");
-        SetColor("ScrollThumbBrush", "#C3CBDB");
-        SetColor("OverlayBrush", "#000000");
+        // The delivered Carbon interface is a single graphite theme; the palette in
+        // App.xaml is authoritative and is not swapped with the Windows appearance.
     }
-
-    private void SetColor(string key, string value) => Resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(value));
 
     public static void OpenBrowserFallback(string url = "http://localhost:5187/")
     {

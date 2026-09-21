@@ -11,12 +11,18 @@ public static class Motion
     {
         element.Opacity = 1;
         if (!Enabled) return;
-        var animation = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150))
+        var transform = new System.Windows.Media.TranslateTransform(0, 5);
+        element.RenderTransform = transform;
+        element.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(250))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
             FillBehavior = FillBehavior.Stop
-        };
-        element.BeginAnimation(UIElement.OpacityProperty, animation);
+        });
+        transform.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, new DoubleAnimation(5, 0, TimeSpan.FromMilliseconds(250))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            FillBehavior = FillBehavior.Stop
+        });
     }
 
     public static void SetBusy(UIElement element, bool busy)

@@ -38,6 +38,8 @@ public partial class MainWindow : Window
     private Guid? _terminalSessionId;
     private long _terminalSequence;
     private bool _terminalPolling;
+    private bool _syncingSearch;
+    private string _currentView = "DashboardView";
     private bool _setupRequired;
     private bool _refreshing;
 
@@ -235,6 +237,10 @@ public partial class MainWindow : Window
         ShellGrid.Visibility = Visibility.Visible;
         SignedInName.Text = _user.Username;
         SignedInRole.Text = _user.Role;
+        UserInitialsText.Text = Initials(_user.Username);
+        WorkspaceNameText.Text = "Personal workspace";
+        WorkspaceDetailText.Text = _api.BaseAddress.IsLoopback ? "Local controller" : _api.BaseAddress.Host;
+        FooterControllerText.Text = _api.BaseAddress.IsLoopback ? $"localhost:{_api.BaseAddress.Port}" : _api.BaseAddress.Host;
         AddDeviceButton.IsEnabled = HasAdminPermission();
         VerifyAuditButton.IsEnabled = HasAdminPermission();
         ConfigureNavigationForRole(_user.Role);
@@ -291,6 +297,7 @@ public partial class MainWindow : Window
 
             DashboardGettingStarted.Visibility = _devices.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             DashboardDevicesGrid.Visibility = _devices.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            FooterFleetText.Text = $"{online.Count}/{_devices.Count} online · TLS pinned";
             LastRefreshText.Text = $"Updated {DateTime.Now:t}";
             SetStatus("Connected", true);
         }
@@ -1801,6 +1808,7 @@ public partial class MainWindow : Window
 
     private void NavigateTo(string view)
     {
+        _currentView = view;
         var views = new FrameworkElement[] { DashboardView, DevicesView, DiagnosticsView, FilesView, AdminView, DeploymentView, OperationsView, IntegrationsView, AuditView, SettingsView };
         FrameworkElement? target = null;
         foreach (var item in views)
@@ -1818,27 +1826,36 @@ public partial class MainWindow : Window
             {
                 button.SetCurrentValue(Control.BackgroundProperty, FindResource("AccentSoftBrush"));
                 button.SetCurrentValue(Control.ForegroundProperty, FindResource("TextBrush"));
+                button.SetCurrentValue(Control.BorderBrushProperty, FindResource("AccentBrush"));
+                button.SetCurrentValue(Control.BorderThicknessProperty, new Thickness(2, 0, 0, 0));
             }
             else
             {
                 button.ClearValue(Control.BackgroundProperty);
                 button.ClearValue(Control.ForegroundProperty);
+                button.ClearValue(Control.BorderBrushProperty);
+                button.ClearValue(Control.BorderThicknessProperty);
             }
         }
 
-        (ViewEyebrow.Text, ViewTitle.Text) = view switch
+        var (eyebrow, title, subtitle) = view switch
         {
-            "DevicesView" => ("DEVICE DIRECTORY", "Managed computers"),
-            "DiagnosticsView" => ("READ-ONLY TOOLS", "Remote diagnostics"),
-            "FilesView" => ("MANAGED ROOT", "Remote file browser"),
-            "AdminView" => ("CONTROLLED ADMIN", "Processes, services, terminal"),
-            "DeploymentView" => ("SOFTWARE LIFECYCLE", "Packages and Windows Update"),
-            "OperationsView" => ("PROTECTION AND AUTOMATION", "Backups, alerts, rules"),
-            "IntegrationsView" => ("OPTIONAL INTEGRATIONS", "Pterodactyl and Docker"),
-            "AuditView" => ("ACCOUNTABILITY", "Audit history"),
-            "SettingsView" => ("APPLICATION", "Settings"),
-            _ => ("FLEET OVERVIEW", "Command center")
+            "DevicesView" => ("WORKSPACE · DEVICES", "Managed computers", "Search, filter, and inspect every authorized device."),
+            "DiagnosticsView" => ("WORKSPACE · DIAGNOSTICS", "Remote diagnostics", "Read-only inventories for online nodes."),
+            "FilesView" => ("WORKSPACE · MANAGED ROOT", "Remote file browser", "Browse, transfer, and edit inside the approved root."),
+            "AdminView" => ("WORKSPACE · ADMINISTRATION", "Processes, services, terminal", "Controlled actions with confirmations and audits."),
+            "DeploymentView" => ("WORKSPACE · DEPLOYMENT", "Packages and Windows Update", "Approved software and update lifecycle."),
+            "OperationsView" => ("WORKSPACE · OPERATIONS", "Backups, alerts, automation", "Protection, compute, and game server workloads."),
+            "IntegrationsView" => ("WORKSPACE · INTEGRATIONS", "Pterodactyl and Docker", "Optional external environments with encrypted credentials."),
+            "AuditView" => ("WORKSPACE · ACCOUNTABILITY", "Audit history", "Every administrative action, hash-chained."),
+            "SettingsView" => ("PREFERENCES", "Settings", "Connection, identity, accounts, and shortcuts."),
+            _ => ("YOUR WORKSPACE, UNDER CONTROL", "Command center", "A clear view of your devices. Everything in one place.")
         };
+        ViewEyebrow.Text = eyebrow;
+        ViewTitle.Text = title;
+        ViewSubtitle.Text = subtitle;
+        BreadcrumbText.Text = $"Workspace › {title}";
+
         if (view == "AuditView" && _auditEvents.Count == 0) _ = LoadAuditAsync();
         if (view == "DeploymentView") _ = LoadSoftwareAsync();
         if (view == "OperationsView") { _ = LoadBackupsAsync(); _ = LoadAlertsAsync(); _ = LoadAutomationsAsync(); _ = LoadComputeJobsAsync(); _ = LoadGameServersAsync(); }
@@ -1857,7 +1874,8 @@ public partial class MainWindow : Window
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F)
         {
             NavigateTo("DevicesView");
-            DeviceSearchBox.Focus();
+            GlobalSearchBox.Focus();
+            GlobalSearchBox.SelectAll();
             e.Handled = true;
         }
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.E && AddDeviceButton.IsEnabled)
@@ -1960,7 +1978,28 @@ public partial class MainWindow : Window
     {
         StatusText.Text = text;
         ConnectionDot.Fill = (Brush)FindResource(error ? "DangerBrush" : success ? "SuccessBrush" : "WarningBrush");
+        PillText.Text = error ? "Controller issue" : success ? "Controller online" : "Connecting";
+        PillDot.Fill = (Brush)FindResource(error ? "DangerBrush" : success ? "SuccessBrush" : "WarningBrush");
     }
+
+    private static string Initials(string username)
+    {
+        var parts = username.Split(['.', '_', '-', ' '], StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{char.ToUpperInvariant(parts[0][0])}{char.ToUpperInvariant(parts[1][0])}"
+            : username.Length >= 2 ? username[..2].ToUpperInvariant() : username.ToUpperInvariant();
+    }
+
+    private void GlobalSearch_Changed(object sender, TextChangedEventArgs e)
+    {
+        if (_syncingSearch || _user is null) return;
+        if (GlobalSearchBox.Text.Length > 0 && _currentView != "DevicesView") NavigateTo("DevicesView");
+        _syncingSearch = true;
+        DeviceSearchBox.Text = GlobalSearchBox.Text;
+        _syncingSearch = false;
+    }
+
+    private void SettingsShortcut_Click(object sender, RoutedEventArgs e) => NavigateTo("SettingsView");
 
     private static string GetDiagnosticTitle(OperationKind kind) => kind switch
     {

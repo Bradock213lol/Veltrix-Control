@@ -37,8 +37,15 @@
       <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
       <Border Grid.Column="1" Grid.Row="1" Style="{StaticResource PanelBorder}" Padding="34">
         <StackPanel>
-          <Border Width="54" Height="8" Background="{DynamicResource AccentBrush}" CornerRadius="4" HorizontalAlignment="Left" Margin="0,0,0,26"/>
-          <TextBlock Text="VELTRIX-CONTROL" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource CyanBrush}"/>
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+            <Border Width="38" Height="38" CornerRadius="9" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+              <TextBlock Text="V" FontSize="19" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="VELTRIX" FontSize="16" FontWeight="Bold"/>
+              <TextBlock Text="CONTROL SYSTEM" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource SubtleTextBrush}"/>
+            </StackPanel>
+          </StackPanel>
           <TextBlock x:Name="AuthTitle" Text="Connect to your fleet" FontSize="30" FontWeight="SemiBold" Margin="0,8,0,8"/>
           <TextBlock x:Name="AuthSubtitle" Text="Sign in to the local Controller." Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,24"/>
           <Label Content="Controller address" Target="{Binding ElementName=AuthControllerUrl}"/>
@@ -65,22 +72,29 @@
     </Grid>
 
     <Grid x:Name="ShellGrid" Visibility="Collapsed">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="238"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="210"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
 
       <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-        <Grid Margin="18">
+        <Grid Margin="14">
           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-          <StackPanel Orientation="Horizontal" Margin="4,8,4,26">
-            <Border Width="40" Height="40" CornerRadius="12" Background="{StaticResource AccentGradientBrush}">
-              <TextBlock Text="V" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <StackPanel Orientation="Horizontal" Margin="6,10,6,18">
+            <Border Width="34" Height="34" CornerRadius="8" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+              <TextBlock Text="V" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
-            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-              <TextBlock Text="Veltrix-Control" FontSize="18" FontWeight="Bold"/>
-              <TextBlock Text="WINDOWS FLEET DESK" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource SubtleTextBrush}"/>
+            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="VELTRIX" FontSize="15" FontWeight="Bold"/>
+              <TextBlock Text="CONTROL SYSTEM" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource SubtleTextBrush}"/>
             </StackPanel>
           </StackPanel>
-          <StackPanel Grid.Row="1">
-            <TextBlock Text="WORKSPACE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" Margin="14,0,0,6"/>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+              <Border Background="{DynamicResource SurfaceMutedBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,18">
+                <StackPanel>
+                  <TextBlock x:Name="WorkspaceNameText" FontWeight="SemiBold" FontSize="13.5" Text="Personal workspace"/>
+                  <TextBlock x:Name="WorkspaceDetailText" FontSize="11.5" Foreground="{DynamicResource SubtleTextBrush}" Margin="0,2,0,0" Text="Local controller"/>
+                </StackPanel>
+              </Border>
+              <TextBlock Text="WORKSPACE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource SubtleTextBrush}" Margin="10,0,0,6"/>
             <Button x:Name="DashboardNav" Tag="DashboardView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
               <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE80F;"/><TextBlock Style="{StaticResource NavLabel}" Text="Overview"/></StackPanel>
             </Button>
@@ -108,42 +122,82 @@
             <Button x:Name="AuditNav" Tag="AuditView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
               <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE7C3;"/><TextBlock Style="{StaticResource NavLabel}" Text="Audit history"/></StackPanel>
             </Button>
-            <TextBlock Text="APPLICATION" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" Margin="14,22,0,6"/>
+            <TextBlock Text="PREFERENCES" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource SubtleTextBrush}" Margin="10,18,0,6"/>
             <Button x:Name="SettingsNav" Tag="SettingsView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
               <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE713;"/><TextBlock Style="{StaticResource NavLabel}" Text="Settings"/></StackPanel>
             </Button>
-          </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
           <StackPanel Grid.Row="2">
-            <Border Background="{DynamicResource SurfaceMutedBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
-              <StackPanel>
-                <TextBlock x:Name="SignedInName" FontWeight="SemiBold"/>
-                <TextBlock x:Name="SignedInRole" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
-              </StackPanel>
+            <Border Background="{DynamicResource SurfaceMutedBrush}" CornerRadius="8" Padding="10" Margin="0,0,0,8">
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Border Width="30" Height="30" CornerRadius="15" Background="{DynamicResource AccentSoftBrush}">
+                  <TextBlock x:Name="UserInitialsText" Text="--" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                  <TextBlock x:Name="SignedInName" FontWeight="SemiBold" FontSize="13"/>
+                  <TextBlock x:Name="SignedInRole" FontSize="11" Foreground="{DynamicResource SubtleTextBrush}"/>
+                </StackPanel>
+                <Button Grid.Column="2" Content="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource LinkButton}" Foreground="{DynamicResource SubtleTextBrush}" VerticalAlignment="Center" Click="Logout_Click" ToolTip="Sign out"/>
+              </Grid>
             </Border>
-            <Button Content="Sign out" Style="{StaticResource NavigationButton}" Click="Logout_Click"/>
-            <TextBlock x:Name="VersionText" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" Margin="4,10,0,0"/>
+            <Border Background="{DynamicResource SurfaceMutedBrush}" CornerRadius="6" Padding="10,6">
+              <Grid>
+                <TextBlock x:Name="VersionText" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource SubtleTextBrush}"/>
+                <TextBlock Text="SECURE" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Right"/>
+              </Grid>
+            </Border>
           </StackPanel>
         </Grid>
       </Border>
 
       <Grid Grid.Column="1">
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="28,18">
+        <Grid.RowDefinitions><RowDefinition Height="54"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="29"/></Grid.RowDefinitions>
+
+        <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="20,0">
+          <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="230"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock x:Name="BreadcrumbText" VerticalAlignment="Center" Foreground="{DynamicResource SubtleTextBrush}" FontSize="12.5" Text="Workspace › Overview"/>
+            <Border Grid.Column="1" Background="{DynamicResource SurfaceMutedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" MaxWidth="440" Height="34" VerticalAlignment="Center" Margin="10,0">
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SubtleTextBrush}" VerticalAlignment="Center" Margin="10,0,8,0"/>
+                <TextBox x:Name="GlobalSearchBox" Grid.Column="1" Background="Transparent" BorderThickness="0" MinHeight="30" Padding="0" VerticalContentAlignment="Center" AutomationProperties.Name="Find a device" TextChanged="GlobalSearch_Changed"/>
+                <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0" VerticalAlignment="Center">
+                  <TextBlock Text="Ctrl F" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource SubtleTextBrush}"/>
+                </Border>
+              </Grid>
+            </Border>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+              <Border Background="{DynamicResource SurfaceMutedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="14" Padding="12,5" Margin="0,0,12,0">
+                <StackPanel Orientation="Horizontal">
+                  <Ellipse x:Name="PillDot" Width="7" Height="7" Fill="{DynamicResource WarningBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                  <TextBlock x:Name="PillText" Text="Connecting" FontSize="12.5" FontWeight="SemiBold"/>
+                </StackPanel>
+              </Border>
+              <Button Content="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource LinkButton}" VerticalAlignment="Center" Click="SettingsShortcut_Click" ToolTip="Settings (Ctrl+,)"/>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Padding="24,20,24,14">
           <Grid>
             <StackPanel>
-              <TextBlock x:Name="ViewEyebrow" Text="FLEET OVERVIEW" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource CyanBrush}"/>
-              <TextBlock x:Name="ViewTitle" Text="Command center" FontSize="28" FontWeight="SemiBold"/>
+              <TextBlock x:Name="ViewEyebrow" Text="YOUR WORKSPACE, UNDER CONTROL" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource SubtleTextBrush}"/>
+              <TextBlock x:Name="ViewTitle" Text="Command center" FontSize="26" FontWeight="SemiBold" Margin="0,6,0,2"/>
+              <TextBlock x:Name="ViewSubtitle" Text="A clear view of your devices." Foreground="{DynamicResource MutedTextBrush}" FontSize="13"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
               <Ellipse x:Name="BusyDot" Width="8" Height="8" Fill="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0" Opacity="0"/>
-              <TextBlock x:Name="LastRefreshText" Text="Not synchronized" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+              <TextBlock x:Name="LastRefreshText" Text="Not synchronized" Foreground="{DynamicResource SubtleTextBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,14,0"/>
               <Button Content="Refresh" Click="Refresh_Click" ToolTip="Refresh (F5)"/>
               <Button x:Name="AddDeviceButton" Content="Add device" Style="{StaticResource PrimaryButton}" Click="AddDevice_Click" ToolTip="Create enrollment code (Ctrl+E)"/>
             </StackPanel>
           </Grid>
         </Border>
 
-        <Grid Grid.Row="1" Margin="28,24,28,18">
+        <Grid Grid.Row="2" Margin="24,0,24,16">
           <Grid x:Name="DashboardView">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
             <Grid Grid.Row="0">
@@ -188,12 +242,30 @@
             <DataGrid x:Name="DashboardDevicesGrid" Grid.Row="2" MouseDoubleClick="DeviceGrid_DoubleClick">
               <DataGrid.Columns>
                 <DataGridTextColumn Header="Device" Binding="{Binding Name}" Width="2*"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                <DataGridTemplateColumn Header="Status" Width="*">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                      <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding Status}" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="CPU" Binding="{Binding Cpu}" Width="*"/>
                 <DataGridTextColumn Header="Memory used / total" Binding="{Binding Memory}" Width="1.4*"/>
                 <DataGridTextColumn Header="Free RAM" Binding="{Binding FreeMemory}" Width="*"/>
-                <DataGridTextColumn Header="Health" Binding="{Binding HealthDetail}" Width="*"/>
-                <DataGridTextColumn Header="Last seen" Binding="{Binding LastSeen}" Width="1.4*"/>
+                <DataGridTemplateColumn Header="Health" Width="1.2*">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                      <StackPanel Orientation="Horizontal">
+                        <ProgressBar Width="52" Height="5" Maximum="100" Value="{Binding Health}" Foreground="{Binding HealthBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding HealthDetail}" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Last seen" Binding="{Binding LastSeen}" Width="1.2*"/>
               </DataGrid.Columns>
             </DataGrid>
             <TextBlock x:Name="DashboardEmptyState" Grid.Row="2" Style="{StaticResource EmptyStateText}"
@@ -223,12 +295,30 @@
             <DataGrid x:Name="DevicesGrid" Grid.Row="1" MouseDoubleClick="DeviceGrid_DoubleClick">
               <DataGrid.Columns>
                 <DataGridTextColumn Header="Device" Binding="{Binding Name}" Width="1.8*"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                <DataGridTemplateColumn Header="Status" Width="*">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                      <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding Status}" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Operating system" Binding="{Binding OperatingSystem}" Width="2.2*"/>
                 <DataGridTextColumn Header="CPU" Binding="{Binding Cpu}" Width="*"/>
                 <DataGridTextColumn Header="Memory used / total" Binding="{Binding Memory}" Width="1.4*"/>
                 <DataGridTextColumn Header="Free RAM" Binding="{Binding FreeMemory}" Width="*"/>
-                <DataGridTextColumn Header="Health" Binding="{Binding HealthDetail}" Width="*"/>
+                <DataGridTemplateColumn Header="Health" Width="1.2*">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                      <StackPanel Orientation="Horizontal">
+                        <ProgressBar Width="52" Height="5" Maximum="100" Value="{Binding Health}" Foreground="{Binding HealthBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding HealthDetail}" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Agent" Binding="{Binding Agent}" Width="*"/>
               </DataGrid.Columns>
             </DataGrid>
@@ -755,10 +845,16 @@
           </ScrollViewer>
         </Grid>
 
-        <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="28,10">
+        <Border Grid.Row="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,0">
           <Grid>
-            <StackPanel Orientation="Horizontal"><Ellipse x:Name="ConnectionDot" Width="9" Height="9" Fill="{DynamicResource WarningBrush}" Margin="0,0,8,0"/><TextBlock x:Name="StatusText" Text="Connecting…" Foreground="{DynamicResource MutedTextBrush}"/></StackPanel>
-            <TextBlock Text="F5 / Ctrl+R Refresh   Ctrl+F Search   Ctrl+E Enroll   Ctrl+1–9 Sections   Ctrl+, Settings" FontSize="12" Foreground="{DynamicResource SubtleTextBrush}" HorizontalAlignment="Right"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <Ellipse x:Name="ConnectionDot" Width="8" Height="8" Fill="{DynamicResource WarningBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+              <TextBlock x:Name="StatusText" Text="Connecting…" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+              <TextBlock x:Name="FooterControllerText" FontSize="11.5" Foreground="{DynamicResource SubtleTextBrush}" Margin="0,0,16,0"/>
+              <TextBlock x:Name="FooterFleetText" FontSize="11.5" Foreground="{DynamicResource SubtleTextBrush}"/>
+            </StackPanel>
           </Grid>
         </Border>
       </Grid>

@@ -12,20 +12,35 @@ public sealed record ErrorEnvelope(string? Error);
 
 public sealed class DeviceRow(DeviceSummary source)
 {
+    private static readonly System.Windows.Media.Brush OnlineBrush = Frozen(0x8D, 0xE5, 0xBD);
+    private static readonly System.Windows.Media.Brush OfflineBrush = Frozen(0x81, 0x8E, 0x87);
+    private static readonly System.Windows.Media.Brush HealthyBrush = Frozen(0x8D, 0xE5, 0xBD);
+    private static readonly System.Windows.Media.Brush WarningBrush = Frozen(0xDF, 0xB6, 0x6E);
+    private static readonly System.Windows.Media.Brush DangerBrush = Frozen(0xF2, 0x8D, 0x8D);
+
     public DeviceSummary Source { get; } = source;
     public Guid Id => Source.Id;
     public string Name => Source.Name;
     public string Status => Source.Online ? "Online" : "Offline";
+    public System.Windows.Media.Brush StatusBrush => Source.Online ? OnlineBrush : OfflineBrush;
     public string Cpu => Source.Telemetry is null ? "—" : $"{Source.Telemetry.CpuPercent:0}%";
     public string Memory => Source.Telemetry is null ? "—" : MetricFormatter.Memory(Source.Telemetry.UsedMemoryBytes, Source.Telemetry.TotalMemoryBytes);
     public string FreeMemory => Source.Telemetry is null ? "—" : MetricFormatter.Bytes(Math.Max(0, Source.Telemetry.TotalMemoryBytes - Source.Telemetry.UsedMemoryBytes));
     public int Health => Source.HealthScore;
-    public string HealthDetail => Source.Online ? $"{Source.HealthScore}/100" : "Offline";
+    public System.Windows.Media.Brush HealthBrush => Source.HealthScore >= 75 ? HealthyBrush : Source.HealthScore >= 50 ? WarningBrush : DangerBrush;
+    public string HealthDetail => Source.Online ? $"{Source.HealthScore} / 100" : "Offline";
     public string LastSeen => Source.LastHeartbeat.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
     public string OperatingSystem => Source.Inventory.OperatingSystem;
     public string Agent => Source.Inventory.IsSimulation ? "Simulator" : $"v{Source.Inventory.AgentVersion}";
 
     public static string FormatBytes(long bytes) => MetricFormatter.Bytes(bytes);
+
+    private static System.Windows.Media.SolidColorBrush Frozen(byte r, byte g, byte b)
+    {
+        var brush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(r, g, b));
+        brush.Freeze();
+        return brush;
+    }
 }
 
 public sealed class FileRow(FileEntry source)

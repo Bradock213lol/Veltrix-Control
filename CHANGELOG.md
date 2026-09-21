@@ -2,6 +2,32 @@
 
 All notable changes follow semantic versioning.
 
+## [0.10.6] - 2026-09-19
+
+### Changed
+
+- Adopted the delivered Carbon interface language across the desktop app: graphite
+  surfaces, mint accent, fine borders, flat backgrounds (no gradients or decorative glow),
+  and the compact 210 px navigation column with a 54 px top bar and 29 px status bar.
+- New shell: VELTRIX monogram and wordmark, workspace card, preference section, account
+  card with initials and icon sign-out, build chip, breadcrumb, global device search with
+  a Ctrl+F hint, controller status pill, and a footer showing the real Controller address,
+  fleet online count, and TLS state.
+- Device tables now show a status dot with label and a health bar with `N / 100`; memory
+  keeps `used / total` plus free RAM.
+- Primary buttons use flat mint with dark text and a restrained low-opacity glow; control
+  corners are 6 px and panels 10 px, matching the kit.
+- Content transitions use the kit's 250 ms opacity + 5 px lift and remain disabled when
+  Windows animations are off. The Windows light appearance no longer swaps the palette;
+  Carbon is a single graphite console theme.
+- The Inno Setup installer now renders the Carbon theme: graphite wizard pages, mint page
+  names and Next button, and role selection presented as cards with a mint selection edge.
+  All installation, service, firewall, repair, upgrade, and uninstall behavior is unchanged.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.10.6.
+
 ## [0.10.5] - 2026-09-19
 
 ### Added
