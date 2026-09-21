@@ -43,6 +43,6 @@ internal static class Program
             MessageBoxImage.Warning,
             MessageBoxResult.Yes);
         if (choice == MessageBoxResult.Yes)
-            Process.Start(new ProcessStartInfo("http://localhost:5187") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("http://localhost:5187/carbon/index.html") { UseShellExecute = true });
     }
 }

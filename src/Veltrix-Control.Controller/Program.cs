@@ -184,7 +184,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.10.6" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "0.10.7" }));
 app.MapGet("/api/setup/status", async (VeltrixControlStore database, CancellationToken ct) => Results.Ok(new { required = !await database.HasUsersAsync(ct) }));
 
 app.MapPost("/api/setup", async (SetupRequest request, HttpContext context, VeltrixControlStore database, IOptions<ControllerOptions> controllerOptions, CancellationToken ct) =>

@@ -2001,6 +2001,12 @@ public partial class MainWindow : Window
 
     private void SettingsShortcut_Click(object sender, RoutedEventArgs e) => NavigateTo("SettingsView");
 
+    private void Console_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null) return;
+        new CarbonWindow(_api.BaseAddress, _api.GetSessionCookieValue()) { Owner = this }.Show();
+    }
+
     private static string GetDiagnosticTitle(OperationKind kind) => kind switch
     {
         OperationKind.ListProcesses => "Running processes",

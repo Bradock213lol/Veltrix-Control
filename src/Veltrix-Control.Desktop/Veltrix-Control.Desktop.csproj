@@ -11,4 +11,7 @@
     <ProjectReference Include="..\Veltrix-Control.Core\Veltrix-Control.Core.csproj" />
     <ProjectReference Include="..\Veltrix-Control.Shared\Veltrix-Control.Shared.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+  </ItemGroup>
 </Project>

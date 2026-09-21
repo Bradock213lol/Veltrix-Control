@@ -98,6 +98,9 @@
             <Button x:Name="DashboardNav" Tag="DashboardView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
               <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE80F;"/><TextBlock Style="{StaticResource NavLabel}" Text="Overview"/></StackPanel>
             </Button>
+            <Button x:Name="ConsoleNav" Style="{StaticResource NavigationButton}" Click="Console_Click" ToolTip="Open the Carbon console (kit interface)">
+              <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE774;"/><TextBlock Style="{StaticResource NavLabel}" Text="Console"/></StackPanel>
+            </Button>
             <Button x:Name="DevicesNav" Tag="DevicesView" Style="{StaticResource NavigationButton}" Click="Navigate_Click">
               <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavGlyph}" Text="&#xE7F4;"/><TextBlock Style="{StaticResource NavLabel}" Text="Devices"/></StackPanel>
             </Button>

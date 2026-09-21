@@ -21,6 +21,18 @@ public sealed class ControllerApiClient : IDisposable
 
     public Uri BaseAddress => _client.BaseAddress!;
 
+    public string? GetSessionCookieValue()
+    {
+        foreach (System.Net.Cookie cookie in _cookies.GetCookies(_client.BaseAddress!))
+        {
+            if (string.Equals(cookie.Name, "Veltrix-Control.Session", StringComparison.Ordinal))
+            {
+                return cookie.Value;
+            }
+        }
+        return null;
+    }
+
     public void ChangeController(string controllerUrl)
     {
         var controller = ValidateControllerUri(controllerUrl);

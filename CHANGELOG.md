@@ -2,7 +2,30 @@
 
 All notable changes follow semantic versioning.
 
-## [0.10.6] - 2026-09-19
+## [0.10.7] - 2026-09-19
+
+### Added
+
+- The delivered Carbon interface now runs 1:1 in the product. It is served by the
+  Controller at `/carbon/` and hosted in a WebView2 **Console** window inside the native
+  app, with the signed-in session injected so the kit's own HTML, CSS, JavaScript, icons,
+  motion, and layout are used unchanged.
+- A live bridge (`assets/veltrix.js`) replaces the kit's sample adapter with real data:
+  devices and telemetry refresh from the API, enrollment codes are created for real, the
+  activity list is built from the audit trail, and the workspace name, user, initials,
+  build, controller endpoint, and device count come from the session. The kit still opens
+  standalone with its bundled sample content when the bridge is absent.
+- Device rows hide the sample IP annotation when the platform has no verified IP source.
+
+### Changed
+
+- The launcher's browser fallback opens the Carbon console instead of the legacy page.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.10.7.
+
+## [0.10.6] - 2026-09-19 - 2026-09-19
 
 ### Changed
 
