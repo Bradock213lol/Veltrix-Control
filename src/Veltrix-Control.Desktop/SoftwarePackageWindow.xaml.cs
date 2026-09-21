@@ -16,7 +16,8 @@ public partial class SoftwarePackageWindow : Window
     private void Source_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (ShaBox is null || PackageIdLabel is null) return;
-        var isWinget = (SourceBox.SelectedItem as ComboBoxItem)?.Content?.ToString() == "Winget";
+        var sourceName = (SourceBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+        var isWinget = sourceName is "Winget" or "Chocolatey";
         ShaBox.IsEnabled = !isWinget;
         PackageIdLabel.Content = isWinget ? "WinGet package identifier" : "HTTPS download URL";
     }
@@ -34,13 +35,15 @@ public partial class SoftwarePackageWindow : Window
             ErrorText.Text = "A package identifier or URL is required.";
             return;
         }
-        var source = (SourceBox.SelectedItem as ComboBoxItem)?.Content?.ToString() switch
+        var sourceName = (SourceBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+        var source = sourceName switch
         {
             "Msi" => SoftwareSource.Msi,
             "Exe" => SoftwareSource.Exe,
+            "Chocolatey" => SoftwareSource.Choco,
             _ => SoftwareSource.Winget
         };
-        if (source != SoftwareSource.Winget)
+        if (source is not (SoftwareSource.Winget or SoftwareSource.Choco))
         {
             if (!Uri.TryCreate(PackageIdBox.Text.Trim(), UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
             {

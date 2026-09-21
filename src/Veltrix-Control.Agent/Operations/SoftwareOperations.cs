@@ -44,6 +44,7 @@ public sealed partial class SoftwareOperations(AgentOptions options, ILogger<Sof
         return argument.Source switch
         {
             SoftwareSource.Winget => await WingetAsync(operation, "install", argument.PackageId, argument.Version, cancellationToken),
+            SoftwareSource.Choco => await ChocoAsync(operation, "install", argument.PackageId, argument.Version, cancellationToken),
             SoftwareSource.Msi => await InstallFromDownloadAsync(operation, argument, msiexec: true, cancellationToken),
             SoftwareSource.Exe => await InstallFromDownloadAsync(operation, argument, msiexec: false, cancellationToken),
             _ => Failure(operation.Id, "The package source is invalid.")
@@ -54,9 +55,37 @@ public sealed partial class SoftwareOperations(AgentOptions options, ILogger<Sof
     {
         var argument = Deserialize<SoftwareUninstallArgument>(operation);
         ValidatePackageId(argument.PackageId);
-        if (argument.Source != SoftwareSource.Winget)
-            return Failure(operation.Id, "Only WinGet packages can be changed with this action. Use the vendor uninstaller for MSI or EXE packages.");
-        return await WingetAsync(operation, action, argument.PackageId, null, cancellationToken);
+        return argument.Source switch
+        {
+            SoftwareSource.Winget => await WingetAsync(operation, action, argument.PackageId, null, cancellationToken),
+            SoftwareSource.Choco => await ChocoAsync(operation, action, argument.PackageId, null, cancellationToken),
+            _ => Failure(operation.Id, "Only WinGet or Chocolatey packages can be changed with this action. Use the vendor uninstaller for MSI or EXE packages.")
+        };
+    }
+
+    private async Task<OperationResultPayload> ChocoAsync(OperationAssignment operation, string action, string packageId, string? version, CancellationToken cancellationToken)
+    {
+        var choco = FindChoco()
+            ?? throw new InvalidOperationException("Chocolatey is not installed on this node. Publish an MSI or EXE package instead.");
+        var arguments = action switch
+        {
+            "uninstall" => $"uninstall {packageId} -y --no-progress",
+            "upgrade" => $"upgrade {packageId} -y --no-progress",
+            _ => $"install {packageId} -y --no-progress"
+        };
+        if (!string.IsNullOrWhiteSpace(version) && action != "uninstall") arguments += $" --version={version}";
+        var (exitCode, output) = await RunAsync(choco, arguments, options.DataDirectory, TimeSpan.FromMinutes(60), cancellationToken);
+        var result = new SoftwareActionResult("Choco", packageId, action, exitCode,
+            output.Length > SoftwareLimits.MaxOutputLength ? output[^SoftwareLimits.MaxOutputLength..] : output);
+        return exitCode == 0 || exitCode == 3010
+            ? Success(operation.Id, result)
+            : Failure(operation.Id, $"{action} exited with code {exitCode}. {FirstLines(output)}");
+    }
+
+    private static string? FindChoco()
+    {
+        var candidate = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "chocolatey", "bin", "choco.exe");
+        return File.Exists(candidate) ? candidate : null;
     }
 
     private async Task<OperationResultPayload> WingetAsync(OperationAssignment operation, string action, string packageId, string? version, CancellationToken cancellationToken)

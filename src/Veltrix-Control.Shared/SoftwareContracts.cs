@@ -4,7 +4,8 @@ public enum SoftwareSource
 {
     Winget,
     Msi,
-    Exe
+    Exe,
+    Choco
 }
 
 public enum SoftwareAction

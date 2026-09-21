@@ -299,18 +299,42 @@ public sealed partial class VeltrixControlStore : IDisposable
     public async Task<IReadOnlyList<DeviceSummary>> GetDevicesAsync(TimeSpan onlineWindow, CancellationToken cancellationToken = default)
     {
         var devices = new List<DeviceSummary>();
+        var tags = new Dictionary<Guid, List<string>>();
+        await using (var tagConnection = OpenConnection())
+        {
+            await tagConnection.OpenAsync(cancellationToken);
+            await using var tagCommand = tagConnection.CreateCommand();
+            tagCommand.CommandText = "SELECT device_id, tag FROM device_tags ORDER BY tag COLLATE NOCASE;";
+            await using var tagReader = await tagCommand.ExecuteReaderAsync(cancellationToken);
+            while (await tagReader.ReadAsync(cancellationToken))
+            {
+                var tagDevice = Guid.Parse(tagReader.GetString(0));
+                if (!tags.TryGetValue(tagDevice, out var list))
+                {
+                    list = [];
+                    tags[tagDevice] = list;
+                }
+                list.Add(tagReader.GetString(1));
+            }
+        }
+
         await using var connection = OpenConnection();
         await connection.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT id, name, last_heartbeat, inventory_json, telemetry_json FROM devices ORDER BY name COLLATE NOCASE;";
+        command.CommandText = "SELECT id, name, last_heartbeat, inventory_json, telemetry_json, is_favorite FROM devices ORDER BY name COLLATE NOCASE;";
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
+            var id = Guid.Parse(reader.GetString(0));
             var heartbeat = ParseDate(reader.GetString(2));
             var inventory = JsonSerializer.Deserialize<HardwareInventory>(reader.GetString(3), JsonOptions)!;
             var telemetry = reader.IsDBNull(4) ? null : JsonSerializer.Deserialize<TelemetrySnapshot>(reader.GetString(4), JsonOptions);
             var online = DateTimeOffset.UtcNow - heartbeat <= onlineWindow;
-            devices.Add(new DeviceSummary(Guid.Parse(reader.GetString(0)), reader.GetString(1), online, heartbeat, inventory, telemetry, HealthScorer.Calculate(telemetry, online)));
+            devices.Add(new DeviceSummary(id, reader.GetString(1), online, heartbeat, inventory, telemetry, HealthScorer.Calculate(telemetry, online))
+            {
+                IsFavorite = reader.GetInt32(5) == 1,
+                Tags = tags.TryGetValue(id, out var list) ? list : null
+            });
         }
         return devices;
     }

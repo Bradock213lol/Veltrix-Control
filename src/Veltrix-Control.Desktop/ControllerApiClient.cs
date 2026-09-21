@@ -249,6 +249,27 @@ public sealed class ControllerApiClient : IDisposable
     public async Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken = default) =>
         await SendAsync<object?>(HttpMethod.Delete, $"api/users/{userId:D}", null, true, cancellationToken);
 
+    public Task<DeviceTagView[]> GetDeviceTagsAsync(Guid deviceId, CancellationToken cancellationToken = default) =>
+        GetAsync<DeviceTagView[]>($"api/devices/{deviceId:D}/tags", cancellationToken);
+
+    public Task<DeviceTagView[]> AddDeviceTagAsync(Guid deviceId, string tag, CancellationToken cancellationToken = default) =>
+        SendAsync<DeviceTagView[]>(HttpMethod.Post, $"api/devices/{deviceId:D}/tags", new DeviceTagRequest(tag), true, cancellationToken);
+
+    public async Task RemoveDeviceTagAsync(Guid deviceId, string tag, CancellationToken cancellationToken = default) =>
+        await SendAsync<object?>(HttpMethod.Delete, $"api/devices/{deviceId:D}/tags/{Uri.EscapeDataString(tag)}", null, true, cancellationToken);
+
+    public Task<JsonElement> SetDeviceFavoriteAsync(Guid deviceId, bool favorite, CancellationToken cancellationToken = default) =>
+        SendAsync<JsonElement>(HttpMethod.Post, $"api/devices/{deviceId:D}/favorite?favorite={(favorite ? "true" : "false")}", null, true, cancellationToken);
+
+    public Task<NotificationSettingsView> GetNotificationSettingsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<NotificationSettingsView>("api/settings/notifications", cancellationToken);
+
+    public Task<NotificationSettingsView> SaveNotificationSettingsAsync(NotificationSettingsRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<NotificationSettingsView>(HttpMethod.Put, "api/settings/notifications", request, true, cancellationToken);
+
+    public Task<JsonElement> TestNotificationAsync(CancellationToken cancellationToken = default) =>
+        SendAsync<JsonElement>(HttpMethod.Post, "api/settings/notifications/test", null, true, cancellationToken);
+
     public async Task<TransferView> UploadFileAsync(Guid deviceId, string localPath, string remotePath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         var info = new FileInfo(localPath);

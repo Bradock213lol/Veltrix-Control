@@ -2,7 +2,24 @@
 
 All notable changes follow semantic versioning.
 
-## [0.10.7] - 2026-09-19
+## [0.10.8] - 2026-09-19
+
+### Added
+
+- Device tags and favorites: add and remove tags per device, star devices, search by tag,
+  and a Tags column in the device directory. Tag changes are permission-checked
+  (Administrator) and audited; favorites are available to any signed-in role.
+- Alert notifications: alerts can be delivered to an HTTPS webhook with an
+  `X-Veltrix-Signature` HMAC-SHA256 header when a secret is configured. Settings include a
+  Save and Send test action; the secret is encrypted with the Controller-local AES key.
+- Chocolatey as a package source for software deployment, alongside WinGet, MSI, and EXE,
+  in the agent, Controller validation, and the package registration window.
+
+### Changed
+
+- Bumped all product, health, simulator, test, installer, and web-fallback versions to 0.10.8.
+
+## [0.10.7] - 2026-09-19 - 2026-09-19
 
 ### Added
 

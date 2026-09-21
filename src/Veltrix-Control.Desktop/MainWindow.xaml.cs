@@ -344,7 +344,8 @@ public partial class MainWindow : Window
             filtered = filtered.Where(device =>
                 device.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 device.Inventory.OperatingSystem.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                device.Inventory.AgentVersion.Contains(query, StringComparison.OrdinalIgnoreCase));
+                device.Inventory.AgentVersion.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                (device.Tags?.Any(tag => tag.Contains(query, StringComparison.OrdinalIgnoreCase)) ?? false));
         }
 
         var status = (DeviceStatusFilter.SelectedItem as ComboBoxItem)?.Content?.ToString();
@@ -1860,7 +1861,7 @@ public partial class MainWindow : Window
         if (view == "DeploymentView") _ = LoadSoftwareAsync();
         if (view == "OperationsView") { _ = LoadBackupsAsync(); _ = LoadAlertsAsync(); _ = LoadAutomationsAsync(); _ = LoadComputeJobsAsync(); _ = LoadGameServersAsync(); }
         if (view == "IntegrationsView") _ = LoadIntegrationsAsync();
-        if (view == "SettingsView") _ = LoadUsersAsync();
+        if (view == "SettingsView") { _ = LoadUsersAsync(); _ = LoadNotificationSettingsAsync(); }
         if (view == "DevicesView") DeviceSearchBox.Focus();
     }
 
@@ -1972,6 +1973,7 @@ public partial class MainWindow : Window
         ToolTipService.SetToolTip(OperationsNav, viewer ? "Operations requires the Operator role or higher." : null);
         ToolTipService.SetToolTip(DeploymentNav, administrator ? null : "Deployment requires the Administrator role.");
         ToolTipService.SetToolTip(IntegrationsNav, administrator ? null : "Integrations require the Administrator role.");
+        DeviceTagButton.IsEnabled = administrator;
     }
 
     private void SetStatus(string text, bool success = false, bool error = false)
@@ -2005,6 +2007,96 @@ public partial class MainWindow : Window
     {
         if (_api is null) return;
         new CarbonWindow(_api.BaseAddress, _api.GetSessionCookieValue()) { Owner = this }.Show();
+    }
+
+    private async void DeviceTag_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || DevicesGrid.SelectedItem is not DeviceRow row)
+        {
+            SetStatus("Select a device first.", false, true);
+            return;
+        }
+        var tag = TextPromptWindow.Show(this, "Add tag", $"Tag for {row.Name}:");
+        if (string.IsNullOrWhiteSpace(tag)) return;
+        try
+        {
+            await _api.AddDeviceTagAsync(row.Id, tag.Trim());
+            SetStatus($"Tagged {row.Name}", true);
+            await RefreshFleetAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void DeviceFavorite_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null || DevicesGrid.SelectedItem is not DeviceRow row)
+        {
+            SetStatus("Select a device first.", false, true);
+            return;
+        }
+        try
+        {
+            await _api.SetDeviceFavoriteAsync(row.Id, !row.Source.IsFavorite);
+            await RefreshFleetAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async Task LoadNotificationSettingsAsync()
+    {
+        if (_api is null || !HasAdminPermission()) return;
+        try
+        {
+            var settings = await _api.GetNotificationSettingsAsync();
+            NotificationsEnabledCheck.IsChecked = settings.Enabled;
+            WebhookUrlBox.Text = settings.WebhookUrl ?? string.Empty;
+            NotificationsStatusText.Text = settings.HasSecret ? "A signing secret is stored." : "No signing secret stored.";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            NotificationsStatusText.Text = exception.Message;
+        }
+    }
+
+    private async void NotificationsSave_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null) return;
+        try
+        {
+            var settings = await _api.SaveNotificationSettingsAsync(new NotificationSettingsRequest(
+                NotificationsEnabledCheck.IsChecked == true,
+                string.IsNullOrWhiteSpace(WebhookUrlBox.Text) ? null : WebhookUrlBox.Text.Trim(),
+                string.IsNullOrEmpty(WebhookSecretBox.Password) ? null : WebhookSecretBox.Password));
+            WebhookSecretBox.Clear();
+            NotificationsStatusText.Text = settings.HasSecret ? "Saved with a signing secret." : "Saved.";
+            SetStatus("Notification settings saved", true);
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            NotificationsStatusText.Text = exception.Message;
+            SetStatus(exception.Message, false, true);
+        }
+    }
+
+    private async void NotificationsTest_Click(object sender, RoutedEventArgs e)
+    {
+        if (_api is null) return;
+        try
+        {
+            NotificationsStatusText.Text = "Sending test…";
+            var result = await _api.TestNotificationAsync();
+            NotificationsStatusText.Text = result.TryGetProperty("detail", out var detail) ? detail.GetString() : "Test sent.";
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            NotificationsStatusText.Text = exception.Message;
+        }
     }
 
     private static string GetDiagnosticTitle(OperationKind kind) => kind switch

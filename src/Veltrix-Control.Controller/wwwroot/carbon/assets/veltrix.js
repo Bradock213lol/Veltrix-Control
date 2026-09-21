@@ -97,7 +97,7 @@
       const mapped = (devices || []).map(mapDevice);
       window.VeltrixHost.devices = mapped;
       window.VeltrixHost.activity = mapAudit(audit || []);
-      window.VeltrixHost.build = '0.10.7';
+      window.VeltrixHost.build = '0.10.8';
       window.VeltrixHost.workspaceName = 'Personal workspace';
       window.VeltrixHost.workspaceDetail = info && info.httpsPort ? `Controller · port ${info.httpsPort}` : 'Local controller';
       window.VeltrixHost.endpoint = window.location.host;

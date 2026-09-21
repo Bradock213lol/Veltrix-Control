@@ -317,6 +317,24 @@ public sealed partial class VeltrixControlStore
             updated_at TEXT NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS device_tags (
+            device_id TEXT NOT NULL,
+            tag TEXT NOT NULL,
+            added_by TEXT NOT NULL,
+            added_at TEXT NOT NULL,
+            PRIMARY KEY (device_id, tag),
+            FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_device_tags_tag ON device_tags(tag);
+
+        CREATE TABLE IF NOT EXISTS notification_settings (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            enabled INTEGER NOT NULL DEFAULT 0,
+            webhook_url TEXT NULL,
+            secret TEXT NULL,
+            updated_at TEXT NOT NULL
+        );
+
         INSERT OR IGNORE INTO schema_versions(version, applied_at) VALUES (2, CURRENT_TIMESTAMP);
         INSERT OR IGNORE INTO schema_versions(version, applied_at) VALUES (3, CURRENT_TIMESTAMP);
         INSERT OR IGNORE INTO schema_versions(version, applied_at) VALUES (4, CURRENT_TIMESTAMP);
@@ -338,6 +356,7 @@ public sealed partial class VeltrixControlStore
         command.CommandText = Schema;
         await command.ExecuteNonQueryAsync(cancellationToken);
         await EnsureColumnAsync(connection, "integrations", "health_detail", "TEXT NULL", cancellationToken);
+        await EnsureColumnAsync(connection, "devices", "is_favorite", "INTEGER NOT NULL DEFAULT 0", cancellationToken);
     }
 
     private static async Task EnsureColumnAsync(SqliteConnection connection, string table, string column, string definition, CancellationToken cancellationToken)

@@ -13,6 +13,7 @@
       <ComboBoxItem Content="Winget" IsSelected="True"/>
       <ComboBoxItem Content="Msi"/>
       <ComboBoxItem Content="Exe"/>
+      <ComboBoxItem Content="Chocolatey"/>
     </ComboBox>
     <Label x:Name="PackageIdLabel" Content="WinGet package identifier"/>
     <TextBox x:Name="PackageIdBox" MaxLength="512" Margin="0,0,0,12"/>

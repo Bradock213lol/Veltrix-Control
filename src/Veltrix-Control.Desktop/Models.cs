@@ -32,6 +32,8 @@ public sealed class DeviceRow(DeviceSummary source)
     public string LastSeen => Source.LastHeartbeat.LocalDateTime.ToString("g", CultureInfo.CurrentCulture);
     public string OperatingSystem => Source.Inventory.OperatingSystem;
     public string Agent => Source.Inventory.IsSimulation ? "Simulator" : $"v{Source.Inventory.AgentVersion}";
+    public string Tags => Source.Tags is { Count: > 0 } ? string.Join(", ", Source.Tags) : string.Empty;
+    public string Favorite => Source.IsFavorite ? "★" : string.Empty;
 
     public static string FormatBytes(long bytes) => MetricFormatter.Bytes(bytes);
 

@@ -197,7 +197,9 @@ public sealed record DeviceSummary(
     DateTimeOffset LastHeartbeat,
     HardwareInventory Inventory,
     TelemetrySnapshot? Telemetry,
-    int HealthScore);
+    int HealthScore,
+    bool IsFavorite = false,
+    IReadOnlyList<string>? Tags = null);
 
 public sealed record AuditEventView(
     long Id,

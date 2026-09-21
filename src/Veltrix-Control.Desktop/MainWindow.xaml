@@ -290,13 +290,16 @@
           <Grid x:Name="DevicesView" Visibility="Collapsed">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
             <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14">
-              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="190"/></Grid.ColumnDefinitions>
-                <TextBox x:Name="DeviceSearchBox" AutomationProperties.Name="Search devices" TextChanged="DeviceFilter_Changed" ToolTip="Search devices (Ctrl+F)"/>
+              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="190"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="DeviceSearchBox" AutomationProperties.Name="Search devices" TextChanged="DeviceFilter_Changed" ToolTip="Search devices and tags (Ctrl+F)"/>
                 <ComboBox x:Name="DeviceStatusFilter" Grid.Column="1" Margin="12,0,0,0" SelectionChanged="DeviceFilter_Changed"><ComboBoxItem Content="All devices" IsSelected="True"/><ComboBoxItem Content="Online"/><ComboBoxItem Content="Offline"/><ComboBoxItem Content="Needs attention"/></ComboBox>
+                <Button x:Name="DeviceTagButton" Grid.Column="2" Content="Tag…" Margin="12,0,0,0" Click="DeviceTag_Click" ToolTip="Add a tag (Administrator)"/>
+                <Button x:Name="DeviceFavoriteButton" Grid.Column="3" Content="Favorite" Margin="8,0,0,0" Click="DeviceFavorite_Click" ToolTip="Pin this device"/>
               </Grid>
             </Border>
             <DataGrid x:Name="DevicesGrid" Grid.Row="1" MouseDoubleClick="DeviceGrid_DoubleClick">
               <DataGrid.Columns>
+                <DataGridTextColumn Header="★" Binding="{Binding Favorite}" Width="40"/>
                 <DataGridTextColumn Header="Device" Binding="{Binding Name}" Width="1.8*"/>
                 <DataGridTemplateColumn Header="Status" Width="*">
                   <DataGridTemplateColumn.CellTemplate>
@@ -323,6 +326,7 @@
                   </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Agent" Binding="{Binding Agent}" Width="*"/>
+                <DataGridTextColumn Header="Tags" Binding="{Binding Tags}" Width="1.2*"/>
               </DataGrid.Columns>
             </DataGrid>
             <TextBlock Grid.Row="1" Style="{StaticResource EmptyStateText}"
@@ -842,6 +846,22 @@
                     <TextBlock Grid.Row="7" Grid.Column="0" FontWeight="SemiBold" Text="Enter" Margin="0,0,0,6"/>
                     <TextBlock Grid.Row="7" Grid.Column="1" Foreground="{DynamicResource MutedTextBrush}" Text="Confirm the default action, send a terminal command, or run a search" Margin="0,0,0,6"/>
                   </Grid>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource PanelBorder}" Margin="0,16,0,0">
+                <StackPanel>
+                  <TextBlock Text="Alert notifications" FontSize="21" FontWeight="SemiBold"/>
+                  <TextBlock Text="Alerts can be delivered to an HTTPS webhook. Every request carries an X-Veltrix-Signature HMAC-SHA256 header when a secret is set." Foreground="{DynamicResource MutedTextBrush}" Margin="0,4,0,14"/>
+                  <CheckBox x:Name="NotificationsEnabledCheck" Content="Send alert events to a webhook" Margin="0,0,0,10"/>
+                  <Label Content="Webhook URL (HTTPS)" Target="{Binding ElementName=WebhookUrlBox}"/>
+                  <TextBox x:Name="WebhookUrlBox" MaxLength="512" Margin="0,0,0,12"/>
+                  <Label Content="Signing secret (optional)" Target="{Binding ElementName=WebhookSecretBox}"/>
+                  <PasswordBox x:Name="WebhookSecretBox" MaxLength="256" Margin="0,0,0,12"/>
+                  <StackPanel Orientation="Horizontal">
+                    <Button Content="Save" Style="{StaticResource PrimaryButton}" Click="NotificationsSave_Click"/>
+                    <Button Content="Send test" Click="NotificationsTest_Click"/>
+                    <TextBlock x:Name="NotificationsStatusText" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" Margin="12,0,0,0"/>
+                  </StackPanel>
                 </StackPanel>
               </Border>
             </StackPanel>
