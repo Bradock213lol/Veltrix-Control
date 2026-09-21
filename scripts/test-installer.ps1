@@ -94,8 +94,13 @@ try {
     $repairSession = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $loginBody = @{ username = 'ci.owner'; password = $password } | ConvertTo-Json
     Invoke-RestMethod -Uri 'http://localhost:5187/api/auth/login' -Method Post -ContentType 'application/json' -Body $loginBody -WebSession $repairSession | Out-Null
-    $devicesAfterRepair = @(Invoke-RestMethod -Uri 'http://localhost:5187/api/devices' -WebSession $repairSession)
-    if ($devicesAfterRepair.Count -ne 1 -or -not $devicesAfterRepair[0].online) {
+    $preserved = $false
+    for ($attempt = 0; $attempt -lt 60; $attempt++) {
+        $devicesAfterRepair = @(Invoke-RestMethod -Uri 'http://localhost:5187/api/devices' -WebSession $repairSession)
+        if ($devicesAfterRepair.Count -eq 1 -and $devicesAfterRepair[0].online) { $preserved = $true; break }
+        Start-Sleep -Milliseconds 500
+    }
+    if (-not $preserved) {
         throw 'Repair did not preserve the enrolled online node.'
     }
     Write-Output "Installer smoke test passed: clean install, services, enrollment, repair, state preservation, and $($devicesAfterRepair.Count) node online."
